@@ -56,6 +56,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
         ]
       }
       audit_log: {
@@ -96,6 +103,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
           },
         ]
       }
@@ -302,6 +316,64 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "clients_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
+        ]
+      }
+      commission_config: {
+        Row: {
+          activa: boolean | null
+          config: Json
+          created_at: string | null
+          id: string
+          tipo: string
+          updated_at: string | null
+          vendedor_id: string | null
+          vigencia_desde: string
+          vigencia_hasta: string | null
+        }
+        Insert: {
+          activa?: boolean | null
+          config: Json
+          created_at?: string | null
+          id?: string
+          tipo: string
+          updated_at?: string | null
+          vendedor_id?: string | null
+          vigencia_desde: string
+          vigencia_hasta?: string | null
+        }
+        Update: {
+          activa?: boolean | null
+          config?: Json
+          created_at?: string | null
+          id?: string
+          tipo?: string
+          updated_at?: string | null
+          vendedor_id?: string | null
+          vigencia_desde?: string
+          vigencia_hasta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_config_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commission_config_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
         ]
       }
       counters: {
@@ -376,6 +448,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_invitado_por_fkey"
+            columns: ["invitado_por"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
           },
         ]
       }
@@ -782,6 +861,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "quotes_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
         ]
       }
       reminder_settings: {
@@ -819,6 +905,54 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      seller_goals: {
+        Row: {
+          created_at: string | null
+          id: string
+          meta_cierre_porcentaje: number | null
+          meta_cotizaciones: number
+          meta_ventas: number
+          periodo: string
+          updated_at: string | null
+          vendedor_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          meta_cierre_porcentaje?: number | null
+          meta_cotizaciones: number
+          meta_ventas: number
+          periodo: string
+          updated_at?: string | null
+          vendedor_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          meta_cierre_porcentaje?: number | null
+          meta_cotizaciones?: number
+          meta_ventas?: number
+          periodo?: string
+          updated_at?: string | null
+          vendedor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_goals_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_goals_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -1016,6 +1150,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "stock_alerts_resuelta_por_fkey"
+            columns: ["resuelta_por"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
         ]
       }
       stock_locations: {
@@ -1153,6 +1294,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "stock_moves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
         ]
       }
       subscription_events: {
@@ -1194,6 +1342,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
           },
         ]
       }
@@ -1378,6 +1533,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
         ]
       }
       vehicles: {
@@ -1550,6 +1712,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_autorizado_por_fkey"
+            columns: ["autorizado_por"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
           },
           {
             foreignKeyName: "wo_substitutions_producto_original_id_fkey"
@@ -1727,6 +1896,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "work_orders_tecnico_id_fkey"
+            columns: ["tecnico_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
+          {
             foreignKeyName: "work_orders_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -1793,6 +1969,31 @@ export type Database = {
           },
         ]
       }
+      seller_performance: {
+        Row: {
+          branch_id: string | null
+          branch_nombre: string | null
+          cotizaciones_mes_actual: number | null
+          email: string | null
+          meta_cierre_porcentaje: number | null
+          meta_cotizaciones: number | null
+          meta_ventas: number | null
+          nombre_completo: string | null
+          tasa_cierre_mes_actual: number | null
+          total_clientes: number | null
+          vendedor_id: string | null
+          ventas_mes_actual: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_by_location: {
         Row: {
           branch_id: string | null
@@ -1833,6 +2034,18 @@ export type Database = {
         }
         Returns: string
       }
+      asignar_clientes_vendedor: {
+        Args: { p_client_ids: string[]; p_vendedor_id: string }
+        Returns: number
+      }
+      calcular_metricas_vendedor: {
+        Args: {
+          p_fecha_desde: string
+          p_fecha_hasta: string
+          p_vendedor_id: string
+        }
+        Returns: Json
+      }
       calcular_stock_producto: {
         Args: { p_location_id: string; p_product_id: string }
         Returns: number
@@ -1867,6 +2080,22 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      obtener_ranking_vendedores: {
+        Args: {
+          p_branch_id?: string
+          p_fecha_desde: string
+          p_fecha_hasta: string
+        }
+        Returns: {
+          branch_nombre: string
+          nombre_completo: string
+          ranking: number
+          tasa_cierre: number
+          total_cotizaciones: number
+          total_ventas: number
+          vendedor_id: string
+        }[]
       }
       pausar_suscripcion: {
         Args: { p_notas?: string; p_subscription_id: string }
