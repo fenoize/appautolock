@@ -12,6 +12,7 @@ export function useQuotes(filters?: QuoteFilters) {
         .select(`
           *,
           client:clients(*),
+          vehicle:vehicles(*),
           vendedor:profiles!vendedor_id(*),
           branch:branches(*),
           items:quote_items(*)
@@ -58,6 +59,7 @@ export function useQuote(id: string) {
         .select(`
           *,
           client:clients(*),
+          vehicle:vehicles(*),
           vendedor:profiles!vendedor_id(*),
           branch:branches(*),
           items:quote_items(*)
@@ -279,6 +281,52 @@ export function useApproveQuote() {
     },
     onError: (error: any) => {
       toast.error(error.message || 'Error al aprobar cotización');
+    }
+  });
+}
+
+export function useDeleteQuote() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      const { error } = await supabase
+        .from('quotes')
+        .delete()
+        .eq('id', quoteId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Cotización eliminada exitosamente');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al eliminar cotización');
+    }
+  });
+}
+
+export function useConvertQuoteToWO() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      const { data, error } = await supabase.rpc('convert_quote_to_wo', {
+        p_quote_id: quoteId
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_woId, quoteId) => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['quote', quoteId] });
+      queryClient.invalidateQueries({ queryKey: ['work-orders'] });
+      toast.success('Cotización convertida a OT exitosamente');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al convertir cotización');
     }
   });
 }

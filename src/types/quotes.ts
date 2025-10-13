@@ -1,11 +1,12 @@
 import { Client } from './clients';
 
-export type QuoteStatus = 'borrador' | 'enviada' | 'aceptada' | 'rechazada' | 'expirada';
+export type QuoteStatus = 'borrador' | 'enviada' | 'aceptada' | 'rechazada' | 'expirada' | 'convertida_ot' | 'cancelada';
 
 export interface Quote {
   id: string;
   folio: string;
   client_id: string;
+  vehicle_id?: string;
   vendedor_id: string;
   branch_id: string;
   fecha_emision: string;
@@ -21,6 +22,13 @@ export interface Quote {
   
   // Relaciones
   client?: Client;
+  vehicle?: {
+    id: string;
+    marca: string;
+    modelo: string;
+    patente: string;
+    anio?: number;
+  };
   vendedor?: {
     id: string;
     nombre: string;

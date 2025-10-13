@@ -803,6 +803,7 @@ export type Database = {
           total: number | null
           updated_at: string | null
           validez_dias: number | null
+          vehicle_id: string | null
           vendedor_id: string
         }
         Insert: {
@@ -820,6 +821,7 @@ export type Database = {
           total?: number | null
           updated_at?: string | null
           validez_dias?: number | null
+          vehicle_id?: string | null
           vendedor_id: string
         }
         Update: {
@@ -837,6 +839,7 @@ export type Database = {
           total?: number | null
           updated_at?: string | null
           validez_dias?: number | null
+          vehicle_id?: string | null
           vendedor_id?: string
         }
         Relationships: [
@@ -852,6 +855,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
           {
@@ -2097,6 +2107,10 @@ export type Database = {
         Args: { p_wo_id: string }
         Returns: undefined
       }
+      convert_quote_to_wo: {
+        Args: { p_quote_id: string }
+        Returns: string
+      }
       expirar_cotizaciones_vencidas: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2238,6 +2252,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      verificar_compatibilidad_items: {
+        Args: { p_items: Json; p_vehicle_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "operador" | "tecnico" | "vendedor" | "cliente"
@@ -2252,6 +2270,8 @@ export type Database = {
         | "aceptada"
         | "rechazada"
         | "expirada"
+        | "convertida_ot"
+        | "cancelada"
       stock_location_type: "bodega" | "camioneta"
       stock_move_type:
         | "compra"
@@ -2410,6 +2430,8 @@ export const Constants = {
         "aceptada",
         "rechazada",
         "expirada",
+        "convertida_ot",
+        "cancelada",
       ],
       stock_location_type: ["bodega", "camioneta"],
       stock_move_type: [
