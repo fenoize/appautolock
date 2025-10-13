@@ -24,7 +24,11 @@ function AppLayoutContent({ children }: AppLayoutProps) {
     <div className="min-h-screen bg-background">
       <AppTopbar />
       
-      {!isMobile && <AppSidebar />}
+      {!isMobile && (
+        <div className="fixed left-0 top-[var(--header-h)] bottom-0 z-30">
+          <AppSidebar />
+        </div>
+      )}
       
       <main 
         className="min-h-screen overflow-y-auto transition-[margin] duration-200 ease-linear"
