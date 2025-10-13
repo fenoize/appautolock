@@ -56,6 +56,20 @@ All colors MUST be HSL.
     --sidebar-border: 0 0% 18%;
     --sidebar-ring: 25 95% 53%;
 
+    /* Layout Dimensions */
+    --header-h: 64px;
+    --sidebar-w: 280px;
+    --sidebar-w-collapsed: 80px;
+    --bottom-nav-h: 64px;
+    --breadcrumbs-h: 48px;
+    
+    /* Z-Index Layers */
+    --z-header: 1000;
+    --z-sidebar: 900;
+    --z-backdrop: 1050;
+    --z-drawer: 1100;
+    --z-modal: 1200;
+
     /* Gradientes corporativos */
     --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 95% 45%));
     --gradient-accent: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 55%));
@@ -115,6 +129,10 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
+  }
+
+  html, body {
+    @apply overflow-x-hidden;
   }
 
   body {

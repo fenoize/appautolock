@@ -29,12 +29,14 @@ import { Badge } from '@/components/ui/badge';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: stats } = useDashboardStats();
   const { can } = usePermissions();
+  const { isTablet } = useResponsiveLayout();
 
   const menuItems = [
     {
@@ -133,7 +135,14 @@ export function AppSidebar() {
     items?.some(item => location.pathname.startsWith(item.path));
 
   return (
-    <Sidebar>
+    <Sidebar
+      collapsible={isTablet ? "offcanvas" : "icon"}
+      style={{
+        top: 'var(--header-h)',
+        height: 'calc(100vh - var(--header-h))',
+        zIndex: 'var(--z-sidebar)'
+      } as any}
+    >
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Navegación</SidebarGroupLabel>

@@ -43,8 +43,11 @@ export function AppBreadcrumbs() {
   }
 
   return (
-    <div className="border-b bg-card">
-      <div className="h-12 px-6 flex items-center">
+    <div 
+      className="border-b bg-card sticky top-0 z-10"
+      style={{ height: 'var(--breadcrumbs-h)' }}
+    >
+      <div className="h-full px-6 flex items-center">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>

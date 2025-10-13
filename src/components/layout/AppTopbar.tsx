@@ -49,8 +49,14 @@ export function AppTopbar() {
     : session?.user?.email?.[0]?.toUpperCase() || 'U';
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card shadow-sm">
-      <div className="flex h-16 items-center px-4 gap-4">
+    <header 
+      className="fixed top-0 left-0 right-0 w-full border-b bg-card shadow-sm"
+      style={{ 
+        height: 'var(--header-h)', 
+        zIndex: 'var(--z-header)' 
+      }}
+    >
+      <div className="flex h-full items-center px-4 gap-4">
         <SidebarTrigger className="-ml-1" />
         
         <div className="flex items-center gap-2">

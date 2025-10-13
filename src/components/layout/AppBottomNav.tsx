@@ -31,8 +31,14 @@ export function AppBottomNav() {
   const isActive = (path: string) => location.pathname.startsWith(path);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card shadow-lg md:hidden">
-      <div className="flex items-center justify-around h-16">
+    <div 
+      className="fixed bottom-0 left-0 right-0 border-t bg-card shadow-lg md:hidden"
+      style={{ 
+        height: 'var(--bottom-nav-h)', 
+        zIndex: 'var(--z-header)' 
+      }}
+    >
+      <div className="flex items-center justify-around h-full">
         {mainItems.map((item) => (
           <button
             key={item.path}

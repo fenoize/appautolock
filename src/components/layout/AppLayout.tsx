@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, useSidebar } from '@/components/ui/sidebar';
 import { AppSidebar } from './AppSidebar';
 import { AppTopbar } from './AppTopbar';
 import { AppBreadcrumbs } from './AppBreadcrumbs';
@@ -10,22 +10,43 @@ interface AppLayoutProps {
   children: ReactNode;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
-  const { isMobile } = useResponsiveLayout();
+function AppLayoutContent({ children }: AppLayoutProps) {
+  const { isMobile, isTablet, isDesktop } = useResponsiveLayout();
+  const { state } = useSidebar();
+
+  const mainMarginLeft = isDesktop 
+    ? (state === 'collapsed' ? 'var(--sidebar-w-collapsed)' : 'var(--sidebar-w)')
+    : '0px';
+
+  const mainPaddingBottom = isMobile ? 'var(--bottom-nav-h)' : '0px';
 
   return (
+    <div className="min-h-screen bg-background">
+      <AppTopbar />
+      
+      {!isMobile && <AppSidebar />}
+      
+      <main 
+        className="min-h-screen overflow-y-auto transition-[margin] duration-200 ease-linear"
+        style={{
+          paddingTop: 'var(--header-h)',
+          marginLeft: mainMarginLeft,
+          paddingBottom: mainPaddingBottom
+        }}
+      >
+        <AppBreadcrumbs />
+        {children}
+      </main>
+      
+      {isMobile && <AppBottomNav />}
+    </div>
+  );
+}
+
+export function AppLayout({ children }: AppLayoutProps) {
+  return (
     <SidebarProvider>
-      <div className="min-h-screen flex flex-col bg-background">
-        <AppTopbar />
-        <div className="flex flex-1 overflow-hidden">
-          {!isMobile && <AppSidebar />}
-          <main className="flex-1 overflow-y-auto">
-            <AppBreadcrumbs />
-            {children}
-          </main>
-        </div>
-        {isMobile && <AppBottomNav />}
-      </div>
+      <AppLayoutContent>{children}</AppLayoutContent>
     </SidebarProvider>
   );
 }
