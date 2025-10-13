@@ -16,6 +16,11 @@ import VehicleDetail from "./pages/vehicles/VehicleDetail";
 import WOList from "./pages/workOrders/WOList";
 import NewWO from "./pages/workOrders/NewWO";
 import WODetail from "./pages/workOrders/WODetail";
+import SubscriptionList from "./pages/subscriptions/SubscriptionList";
+import SubscriptionDetail from "./pages/subscriptions/SubscriptionDetail";
+import NewSubscription from "./pages/subscriptions/NewSubscription";
+import SubscriptionPlans from "./pages/subscriptions/SubscriptionPlans";
+import SubscriptionReports from "./pages/subscriptions/SubscriptionReports";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +43,11 @@ const App = () => (
           <Route path="/work-orders" element={<WOList />} />
           <Route path="/work-orders/new" element={<NewWO />} />
           <Route path="/work-orders/:id" element={<WODetail />} />
+          <Route path="/subscriptions" element={<SubscriptionList />} />
+          <Route path="/subscriptions/new" element={<NewSubscription />} />
+          <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
+          <Route path="/subscriptions/plans" element={<SubscriptionPlans />} />
+          <Route path="/subscriptions/reports" element={<SubscriptionReports />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

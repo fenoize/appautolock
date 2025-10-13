@@ -379,6 +379,39 @@ export type Database = {
           },
         ]
       }
+      notification_templates: {
+        Row: {
+          activa: boolean | null
+          asunto: string | null
+          canal: Database["public"]["Enums"]["notification_channel"]
+          created_at: string | null
+          cuerpo: string
+          evento: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          activa?: boolean | null
+          asunto?: string | null
+          canal: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string | null
+          cuerpo: string
+          evento: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          activa?: boolean | null
+          asunto?: string | null
+          canal?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string | null
+          cuerpo?: string
+          evento?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           canal: Database["public"]["Enums"]["notification_channel"]
@@ -681,6 +714,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reminder_settings: {
+        Row: {
+          activo: boolean | null
+          canal_preferido:
+            | Database["public"]["Enums"]["notification_channel"]
+            | null
+          created_at: string | null
+          dias_previos: number
+          evento: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          activo?: boolean | null
+          canal_preferido?:
+            | Database["public"]["Enums"]["notification_channel"]
+            | null
+          created_at?: string | null
+          dias_previos: number
+          evento: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          activo?: boolean | null
+          canal_preferido?:
+            | Database["public"]["Enums"]["notification_channel"]
+            | null
+          created_at?: string | null
+          dias_previos?: number
+          evento?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       services: {
         Row: {
@@ -994,11 +1063,13 @@ export type Database = {
           created_at: string | null
           estado: Database["public"]["Enums"]["subscription_status"] | null
           fecha_inicio: string
+          fecha_ultima_notificacion: string | null
           fecha_vencimiento: string
           folio: string
           id: string
           notas: string | null
           plan_id: string
+          ultima_notificacion_enviada: string | null
           updated_at: string | null
           vehicle_id: string | null
         }
@@ -1007,11 +1078,13 @@ export type Database = {
           created_at?: string | null
           estado?: Database["public"]["Enums"]["subscription_status"] | null
           fecha_inicio: string
+          fecha_ultima_notificacion?: string | null
           fecha_vencimiento: string
           folio: string
           id?: string
           notas?: string | null
           plan_id: string
+          ultima_notificacion_enviada?: string | null
           updated_at?: string | null
           vehicle_id?: string | null
         }
@@ -1020,11 +1093,13 @@ export type Database = {
           created_at?: string | null
           estado?: Database["public"]["Enums"]["subscription_status"] | null
           fecha_inicio?: string
+          fecha_ultima_notificacion?: string | null
           fecha_vencimiento?: string
           folio?: string
           id?: string
           notas?: string | null
           plan_id?: string
+          ultima_notificacion_enviada?: string | null
           updated_at?: string | null
           vehicle_id?: string | null
         }
@@ -1527,6 +1602,14 @@ export type Database = {
       }
     }
     Functions: {
+      actualizar_estado_suscripciones: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cancelar_suscripcion: {
+        Args: { p_notas?: string; p_subscription_id: string }
+        Returns: undefined
+      }
       consumir_inventario_wo: {
         Args: { p_wo_id: string }
         Returns: undefined
@@ -1553,6 +1636,18 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      pausar_suscripcion: {
+        Args: { p_notas?: string; p_subscription_id: string }
+        Returns: undefined
+      }
+      reactivar_suscripcion: {
+        Args: { p_subscription_id: string }
+        Returns: undefined
+      }
+      renovar_suscripcion: {
+        Args: { p_subscription_id: string }
+        Returns: undefined
       }
       reservar_inventario_wo: {
         Args: { p_wo_id: string }
