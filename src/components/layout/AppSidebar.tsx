@@ -95,6 +95,14 @@ export function AppSidebar() {
       ]
     },
     {
+      title: 'Servicios',
+      icon: Briefcase,
+      show: can('view', 'services'),
+      items: [
+        { title: 'Catálogo', path: '/services' },
+      ]
+    },
+    {
       title: 'Inventario',
       icon: Package,
       badge: stats?.stock_critico,

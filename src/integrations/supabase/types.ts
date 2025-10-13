@@ -964,46 +964,137 @@ export type Database = {
           },
         ]
       }
+      service_checklist_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          obligatorio: boolean | null
+          orden: number
+          service_id: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          obligatorio?: boolean | null
+          orden?: number
+          service_id: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          obligatorio?: boolean | null
+          orden?: number
+          service_id?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_checklist_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_compat_rules: {
+        Row: {
+          anio_max: number | null
+          anio_min: number | null
+          combustible: Database["public"]["Enums"]["combustible_type"] | null
+          created_at: string | null
+          id: string
+          nota: string | null
+          service_id: string
+        }
+        Insert: {
+          anio_max?: number | null
+          anio_min?: number | null
+          combustible?: Database["public"]["Enums"]["combustible_type"] | null
+          created_at?: string | null
+          id?: string
+          nota?: string | null
+          service_id: string
+        }
+        Update: {
+          anio_max?: number | null
+          anio_min?: number | null
+          combustible?: Database["public"]["Enums"]["combustible_type"] | null
+          created_at?: string | null
+          id?: string
+          nota?: string | null
+          service_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_compat_rules_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           activo: boolean | null
+          branch_id: string | null
           created_at: string | null
           descripcion: string | null
           id: string
           nombre: string
           precio_base: number
           requiere_checklist: boolean | null
-          tiempo_estimado_minutos: number | null
+          solo_cotizable_externo: boolean | null
+          tiempo_estimado_minutos: number
           updated_at: string | null
+          version: number | null
         }
         Insert: {
           activo?: boolean | null
+          branch_id?: string | null
           created_at?: string | null
           descripcion?: string | null
           id?: string
           nombre: string
           precio_base: number
           requiere_checklist?: boolean | null
-          tiempo_estimado_minutos?: number | null
+          solo_cotizable_externo?: boolean | null
+          tiempo_estimado_minutos?: number
           updated_at?: string | null
+          version?: number | null
         }
         Update: {
           activo?: boolean | null
+          branch_id?: string | null
           created_at?: string | null
           descripcion?: string | null
           id?: string
           nombre?: string
           precio_base?: number
           requiere_checklist?: boolean | null
-          tiempo_estimado_minutos?: number | null
+          solo_cotizable_externo?: boolean | null
+          tiempo_estimado_minutos?: number
           updated_at?: string | null
+          version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "services_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services_products: {
         Row: {
           cantidad: number
           created_at: string | null
+          es_sustituible: boolean | null
           id: string
           product_id: string
           service_id: string
@@ -1011,6 +1102,7 @@ export type Database = {
         Insert: {
           cantidad?: number
           created_at?: string | null
+          es_sustituible?: boolean | null
           id?: string
           product_id: string
           service_id: string
@@ -1018,6 +1110,7 @@ export type Database = {
         Update: {
           cantidad?: number
           created_at?: string | null
+          es_sustituible?: boolean | null
           id?: string
           product_id?: string
           service_id?: string
@@ -2016,6 +2109,16 @@ export type Database = {
           },
         ]
       }
+      service_usage_stats: {
+        Row: {
+          ftf_pct: number | null
+          ots_periodo: number | null
+          reprogramadas: number | null
+          service_id: string | null
+          tiempo_promedio_real_min: number | null
+        }
+        Relationships: []
+      }
       stock_by_location: {
         Row: {
           branch_id: string | null
@@ -2134,6 +2237,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_service_compatible: {
+        Args: { p_service_id: string; p_vehicle_id: string }
+        Returns: boolean
+      }
       obtener_bitacora_auditoria: {
         Args: {
           p_accion?: string
@@ -2187,6 +2294,21 @@ export type Database = {
           ventas_totales: number
         }[]
       }
+      obtener_top_servicios: {
+        Args: {
+          p_branch_id?: string
+          p_fecha_desde: string
+          p_fecha_hasta: string
+          p_limit?: number
+          p_order_by?: string
+        }
+        Returns: {
+          cantidad: number
+          monto: number
+          nombre: string
+          service_id: string
+        }[]
+      }
       pausar_suscripcion: {
         Args: { p_notas?: string; p_subscription_id: string }
         Returns: undefined
@@ -2198,6 +2320,10 @@ export type Database = {
       realizar_respaldo_sistema: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      refresh_service_usage_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       refresh_stock_by_location: {
         Args: Record<PropertyKey, never>
@@ -2221,6 +2347,10 @@ export type Database = {
       }
       reservar_inventario_wo: {
         Args: { p_wo_id: string }
+        Returns: undefined
+      }
+      reservar_materiales_servicio: {
+        Args: { p_service_id: string; p_wo_id: string }
         Returns: undefined
       }
       search_clients: {
@@ -2261,6 +2391,12 @@ export type Database = {
       app_role: "admin" | "operador" | "tecnico" | "vendedor" | "cliente"
       client_status: "prospecto" | "activo" | "mora" | "suspendido"
       client_type: "empresa" | "persona"
+      combustible_type:
+        | "bencina"
+        | "diesel"
+        | "electrico"
+        | "hibrido"
+        | "cualquiera"
       invitation_status: "pendiente" | "aceptada" | "expirada"
       notification_channel: "email" | "sms" | "whatsapp"
       notification_status: "pendiente" | "enviado" | "fallido"
@@ -2421,6 +2557,13 @@ export const Constants = {
       app_role: ["admin", "operador", "tecnico", "vendedor", "cliente"],
       client_status: ["prospecto", "activo", "mora", "suspendido"],
       client_type: ["empresa", "persona"],
+      combustible_type: [
+        "bencina",
+        "diesel",
+        "electrico",
+        "hibrido",
+        "cualquiera",
+      ],
       invitation_status: ["pendiente", "aceptada", "expirada"],
       notification_channel: ["email", "sms", "whatsapp"],
       notification_status: ["pendiente", "enviado", "fallido"],

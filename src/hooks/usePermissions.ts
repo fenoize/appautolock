@@ -52,6 +52,12 @@ const PERMISSIONS: PermissionMatrix = {
     edit: ['admin', 'operador'],
     delete: ['admin']
   },
+  services: {
+    view: ['admin', 'operador', 'vendedor'],
+    create: ['admin', 'operador'],
+    edit: ['admin', 'operador'],
+    delete: ['admin']
+  },
   reports: {
     view: ['admin', 'operador'],
     export: ['admin']

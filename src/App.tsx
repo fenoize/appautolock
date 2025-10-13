@@ -49,6 +49,9 @@ import InviteUser from "./pages/admin/InviteUser";
 import QuotesList from "./pages/quotes/QuotesList";
 import NewQuote from "./pages/quotes/NewQuote";
 import QuoteDetail from "./pages/quotes/QuoteDetail";
+import ServicesList from "./pages/services/ServicesList";
+import NewService from "./pages/services/NewService";
+import ServiceDetail from "./pages/services/ServiceDetail";
 
 const queryClient = new QueryClient();
 
@@ -98,6 +101,11 @@ const App = () => (
           
           {/* Analytics */}
           <Route path="/analytics" element={<ProtectedRoute><AppLayout><AnalyticsDashboard /></AppLayout></ProtectedRoute>} />
+          
+          {/* Servicios */}
+          <Route path="/services" element={<ProtectedRoute><AppLayout><ServicesList /></AppLayout></ProtectedRoute>} />
+          <Route path="/services/new" element={<ProtectedRoute><AppLayout><NewService /></AppLayout></ProtectedRoute>} />
+          <Route path="/services/:id" element={<ProtectedRoute><AppLayout><ServiceDetail /></AppLayout></ProtectedRoute>} />
           
           {/* Admin - Usuarios */}
           <Route path="/admin/users" element={<ProtectedRoute><AppLayout><UsersList /></AppLayout></ProtectedRoute>} />
