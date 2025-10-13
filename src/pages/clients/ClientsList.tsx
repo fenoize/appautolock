@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,21 +6,42 @@ import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
+import { SkeletonTable } from '@/components/shared/SkeletonTable';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SearchBar } from '@/components/shared/SearchBar';
+import { ViewToggle } from '@/components/shared/ViewToggle';
+import { PaginationControls } from '@/components/shared/PaginationControls';
 import { ClientStatusBadge } from '@/components/clients/ClientStatusBadge';
+import { ClientsTable } from '@/components/clients/ClientsTable';
 import { useClients } from '@/hooks/useClients';
 import { ClientFilters } from '@/types/clients';
 import { cn } from '@/lib/utils';
 import { getStaggerStyle } from '@/lib/animations';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ClientsList() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<ClientFilters>({});
+  const [view, setView] = useState<'grid' | 'table'>('grid');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(30);
   
   const { data: clients, isLoading } = useClients({ ...filters, search });
+
+  const paginatedClients = useMemo(() => {
+    if (!clients) return [];
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return clients.slice(startIndex, endIndex);
+  }, [clients, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil((clients?.length || 0) / itemsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filters]);
 
   return (
     <PageContainer>
@@ -35,20 +56,49 @@ export default function ClientsList() {
         }
       />
 
-      {/* Search */}
-      <SearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Buscar por nombre, RUT, email o teléfono..."
-      />
-
-      {/* Clients Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <SkeletonCard key={i} />
-          ))}
+      {/* Search and View Controls */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Buscar por nombre, RUT, email o teléfono..."
+          className="flex-1 max-w-md"
+        />
+        
+        <div className="flex items-center gap-3">
+          <Select 
+            value={itemsPerPage.toString()} 
+            onValueChange={(v) => {
+              setItemsPerPage(parseInt(v));
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="15">15 por página</SelectItem>
+              <SelectItem value="30">30 por página</SelectItem>
+              <SelectItem value="50">50 por página</SelectItem>
+              <SelectItem value="100">100 por página</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <ViewToggle view={view} onViewChange={setView} />
         </div>
+      </div>
+
+      {/* Clients Content */}
+      {isLoading ? (
+        view === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : (
+          <SkeletonTable rows={8} columns={6} />
+        )
       ) : !clients || clients.length === 0 ? (
         <EmptyState
           icon={Users}
@@ -61,9 +111,9 @@ export default function ClientsList() {
             </Button>
           }
         />
-      ) : (
+      ) : view === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {clients.map((client, index) => (
+          {paginatedClients.map((client, index) => (
             <Card
               key={client.id}
               style={getStaggerStyle(index)}
@@ -76,7 +126,7 @@ export default function ClientsList() {
               <CardContent className="p-6">
                 <div className="flex items-start gap-3 mb-3">
                   <Avatar>
-                    <AvatarFallback className="bg-primary/10 text-primary">
+                    <AvatarFallback className="bg-primary-soft text-primary">
                       {(client.razon_social || client.nombre_comercial)?.[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -111,6 +161,25 @@ export default function ClientsList() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      ) : (
+        <ClientsTable clients={paginatedClients} />
+      )}
+
+      {/* Pagination */}
+      {clients && clients.length > itemsPerPage && (
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-6">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {((currentPage - 1) * itemsPerPage) + 1} a{' '}
+            {Math.min(currentPage * itemsPerPage, clients.length)} de{' '}
+            {clients.length} clientes
+          </p>
+          
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
     </PageContainer>
