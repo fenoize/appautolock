@@ -1185,6 +1185,38 @@ export type Database = {
           },
         ]
       }
+      wo_checklist_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          items: Json
+          service_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          items: Json
+          service_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          items?: Json
+          service_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wo_checklist_templates_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wo_items: {
         Row: {
           cantidad: number
@@ -1226,17 +1258,105 @@ export type Database = {
           },
         ]
       }
+      wo_substitutions: {
+        Row: {
+          autorizado_por: string | null
+          cantidad: number
+          created_at: string | null
+          id: string
+          producto_original_id: string
+          producto_sustituto_id: string
+          razon: string | null
+          wo_id: string
+        }
+        Insert: {
+          autorizado_por?: string | null
+          cantidad: number
+          created_at?: string | null
+          id?: string
+          producto_original_id: string
+          producto_sustituto_id: string
+          razon?: string | null
+          wo_id: string
+        }
+        Update: {
+          autorizado_por?: string | null
+          cantidad?: number
+          created_at?: string | null
+          id?: string
+          producto_original_id?: string
+          producto_sustituto_id?: string
+          razon?: string | null
+          wo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wo_substitutions_autorizado_por_fkey"
+            columns: ["autorizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_producto_original_id_fkey"
+            columns: ["producto_original_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_producto_original_id_fkey"
+            columns: ["producto_original_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_producto_sustituto_id_fkey"
+            columns: ["producto_sustituto_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_producto_sustituto_id_fkey"
+            columns: ["producto_sustituto_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_wo_id_fkey"
+            columns: ["wo_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_orders: {
         Row: {
           branch_id: string
+          checklist_data: Json | null
           client_id: string
           created_at: string | null
           direccion_id: string | null
+          duracion_minutos: number | null
           estado: Database["public"]["Enums"]["wo_status"] | null
+          evidencias_urls: string[] | null
+          fecha_fin_real: string | null
+          fecha_inicio_real: string | null
           fecha_programada: string | null
+          firma_nombre: string | null
+          firma_url: string | null
           folio: string
           id: string
+          inventario_consumido: boolean | null
+          inventario_reservado: boolean | null
           notas: string | null
+          observaciones_cierre: string | null
+          pdf_informe_url: string | null
+          quote_id: string | null
           tecnico_id: string | null
           ubicacion_manual: string | null
           updated_at: string | null
@@ -1246,14 +1366,26 @@ export type Database = {
         }
         Insert: {
           branch_id: string
+          checklist_data?: Json | null
           client_id: string
           created_at?: string | null
           direccion_id?: string | null
+          duracion_minutos?: number | null
           estado?: Database["public"]["Enums"]["wo_status"] | null
+          evidencias_urls?: string[] | null
+          fecha_fin_real?: string | null
+          fecha_inicio_real?: string | null
           fecha_programada?: string | null
+          firma_nombre?: string | null
+          firma_url?: string | null
           folio: string
           id?: string
+          inventario_consumido?: boolean | null
+          inventario_reservado?: boolean | null
           notas?: string | null
+          observaciones_cierre?: string | null
+          pdf_informe_url?: string | null
+          quote_id?: string | null
           tecnico_id?: string | null
           ubicacion_manual?: string | null
           updated_at?: string | null
@@ -1263,14 +1395,26 @@ export type Database = {
         }
         Update: {
           branch_id?: string
+          checklist_data?: Json | null
           client_id?: string
           created_at?: string | null
           direccion_id?: string | null
+          duracion_minutos?: number | null
           estado?: Database["public"]["Enums"]["wo_status"] | null
+          evidencias_urls?: string[] | null
+          fecha_fin_real?: string | null
+          fecha_inicio_real?: string | null
           fecha_programada?: string | null
+          firma_nombre?: string | null
+          firma_url?: string | null
           folio?: string
           id?: string
+          inventario_consumido?: boolean | null
+          inventario_reservado?: boolean | null
           notas?: string | null
+          observaciones_cierre?: string | null
+          pdf_informe_url?: string | null
+          quote_id?: string | null
           tecnico_id?: string | null
           ubicacion_manual?: string | null
           updated_at?: string | null
@@ -1298,6 +1442,13 @@ export type Database = {
             columns: ["direccion_id"]
             isOneToOne: false
             referencedRelation: "client_addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
           {
@@ -1376,6 +1527,10 @@ export type Database = {
       }
     }
     Functions: {
+      consumir_inventario_wo: {
+        Args: { p_wo_id: string }
+        Returns: undefined
+      }
       expirar_cotizaciones_vencidas: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1398,6 +1553,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      reservar_inventario_wo: {
+        Args: { p_wo_id: string }
+        Returns: undefined
       }
       search_clients: {
         Args: { search_term: string }
@@ -1442,6 +1601,10 @@ export type Database = {
         | "en_proceso"
         | "completada"
         | "cancelada"
+        | "pendiente"
+        | "asignada"
+        | "pausada"
+        | "reprogramada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1598,6 +1761,10 @@ export const Constants = {
         "en_proceso",
         "completada",
         "cancelada",
+        "pendiente",
+        "asignada",
+        "pausada",
+        "reprogramada",
       ],
     },
   },
