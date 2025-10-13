@@ -31,6 +31,7 @@ import PlanDetail from "./pages/subscriptions/PlanDetail";
 import ProductsList from "./pages/inventory/ProductsList";
 import ProductDetail from "./pages/inventory/ProductDetail";
 import NewProduct from "./pages/inventory/NewProduct";
+import EditProduct from "./pages/inventory/EditProduct";
 import InventoryReports from "./pages/inventory/InventoryReports";
 import StockAlerts from "./pages/inventory/StockAlerts";
 import AnalyticsDashboard from "./pages/analytics/AnalyticsDashboard";
@@ -96,6 +97,7 @@ const App = () => (
           <Route path="/inventory" element={<ProtectedRoute><AppLayout><ProductsList /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/products/new" element={<ProtectedRoute><AppLayout><NewProduct /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/products/:id" element={<ProtectedRoute><AppLayout><ProductDetail /></AppLayout></ProtectedRoute>} />
+          <Route path="/inventory/products/:id/edit" element={<ProtectedRoute><AppLayout><EditProduct /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/reports" element={<ProtectedRoute><AppLayout><InventoryReports /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/alerts" element={<ProtectedRoute><AppLayout><StockAlerts /></AppLayout></ProtectedRoute>} />
           

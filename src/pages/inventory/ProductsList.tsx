@@ -3,18 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { useProducts } from '@/hooks/useProducts';
 import { InventoryFilters } from '@/types/inventory';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { StockBadge } from '@/components/inventory/StockBadge';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SearchBar } from '@/components/shared/SearchBar';
-import { Plus, Package, Search } from 'lucide-react';
+import { ViewToggle } from '@/components/shared/ViewToggle';
+import { ProductsTable } from '@/components/inventory/ProductsTable';
+import { Plus, Grid, List } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 export default function ProductsList() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<InventoryFilters>({});
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
   const { data: products, isLoading } = useProducts(filters);
 
   return (
@@ -30,11 +31,14 @@ export default function ProductsList() {
         }
       />
 
-      <SearchBar
-        value={filters.search || ''}
-        onChange={(value) => setFilters({ ...filters, search: value })}
-        placeholder="Buscar por SKU o nombre..."
-      />
+      <div className="flex gap-4 items-center">
+        <SearchBar
+          value={filters.search || ''}
+          onChange={(value) => setFilters({ ...filters, search: value })}
+          placeholder="Buscar por SKU o nombre..."
+        />
+        <ViewToggle view={viewMode} onViewChange={setViewMode} />
+      </div>
 
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">
@@ -47,6 +51,8 @@ export default function ProductsList() {
             Crear primer producto
           </Button>
         </div>
+      ) : viewMode === 'table' ? (
+        <ProductsTable products={products} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {products.map((product) => (
@@ -57,23 +63,27 @@ export default function ProductsList() {
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-5 w-5" />
+                  <div>
                     <CardTitle className="text-lg">{product.nombre}</CardTitle>
+                    <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
                   </div>
+                  {product.activo ? (
+                    <Badge className="bg-green-500">Activo</Badge>
+                  ) : (
+                    <Badge variant="destructive">Inactivo</Badge>
+                  )}
                 </div>
-                <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Precio Venta:</span>
-                    <span className="font-semibold">${product.precio_venta.toLocaleString()}</span>
+                    <span className="font-semibold">${product.precio_venta.toLocaleString('es-CL')}</span>
                   </div>
-                  {product.precio_costo !== undefined && (
+                  {product.precio_costo && (
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Precio Costo:</span>
-                      <span className="font-semibold">${product.precio_costo.toLocaleString()}</span>
+                      <span className="font-semibold">${product.precio_costo.toLocaleString('es-CL')}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center">
@@ -82,7 +92,7 @@ export default function ProductsList() {
                   </div>
                   {product.serializable && (
                     <div className="pt-2">
-                      <Badge>Serializable</Badge>
+                      <Badge variant="outline">Serializable</Badge>
                     </div>
                   )}
                 </div>

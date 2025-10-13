@@ -3,8 +3,10 @@ import { useProduct } from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Package } from 'lucide-react';
+import { ArrowLeft, Edit, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { PageContainer } from '@/components/shared/PageContainer';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -15,27 +17,29 @@ export default function ProductDetail() {
   if (!product) return <div>Producto no encontrado</div>;
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/inventory')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <Package className="h-8 w-8" />
-            <div>
-              <h1 className="text-3xl font-bold">{product.nombre}</h1>
-              <p className="text-muted-foreground">SKU: {product.sku}</p>
-            </div>
+    <PageContainer>
+      <PageHeader
+        title={product.nombre}
+        description={`SKU: ${product.sku}`}
+        action={
+          <div className="flex gap-2 items-center">
+            {product.serializable && <Badge variant="outline">Serializable</Badge>}
+            {product.activo ? (
+              <Badge className="bg-green-500">Activo</Badge>
+            ) : (
+              <Badge variant="destructive">Inactivo</Badge>
+            )}
+            <Button variant="outline" onClick={() => navigate('/inventory')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver
+            </Button>
+            <Button onClick={() => navigate(`/inventory/products/${product.id}/edit`)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
           </div>
-        </div>
-        {product.serializable && <Badge>Serializable</Badge>}
-        {product.activo ? (
-          <Badge className="bg-green-500">Activo</Badge>
-        ) : (
-          <Badge variant="destructive">Inactivo</Badge>
-        )}
-      </div>
+        }
+      />
 
       <Tabs defaultValue="info">
         <TabsList>
@@ -128,6 +132,6 @@ export default function ProductDetail() {
           </TabsContent>
         )}
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }
