@@ -1284,6 +1284,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      search_clients: {
+        Args: { search_term: string }
+        Returns: {
+          client_id: string
+          relevance: number
+        }[]
+      }
+      search_vehicles: {
+        Args: { search_term: string }
+        Returns: {
+          relevance: number
+          vehicle_id: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "operador" | "tecnico" | "vendedor" | "cliente"
