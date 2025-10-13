@@ -2046,6 +2046,33 @@ export type Database = {
         }
         Returns: Json
       }
+      calcular_productividad_tecnicos: {
+        Args: {
+          p_branch_id?: string
+          p_fecha_desde: string
+          p_fecha_hasta: string
+        }
+        Returns: {
+          branch_nombre: string
+          eficiencia: number
+          nombre_completo: string
+          ots_completadas: number
+          ots_totales: number
+          tecnico_id: string
+          tiempo_promedio_minutos: number
+        }[]
+      }
+      calcular_rotacion_inventario: {
+        Args: { p_fecha_desde: string; p_fecha_hasta: string }
+        Returns: {
+          consumos: number
+          nombre: string
+          product_id: string
+          rotacion: number
+          sku: string
+          stock_promedio: number
+        }[]
+      }
       calcular_stock_producto: {
         Args: { p_location_id: string; p_product_id: string }
         Returns: number
@@ -2095,6 +2122,22 @@ export type Database = {
           total_cotizaciones: number
           total_ventas: number
           vendedor_id: string
+        }[]
+      }
+      obtener_top_productos_servicios: {
+        Args: {
+          p_branch_id?: string
+          p_fecha_desde: string
+          p_fecha_hasta: string
+          p_limit?: number
+        }
+        Returns: {
+          cantidad_total: number
+          item_tipo: string
+          nombre: string
+          ref_id: string
+          veces_vendido: number
+          ventas_totales: number
         }[]
       }
       pausar_suscripcion: {

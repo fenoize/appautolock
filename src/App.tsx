@@ -26,6 +26,7 @@ import ProductDetail from "./pages/inventory/ProductDetail";
 import NewProduct from "./pages/inventory/NewProduct";
 import InventoryReports from "./pages/inventory/InventoryReports";
 import StockAlerts from "./pages/inventory/StockAlerts";
+import AnalyticsDashboard from "./pages/analytics/AnalyticsDashboard";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,9 @@ const App = () => (
           <Route path="/inventory/products/:id" element={<ProductDetail />} />
           <Route path="/inventory/reports" element={<InventoryReports />} />
           <Route path="/inventory/alerts" element={<StockAlerts />} />
+          
+          {/* Analytics */}
+          <Route path="/analytics" element={<AnalyticsDashboard />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>

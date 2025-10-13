@@ -41,6 +41,7 @@ const Dashboard = () => {
     { title: "Órdenes de Trabajo", description: "OTs programadas", icon: Wrench, count: 0, link: "/work-orders" },
     { title: "Suscripciones GPS", description: "Rastreo vehicular", icon: Radio, count: 0, link: "/subscriptions" },
     { title: "Inventario", description: "Productos y stock", icon: Package, count: 0, link: "/inventory" },
+    { title: "Reportes", description: "KPIs y métricas", icon: BarChart3, count: 0, link: "/analytics" },
   ];
 
   return (
