@@ -1,10 +1,19 @@
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, Wrench, Users, DollarSign, AlertTriangle, Package } from 'lucide-react';
+import { FileText, Wrench, Users, AlertTriangle, Package } from 'lucide-react';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { KPICard } from '@/components/dashboard/KPICard';
-import { Button } from '@/components/ui/button';
+import { DashboardFilters } from '@/components/dashboard/DashboardFilters';
+import { IngresoEstimadoCard } from '@/components/dashboard/IngresoEstimadoCard';
+import { VendedorRankingTable } from '@/components/dashboard/VendedorRankingTable';
+import { TecnicoRankingTable } from '@/components/dashboard/TecnicoRankingTable';
+import { SLACard } from '@/components/dashboard/SLACard';
+import { OTMapView } from '@/components/dashboard/OTMapView';
+import { TopItemsTable } from '@/components/dashboard/TopItemsTable';
+import { StockAlertsTable } from '@/components/dashboard/StockAlertsTable';
+import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { useDashboardStats, useProximasOTs } from '@/hooks/useDashboardStats';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -12,65 +21,81 @@ import { es } from 'date-fns/locale';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { data: stats, isLoading } = useDashboardStats();
+  const { filters } = useDashboardFilters();
+  const { data: stats } = useDashboardStats();
   const { data: proximasOTs } = useProximasOTs(5);
+  const { hasRole, hasAnyRole } = usePermissions();
+  
+  // Role-aware: definir qué componentes mostrar
+  const isVendedor = hasRole('vendedor');
+  const isTecnico = hasRole('tecnico');
+  const canViewInventory = hasAnyRole(['admin', 'operador']);
+  const canViewQuotes = hasAnyRole(['admin', 'operador', 'vendedor']);
 
   return (
     <PageContainer>
       <PageHeader
         title="Escritorio"
         description="Resumen de actividad y métricas clave"
-        action={
-          <div className="flex gap-2">
-            <Button onClick={() => navigate('/quotes/new')} variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
-              Nueva Cotización
-            </Button>
-            <Button onClick={() => navigate('/work-orders/new')}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva OT
-            </Button>
-          </div>
-        }
       />
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <KPICard
-          title="Cotizaciones Abiertas"
-          value={stats?.cotizaciones_abiertas || 0}
-          icon={FileText}
-          color="blue"
-          onClick={() => navigate('/quotes')}
-        />
-        <KPICard
-          title="OTs Hoy"
-          value={stats?.ots_hoy || 0}
-          icon={Wrench}
-          color="orange"
-          onClick={() => navigate('/work-orders')}
-        />
-        <KPICard
-          title="Suscripciones Vencen 7d"
-          value={stats?.subscripciones_vencen || 0}
-          urgent={stats?.subscripciones_vencen && stats.subscripciones_vencen > 5}
-          icon={AlertTriangle}
-          color="red"
-          onClick={() => navigate('/subscriptions')}
-        />
-        <KPICard
-          title="Stock Crítico"
-          value={stats?.stock_critico || 0}
-          urgent={stats?.stock_critico && stats.stock_critico > 0}
-          icon={Package}
-          color="yellow"
-          onClick={() => navigate('/inventory/alerts')}
-        />
+      <DashboardFilters />
+
+      {/* Fila 1: KPIs (5 columnas en desktop) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+        {!isVendedor && (
+          <KPICard
+            title="Cotizaciones Abiertas"
+            value={stats?.cotizaciones_abiertas || 0}
+            icon={FileText}
+            color="blue"
+            onClick={() => navigate('/quotes')}
+          />
+        )}
+        {!isVendedor && (
+          <KPICard
+            title="OTs Hoy"
+            value={stats?.ots_hoy || 0}
+            icon={Wrench}
+            color="orange"
+            onClick={() => navigate('/work-orders')}
+          />
+        )}
+        {canViewQuotes && (
+          <KPICard
+            title="Nuevos Clientes"
+            value={0}
+            icon={Users}
+            color="green"
+            onClick={() => navigate('/clients')}
+          />
+        )}
+        {canViewInventory && (
+          <KPICard
+            title="Suscripciones Vencen 7d"
+            value={stats?.subscripciones_vencen || 0}
+            urgent={stats?.subscripciones_vencen && stats.subscripciones_vencen > 5}
+            icon={AlertTriangle}
+            color="red"
+            onClick={() => navigate('/subscriptions')}
+          />
+        )}
+        {canViewInventory && (
+          <KPICard
+            title="Stock Crítico"
+            value={stats?.stock_critico || 0}
+            urgent={stats?.stock_critico && stats.stock_critico > 0}
+            icon={Package}
+            color="yellow"
+            onClick={() => navigate('/inventory/alerts')}
+          />
+        )}
+        {canViewQuotes && <IngresoEstimadoCard />}
       </div>
 
-      {/* Próximas OTs */}
+      {/* Fila 2: Próximas OTs */}
       {proximasOTs && proximasOTs.length > 0 && (
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>Próximas Órdenes de Trabajo</CardTitle>
           </CardHeader>
@@ -106,43 +131,26 @@ const Dashboard = () => {
         </Card>
       )}
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/clients/new')}>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="font-medium">Nuevo Cliente</p>
-              <p className="text-sm text-muted-foreground">Agregar cliente a la cartera</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Fila 3: Rankings */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {canViewQuotes && <VendedorRankingTable />}
+        {!isVendedor && <TecnicoRankingTable />}
+      </div>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/vehicles/new')}>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
-              <Package className="h-6 w-6 text-accent" />
-            </div>
-            <div>
-              <p className="font-medium">Nuevo Vehículo</p>
-              <p className="text-sm text-muted-foreground">Registrar vehículo</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Fila 4: SLA + Mapa */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {!isVendedor && <SLACard />}
+        {!isVendedor && <OTMapView />}
+      </div>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/analytics')}>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="h-12 w-12 rounded-full bg-warning/10 flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-warning" />
-            </div>
-            <div>
-              <p className="font-medium">Ver Reportes</p>
-              <p className="text-sm text-muted-foreground">Análisis y métricas</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Fila 5: Alertas (Subs y Stock) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {canViewInventory && <StockAlertsTable />}
+      </div>
+
+      {/* Fila 6: Top Items */}
+      <div className="mb-6">
+        {canViewInventory && <TopItemsTable />}
       </div>
     </PageContainer>
   );

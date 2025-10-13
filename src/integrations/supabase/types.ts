@@ -1795,6 +1795,8 @@ export type Database = {
           pdf_informe_url: string | null
           quote_id: string | null
           tecnico_id: string | null
+          ubicacion_lat: number | null
+          ubicacion_lng: number | null
           ubicacion_manual: string | null
           updated_at: string | null
           vehicle_id: string | null
@@ -1824,6 +1826,8 @@ export type Database = {
           pdf_informe_url?: string | null
           quote_id?: string | null
           tecnico_id?: string | null
+          ubicacion_lat?: number | null
+          ubicacion_lng?: number | null
           ubicacion_manual?: string | null
           updated_at?: string | null
           vehicle_id?: string | null
@@ -1853,6 +1857,8 @@ export type Database = {
           pdf_informe_url?: string | null
           quote_id?: string | null
           tecnico_id?: string | null
+          ubicacion_lat?: number | null
+          ubicacion_lng?: number | null
           ubicacion_manual?: string | null
           updated_at?: string | null
           vehicle_id?: string | null
