@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, BarChart3, FileText, Bell, LogOut, Users, Building, Car, Wrench, Radio, Package } from "lucide-react";
+import { Calendar, BarChart3, FileText, Bell, LogOut, Users, Building, Car, Wrench, Radio, Package, Settings } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -42,6 +42,7 @@ const Dashboard = () => {
     { title: "Suscripciones GPS", description: "Rastreo vehicular", icon: Radio, count: 0, link: "/subscriptions" },
     { title: "Inventario", description: "Productos y stock", icon: Package, count: 0, link: "/inventory" },
     { title: "Reportes", description: "KPIs y métricas", icon: BarChart3, count: 0, link: "/analytics" },
+    { title: "Configuración", description: "Sistema y empresa", icon: Settings, count: 0, link: "/settings" },
   ];
 
   return (

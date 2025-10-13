@@ -27,6 +27,15 @@ import NewProduct from "./pages/inventory/NewProduct";
 import InventoryReports from "./pages/inventory/InventoryReports";
 import StockAlerts from "./pages/inventory/StockAlerts";
 import AnalyticsDashboard from "./pages/analytics/AnalyticsDashboard";
+import SettingsLayout from "./pages/settings/SettingsLayout";
+import GeneralSettings from "./pages/settings/GeneralSettings";
+import CompanySettings from "./pages/settings/CompanySettings";
+import NumeradoresSettings from "./pages/settings/NumeradoresSettings";
+import NotificationsSettings from "./pages/settings/NotificationsSettings";
+import PDFSettings from "./pages/settings/PDFSettings";
+import IntegrationsSettings from "./pages/settings/IntegrationsSettings";
+import BackupsSettings from "./pages/settings/BackupsSettings";
+import AuditSettings from "./pages/settings/AuditSettings";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +73,18 @@ const App = () => (
           
           {/* Analytics */}
           <Route path="/analytics" element={<AnalyticsDashboard />} />
+          
+          {/* Settings */}
+          <Route path="/settings" element={<SettingsLayout />}>
+            <Route index element={<GeneralSettings />} />
+            <Route path="company" element={<CompanySettings />} />
+            <Route path="numeradores" element={<NumeradoresSettings />} />
+            <Route path="notifications" element={<NotificationsSettings />} />
+            <Route path="pdfs" element={<PDFSettings />} />
+            <Route path="integrations" element={<IntegrationsSettings />} />
+            <Route path="backups" element={<BackupsSettings />} />
+            <Route path="audit" element={<AuditSettings />} />
+          </Route>
           
           <Route path="*" element={<NotFound />} />
         </Routes>

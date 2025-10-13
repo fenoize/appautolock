@@ -2108,6 +2108,27 @@ export type Database = {
         }
         Returns: boolean
       }
+      obtener_bitacora_auditoria: {
+        Args: {
+          p_accion?: string
+          p_fecha_desde: string
+          p_fecha_hasta: string
+          p_limit?: number
+          p_tabla?: string
+          p_user_id?: string
+        }
+        Returns: {
+          accion: string
+          datos_anteriores: Json
+          datos_nuevos: Json
+          fecha_hora: string
+          id: string
+          registro_id: string
+          tabla: string
+          user_id: string
+          user_nombre: string
+        }[]
+      }
       obtener_ranking_vendedores: {
         Args: {
           p_branch_id?: string
@@ -2147,6 +2168,10 @@ export type Database = {
       reactivar_suscripcion: {
         Args: { p_subscription_id: string }
         Returns: undefined
+      }
+      realizar_respaldo_sistema: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       refresh_stock_by_location: {
         Args: Record<PropertyKey, never>
