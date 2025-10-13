@@ -46,6 +46,9 @@ import AuditSettings from "./pages/settings/AuditSettings";
 import UsersList from "./pages/admin/UsersList";
 import UserDetail from "./pages/admin/UserDetail";
 import InviteUser from "./pages/admin/InviteUser";
+import QuotesList from "./pages/quotes/QuotesList";
+import NewQuote from "./pages/quotes/NewQuote";
+import QuoteDetail from "./pages/quotes/QuoteDetail";
 
 const queryClient = new QueryClient();
 
@@ -80,6 +83,11 @@ const App = () => (
           <Route path="/subscriptions/plans/new" element={<ProtectedRoute><AppLayout><NewPlan /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/plans/:id" element={<ProtectedRoute><AppLayout><PlanDetail /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/reports" element={<ProtectedRoute><AppLayout><SubscriptionReports /></AppLayout></ProtectedRoute>} />
+          
+          {/* Cotizaciones */}
+          <Route path="/quotes" element={<ProtectedRoute><AppLayout><QuotesList /></AppLayout></ProtectedRoute>} />
+          <Route path="/quotes/new" element={<ProtectedRoute><AppLayout><NewQuote /></AppLayout></ProtectedRoute>} />
+          <Route path="/quotes/:id" element={<ProtectedRoute><AppLayout><QuoteDetail /></AppLayout></ProtectedRoute>} />
           
           {/* Inventario */}
           <Route path="/inventory" element={<ProtectedRoute><AppLayout><ProductsList /></AppLayout></ProtectedRoute>} />
