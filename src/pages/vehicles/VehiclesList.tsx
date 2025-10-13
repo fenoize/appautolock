@@ -6,13 +6,23 @@ import { Card, CardContent } from '@/components/ui/card';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { ViewToggle } from '@/components/shared/ViewToggle';
+import { VehiclesTable } from '@/components/vehicles/VehiclesTable';
 import { useVehicles } from '@/hooks/useVehicles';
 
 export default function VehiclesList() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(() => {
+    return (localStorage.getItem('vehiclesViewMode') as 'grid' | 'table') || 'grid';
+  });
   
   const { data: vehicles, isLoading } = useVehicles({ search });
+
+  const handleViewChange = (view: 'grid' | 'table') => {
+    setViewMode(view);
+    localStorage.setItem('vehiclesViewMode', view);
+  };
 
   return (
     <PageContainer>
@@ -20,10 +30,13 @@ export default function VehiclesList() {
         title="Vehículos"
         description="Gestiona el parque vehicular"
         action={
-          <Button onClick={() => navigate('/vehicles/new')}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Vehículo
-          </Button>
+          <div className="flex gap-2">
+            <ViewToggle view={viewMode} onViewChange={handleViewChange} />
+            <Button onClick={() => navigate('/vehicles/new')}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Vehículo
+            </Button>
+          </div>
         }
       />
 
@@ -44,7 +57,7 @@ export default function VehiclesList() {
             Registrar primer vehículo
           </Button>
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {vehicles.map((vehicle: any) => (
             <Card
@@ -96,6 +109,8 @@ export default function VehiclesList() {
             </Card>
           ))}
         </div>
+      ) : (
+        <VehiclesTable vehicles={vehicles} />
       )}
     </PageContainer>
   );
