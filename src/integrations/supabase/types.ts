@@ -518,6 +518,44 @@ export type Database = {
           },
         ]
       }
+      quote_approval_tokens: {
+        Row: {
+          created_at: string | null
+          expira_at: string
+          id: string
+          quote_id: string
+          token: string
+          usado: boolean | null
+          usado_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expira_at?: string
+          id?: string
+          quote_id: string
+          token: string
+          usado?: boolean | null
+          usado_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expira_at?: string
+          id?: string
+          quote_id?: string
+          token?: string
+          usado?: boolean | null
+          usado_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_approval_tokens_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_items: {
         Row: {
           cantidad: number
@@ -711,6 +749,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "services_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "services_products_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
@@ -837,6 +882,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_moves_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
             referencedColumns: ["id"]
           },
           {
@@ -1266,11 +1318,74 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      products_public: {
+        Row: {
+          activo: boolean | null
+          aplica_iva: boolean | null
+          created_at: string | null
+          id: string | null
+          nombre: string | null
+          precio_venta: number | null
+          serializable: boolean | null
+          sku: string | null
+          stock_minimo: number | null
+          supplier_id: string | null
+          tipo: string | null
+          unidad_medida: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          activo?: boolean | null
+          aplica_iva?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          nombre?: string | null
+          precio_venta?: number | null
+          serializable?: boolean | null
+          sku?: string | null
+          stock_minimo?: number | null
+          supplier_id?: string | null
+          tipo?: string | null
+          unidad_medida?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          activo?: boolean | null
+          aplica_iva?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          nombre?: string | null
+          precio_venta?: number | null
+          serializable?: boolean | null
+          sku?: string | null
+          stock_minimo?: number | null
+          supplier_id?: string | null
+          tipo?: string | null
+          unidad_medida?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      expirar_cotizaciones_vencidas: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generar_folio: {
         Args: { prefijo: string }
+        Returns: string
+      }
+      generar_token_aprobacion: {
+        Args: { quote_id_param: string }
         Returns: string
       }
       get_user_branch: {
