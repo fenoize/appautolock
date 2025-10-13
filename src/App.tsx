@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -56,35 +57,35 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
           
-          {/* Rutas protegidas */}
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/clients" element={<ProtectedRoute><ClientsList /></ProtectedRoute>} />
-          <Route path="/clients/new" element={<ProtectedRoute><NewClient /></ProtectedRoute>} />
-          <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
-          <Route path="/vehicles" element={<ProtectedRoute><VehiclesList /></ProtectedRoute>} />
-          <Route path="/vehicles/new" element={<ProtectedRoute><NewVehicle /></ProtectedRoute>} />
-          <Route path="/vehicles/:id" element={<ProtectedRoute><VehicleDetail /></ProtectedRoute>} />
-          <Route path="/work-orders" element={<ProtectedRoute><WOList /></ProtectedRoute>} />
-          <Route path="/work-orders/new" element={<ProtectedRoute><NewWO /></ProtectedRoute>} />
-          <Route path="/work-orders/:id" element={<ProtectedRoute><WODetail /></ProtectedRoute>} />
-          <Route path="/subscriptions" element={<ProtectedRoute><SubscriptionList /></ProtectedRoute>} />
-          <Route path="/subscriptions/new" element={<ProtectedRoute><NewSubscription /></ProtectedRoute>} />
-          <Route path="/subscriptions/:id" element={<ProtectedRoute><SubscriptionDetail /></ProtectedRoute>} />
-          <Route path="/subscriptions/plans" element={<ProtectedRoute><SubscriptionPlans /></ProtectedRoute>} />
-          <Route path="/subscriptions/reports" element={<ProtectedRoute><SubscriptionReports /></ProtectedRoute>} />
+          {/* Rutas protegidas con Layout */}
+          <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
+          <Route path="/clients" element={<ProtectedRoute><AppLayout><ClientsList /></AppLayout></ProtectedRoute>} />
+          <Route path="/clients/new" element={<ProtectedRoute><AppLayout><NewClient /></AppLayout></ProtectedRoute>} />
+          <Route path="/clients/:id" element={<ProtectedRoute><AppLayout><ClientDetail /></AppLayout></ProtectedRoute>} />
+          <Route path="/vehicles" element={<ProtectedRoute><AppLayout><VehiclesList /></AppLayout></ProtectedRoute>} />
+          <Route path="/vehicles/new" element={<ProtectedRoute><AppLayout><NewVehicle /></AppLayout></ProtectedRoute>} />
+          <Route path="/vehicles/:id" element={<ProtectedRoute><AppLayout><VehicleDetail /></AppLayout></ProtectedRoute>} />
+          <Route path="/work-orders" element={<ProtectedRoute><AppLayout><WOList /></AppLayout></ProtectedRoute>} />
+          <Route path="/work-orders/new" element={<ProtectedRoute><AppLayout><NewWO /></AppLayout></ProtectedRoute>} />
+          <Route path="/work-orders/:id" element={<ProtectedRoute><AppLayout><WODetail /></AppLayout></ProtectedRoute>} />
+          <Route path="/subscriptions" element={<ProtectedRoute><AppLayout><SubscriptionList /></AppLayout></ProtectedRoute>} />
+          <Route path="/subscriptions/new" element={<ProtectedRoute><AppLayout><NewSubscription /></AppLayout></ProtectedRoute>} />
+          <Route path="/subscriptions/:id" element={<ProtectedRoute><AppLayout><SubscriptionDetail /></AppLayout></ProtectedRoute>} />
+          <Route path="/subscriptions/plans" element={<ProtectedRoute><AppLayout><SubscriptionPlans /></AppLayout></ProtectedRoute>} />
+          <Route path="/subscriptions/reports" element={<ProtectedRoute><AppLayout><SubscriptionReports /></AppLayout></ProtectedRoute>} />
           
           {/* Inventario */}
-          <Route path="/inventory" element={<ProtectedRoute><ProductsList /></ProtectedRoute>} />
-          <Route path="/inventory/products/new" element={<ProtectedRoute><NewProduct /></ProtectedRoute>} />
-          <Route path="/inventory/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
-          <Route path="/inventory/reports" element={<ProtectedRoute><InventoryReports /></ProtectedRoute>} />
-          <Route path="/inventory/alerts" element={<ProtectedRoute><StockAlerts /></ProtectedRoute>} />
+          <Route path="/inventory" element={<ProtectedRoute><AppLayout><ProductsList /></AppLayout></ProtectedRoute>} />
+          <Route path="/inventory/products/new" element={<ProtectedRoute><AppLayout><NewProduct /></AppLayout></ProtectedRoute>} />
+          <Route path="/inventory/products/:id" element={<ProtectedRoute><AppLayout><ProductDetail /></AppLayout></ProtectedRoute>} />
+          <Route path="/inventory/reports" element={<ProtectedRoute><AppLayout><InventoryReports /></AppLayout></ProtectedRoute>} />
+          <Route path="/inventory/alerts" element={<ProtectedRoute><AppLayout><StockAlerts /></AppLayout></ProtectedRoute>} />
           
           {/* Analytics */}
-          <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
+          <Route path="/analytics" element={<ProtectedRoute><AppLayout><AnalyticsDashboard /></AppLayout></ProtectedRoute>} />
           
           {/* Settings */}
-          <Route path="/settings" element={<ProtectedRoute><SettingsLayout /></ProtectedRoute>}>
+          <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsLayout /></AppLayout></ProtectedRoute>}>
             <Route index element={<GeneralSettings />} />
             <Route path="company" element={<CompanySettings />} />
             <Route path="numeradores" element={<NumeradoresSettings />} />
