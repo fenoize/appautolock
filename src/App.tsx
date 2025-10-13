@@ -21,6 +21,11 @@ import SubscriptionDetail from "./pages/subscriptions/SubscriptionDetail";
 import NewSubscription from "./pages/subscriptions/NewSubscription";
 import SubscriptionPlans from "./pages/subscriptions/SubscriptionPlans";
 import SubscriptionReports from "./pages/subscriptions/SubscriptionReports";
+import ProductsList from "./pages/inventory/ProductsList";
+import ProductDetail from "./pages/inventory/ProductDetail";
+import NewProduct from "./pages/inventory/NewProduct";
+import InventoryReports from "./pages/inventory/InventoryReports";
+import StockAlerts from "./pages/inventory/StockAlerts";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +53,14 @@ const App = () => (
           <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
           <Route path="/subscriptions/plans" element={<SubscriptionPlans />} />
           <Route path="/subscriptions/reports" element={<SubscriptionReports />} />
+          
+          {/* Inventario */}
+          <Route path="/inventory" element={<ProductsList />} />
+          <Route path="/inventory/products/new" element={<NewProduct />} />
+          <Route path="/inventory/products/:id" element={<ProductDetail />} />
+          <Route path="/inventory/reports" element={<InventoryReports />} />
+          <Route path="/inventory/alerts" element={<StockAlerts />} />
+          
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -448,6 +448,75 @@ export type Database = {
         }
         Relationships: []
       }
+      product_serials: {
+        Row: {
+          created_at: string | null
+          estado: string | null
+          id: string
+          location_id: string | null
+          notas: string | null
+          product_id: string
+          serial_number: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          estado?: string | null
+          id?: string
+          location_id?: string | null
+          notas?: string | null
+          product_id: string
+          serial_number: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          estado?: string | null
+          id?: string
+          location_id?: string | null
+          notas?: string | null
+          product_id?: string
+          serial_number?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_serials_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["location_id"]
+          },
+          {
+            foreignKeyName: "product_serials_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "stock_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_serials_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_serials_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_serials_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["product_id"]
+          },
+        ]
+      }
       products: {
         Row: {
           activo: boolean | null
@@ -825,6 +894,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "services_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["product_id"]
+          },
+          {
             foreignKeyName: "services_products_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
@@ -859,6 +935,88 @@ export type Database = {
           valor?: string
         }
         Relationships: []
+      }
+      stock_alerts: {
+        Row: {
+          created_at: string | null
+          id: string
+          location_id: string
+          product_id: string
+          resuelta: boolean | null
+          resuelta_at: string | null
+          resuelta_por: string | null
+          stock_actual: number
+          stock_minimo: number
+          tipo: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          location_id: string
+          product_id: string
+          resuelta?: boolean | null
+          resuelta_at?: string | null
+          resuelta_por?: string | null
+          stock_actual: number
+          stock_minimo: number
+          tipo: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          location_id?: string
+          product_id?: string
+          resuelta?: boolean | null
+          resuelta_at?: string | null
+          resuelta_por?: string | null
+          stock_actual?: number
+          stock_minimo?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_alerts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["location_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "stock_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_resuelta_por_fkey"
+            columns: ["resuelta_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stock_locations: {
         Row: {
@@ -943,6 +1101,13 @@ export type Database = {
             foreignKeyName: "stock_moves_from_location_id_fkey"
             columns: ["from_location_id"]
             isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["location_id"]
+          },
+          {
+            foreignKeyName: "stock_moves_from_location_id_fkey"
+            columns: ["from_location_id"]
+            isOneToOne: false
             referencedRelation: "stock_locations"
             referencedColumns: ["id"]
           },
@@ -959,6 +1124,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_moves_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "stock_moves_to_location_id_fkey"
+            columns: ["to_location_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["location_id"]
           },
           {
             foreignKeyName: "stock_moves_to_location_id_fkey"
@@ -1387,6 +1566,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "wo_substitutions_producto_original_id_fkey"
+            columns: ["producto_original_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["product_id"]
+          },
+          {
             foreignKeyName: "wo_substitutions_producto_sustituto_id_fkey"
             columns: ["producto_sustituto_id"]
             isOneToOne: false
@@ -1399,6 +1585,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "products_public"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_producto_sustituto_id_fkey"
+            columns: ["producto_sustituto_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["product_id"]
           },
           {
             foreignKeyName: "wo_substitutions_wo_id_fkey"
@@ -1600,11 +1793,49 @@ export type Database = {
           },
         ]
       }
+      stock_by_location: {
+        Row: {
+          branch_id: string | null
+          location_id: string | null
+          location_nombre: string | null
+          location_tipo:
+            | Database["public"]["Enums"]["stock_location_type"]
+            | null
+          nombre: string | null
+          product_id: string | null
+          reservas_activas: number | null
+          sku: string | null
+          stock_actual: number | null
+          stock_minimo: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_locations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       actualizar_estado_suscripciones: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      ajustar_stock: {
+        Args: {
+          p_cantidad_nueva: number
+          p_location_id: string
+          p_product_id: string
+          p_razon: string
+        }
+        Returns: string
+      }
+      calcular_stock_producto: {
+        Args: { p_location_id: string; p_product_id: string }
+        Returns: number
       }
       cancelar_suscripcion: {
         Args: { p_notas?: string; p_subscription_id: string }
@@ -1645,6 +1876,22 @@ export type Database = {
         Args: { p_subscription_id: string }
         Returns: undefined
       }
+      refresh_stock_by_location: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      registrar_compra_stock: {
+        Args: {
+          p_cantidad: number
+          p_location_id: string
+          p_notas?: string
+          p_precio_costo: number
+          p_product_id: string
+          p_referencia: string
+          p_serials?: string[]
+        }
+        Returns: string
+      }
       renovar_suscripcion: {
         Args: { p_subscription_id: string }
         Returns: undefined
@@ -1666,6 +1913,21 @@ export type Database = {
           relevance: number
           vehicle_id: string
         }[]
+      }
+      trasladar_stock: {
+        Args: {
+          p_cantidad: number
+          p_from_location_id: string
+          p_notas?: string
+          p_product_id: string
+          p_serials?: string[]
+          p_to_location_id: string
+        }
+        Returns: string
+      }
+      verificar_alertas_stock: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
