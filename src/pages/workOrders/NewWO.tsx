@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft } from 'lucide-react';
+import { PageContainer } from '@/components/shared/PageContainer';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export default function NewWO() {
   const navigate = useNavigate();
@@ -46,13 +47,12 @@ export default function NewWO() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/work-orders')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-3xl font-bold">Nueva Orden de Trabajo</h1>
-      </div>
+    <PageContainer maxWidth="md">
+      <PageHeader
+        title="Nueva Orden de Trabajo"
+        backButton={true}
+        backTo="/work-orders"
+      />
 
       <form onSubmit={handleSubmit}>
         <Card>
@@ -156,6 +156,6 @@ export default function NewWO() {
           </CardContent>
         </Card>
       </form>
-    </div>
+    </PageContainer>
   );
 }

@@ -10,6 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { PageContainer } from '@/components/shared/PageContainer';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 interface FormData {
   client_id: string;
@@ -52,11 +54,13 @@ export default function NewSubscription() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Nueva Suscripción GPS</h1>
-        <p className="text-muted-foreground">Crear una nueva suscripción de rastreo</p>
-      </div>
+    <PageContainer maxWidth="md">
+      <PageHeader
+        title="Nueva Suscripción GPS"
+        description="Crear una nueva suscripción de rastreo"
+        backButton={true}
+        backTo="/subscriptions"
+      />
 
       <Card>
         <CardHeader>
@@ -186,6 +190,6 @@ export default function NewSubscription() {
           </Form>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

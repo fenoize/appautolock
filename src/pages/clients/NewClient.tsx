@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PageContainer } from '@/components/shared/PageContainer';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { useCreateClient } from '@/hooks/useClients';
 import { ClientType, ClientStatus } from '@/types/clients';
 import { validateRUT, formatRUT } from '@/lib/rut-validation';
@@ -64,18 +65,14 @@ export default function NewClient() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/clients')}
-          className="mb-4"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver a Clientes
-        </Button>
+    <PageContainer maxWidth="md">
+      <PageHeader
+        title="Nuevo Cliente"
+        backButton={true}
+        backTo="/clients"
+      />
 
-        <Card>
+      <Card>
           <CardHeader>
             <CardTitle>Nuevo Cliente</CardTitle>
           </CardHeader>
@@ -230,7 +227,6 @@ export default function NewClient() {
             </form>
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </PageContainer>
   );
 }

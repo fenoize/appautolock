@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft } from 'lucide-react';
+import { PageContainer } from '@/components/shared/PageContainer';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 const formSchema = z.object({
   sku: z.string().min(1, 'SKU requerido'),
@@ -47,13 +48,12 @@ export default function NewProduct() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/inventory')}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-3xl font-bold">Nuevo Producto</h1>
-      </div>
+    <PageContainer maxWidth="md">
+      <PageHeader
+        title="Nuevo Producto"
+        backButton={true}
+        backTo="/inventory"
+      />
 
       <Card>
         <CardHeader>
@@ -206,6 +206,6 @@ export default function NewProduct() {
           </Form>
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }
