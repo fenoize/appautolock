@@ -5,8 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import ResetPassword from "./pages/ResetPassword";
+import ResetPasswordConfirm from "./pages/ResetPasswordConfirm";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ClientsList from "./pages/clients/ClientsList";
 import NewClient from "./pages/clients/NewClient";
 import ClientDetail from "./pages/clients/ClientDetail";
@@ -48,34 +52,39 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/clients" element={<ClientsList />} />
-          <Route path="/clients/new" element={<NewClient />} />
-          <Route path="/clients/:id" element={<ClientDetail />} />
-          <Route path="/vehicles" element={<VehiclesList />} />
-          <Route path="/vehicles/new" element={<NewVehicle />} />
-          <Route path="/vehicles/:id" element={<VehicleDetail />} />
-          <Route path="/work-orders" element={<WOList />} />
-          <Route path="/work-orders/new" element={<NewWO />} />
-          <Route path="/work-orders/:id" element={<WODetail />} />
-          <Route path="/subscriptions" element={<SubscriptionList />} />
-          <Route path="/subscriptions/new" element={<NewSubscription />} />
-          <Route path="/subscriptions/:id" element={<SubscriptionDetail />} />
-          <Route path="/subscriptions/plans" element={<SubscriptionPlans />} />
-          <Route path="/subscriptions/reports" element={<SubscriptionReports />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
+          
+          {/* Rutas protegidas */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/clients" element={<ProtectedRoute><ClientsList /></ProtectedRoute>} />
+          <Route path="/clients/new" element={<ProtectedRoute><NewClient /></ProtectedRoute>} />
+          <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
+          <Route path="/vehicles" element={<ProtectedRoute><VehiclesList /></ProtectedRoute>} />
+          <Route path="/vehicles/new" element={<ProtectedRoute><NewVehicle /></ProtectedRoute>} />
+          <Route path="/vehicles/:id" element={<ProtectedRoute><VehicleDetail /></ProtectedRoute>} />
+          <Route path="/work-orders" element={<ProtectedRoute><WOList /></ProtectedRoute>} />
+          <Route path="/work-orders/new" element={<ProtectedRoute><NewWO /></ProtectedRoute>} />
+          <Route path="/work-orders/:id" element={<ProtectedRoute><WODetail /></ProtectedRoute>} />
+          <Route path="/subscriptions" element={<ProtectedRoute><SubscriptionList /></ProtectedRoute>} />
+          <Route path="/subscriptions/new" element={<ProtectedRoute><NewSubscription /></ProtectedRoute>} />
+          <Route path="/subscriptions/:id" element={<ProtectedRoute><SubscriptionDetail /></ProtectedRoute>} />
+          <Route path="/subscriptions/plans" element={<ProtectedRoute><SubscriptionPlans /></ProtectedRoute>} />
+          <Route path="/subscriptions/reports" element={<ProtectedRoute><SubscriptionReports /></ProtectedRoute>} />
           
           {/* Inventario */}
-          <Route path="/inventory" element={<ProductsList />} />
-          <Route path="/inventory/products/new" element={<NewProduct />} />
-          <Route path="/inventory/products/:id" element={<ProductDetail />} />
-          <Route path="/inventory/reports" element={<InventoryReports />} />
-          <Route path="/inventory/alerts" element={<StockAlerts />} />
+          <Route path="/inventory" element={<ProtectedRoute><ProductsList /></ProtectedRoute>} />
+          <Route path="/inventory/products/new" element={<ProtectedRoute><NewProduct /></ProtectedRoute>} />
+          <Route path="/inventory/products/:id" element={<ProtectedRoute><ProductDetail /></ProtectedRoute>} />
+          <Route path="/inventory/reports" element={<ProtectedRoute><InventoryReports /></ProtectedRoute>} />
+          <Route path="/inventory/alerts" element={<ProtectedRoute><StockAlerts /></ProtectedRoute>} />
           
           {/* Analytics */}
-          <Route path="/analytics" element={<AnalyticsDashboard />} />
+          <Route path="/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
           
           {/* Settings */}
-          <Route path="/settings" element={<SettingsLayout />}>
+          <Route path="/settings" element={<ProtectedRoute><SettingsLayout /></ProtectedRoute>}>
             <Route index element={<GeneralSettings />} />
             <Route path="company" element={<CompanySettings />} />
             <Route path="numeradores" element={<NumeradoresSettings />} />
