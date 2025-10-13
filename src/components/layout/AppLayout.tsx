@@ -31,10 +31,11 @@ function AppLayoutContent({ children }: AppLayoutProps) {
       )}
       
       <main 
-        className="min-h-screen w-full overflow-y-auto transition-[margin] duration-200 ease-linear"
+        className="min-h-screen overflow-y-auto transition-all duration-200 ease-linear"
         style={{
           paddingTop: 'var(--header-h)',
           marginLeft: mainMarginLeft,
+          width: `calc(100vw - ${mainMarginLeft})`,
           paddingBottom: mainPaddingBottom
         }}
       >

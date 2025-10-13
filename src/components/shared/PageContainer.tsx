@@ -17,7 +17,7 @@ export function PageContainer({
     md: 'max-w-4xl',
     lg: 'max-w-5xl',
     xl: 'max-w-7xl',
-    full: 'w-full'
+    full: 'max-w-full'
   };
 
   return (
@@ -25,6 +25,7 @@ export function PageContainer({
       'mx-auto space-y-8',
       'p-4 md:p-6 lg:p-8',
       'animate-in fade-in-0 duration-300',
+      'overflow-x-hidden',
       maxWidthClasses[maxWidth],
       className
     )}>

@@ -45,19 +45,25 @@ export default function ClientsList() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Clientes"
-        description="Gestiona tu cartera de clientes"
-        action={
+      {/* Header con título y botones */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Clientes</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            Gestiona tu cartera de clientes
+          </p>
+        </div>
+        
+        <div className="flex items-center gap-2">
           <Button onClick={() => navigate('/clients/new')}>
             <Plus className="h-4 w-4 mr-2" />
             Nuevo Cliente
           </Button>
-        }
-      />
+        </div>
+      </div>
 
-      {/* Search and View Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      {/* Barra de búsqueda y controles */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
         <SearchBar
           value={search}
           onChange={setSearch}
@@ -65,7 +71,7 @@ export default function ClientsList() {
           className="flex-1 max-w-md"
         />
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Select 
             value={itemsPerPage.toString()} 
             onValueChange={(v) => {
