@@ -1360,9 +1360,11 @@ export type Database = {
           dias_gracia: number | null
           id: string
           nombre: string
+          notificacion_config: Json | null
           periodo_meses: number
           precio: number
           suspension_automatica: boolean | null
+          template_notificacion: Json | null
           updated_at: string | null
         }
         Insert: {
@@ -1372,9 +1374,11 @@ export type Database = {
           dias_gracia?: number | null
           id?: string
           nombre: string
+          notificacion_config?: Json | null
           periodo_meses: number
           precio: number
           suspension_automatica?: boolean | null
+          template_notificacion?: Json | null
           updated_at?: string | null
         }
         Update: {
@@ -1384,9 +1388,11 @@ export type Database = {
           dias_gracia?: number | null
           id?: string
           nombre?: string
+          notificacion_config?: Json | null
           periodo_meses?: number
           precio?: number
           suspension_automatica?: boolean | null
+          template_notificacion?: Json | null
           updated_at?: string | null
         }
         Relationships: []

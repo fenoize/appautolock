@@ -3,6 +3,25 @@ import { Database } from '@/integrations/supabase/types';
 export type SubscriptionStatus = Database['public']['Enums']['subscription_status'];
 export type NotificationChannel = Database['public']['Enums']['notification_channel'];
 
+export interface NotificationReminderConfig {
+  dias_previos: number;
+  canal: NotificationChannel;
+  activo: boolean;
+}
+
+export interface PlanNotificationConfig {
+  recordatorios: NotificationReminderConfig[];
+  incluir_datos_vehiculo: boolean;
+  incluir_datos_cliente: boolean;
+  campos_vehiculo: string[];
+  campos_cliente: string[];
+}
+
+export interface PlanNotificationTemplate {
+  asunto: string;
+  cuerpo: string;
+}
+
 export interface SubscriptionPlan {
   id: string;
   nombre: string;
@@ -14,6 +33,8 @@ export interface SubscriptionPlan {
   activo: boolean;
   created_at: string;
   updated_at: string;
+  notificacion_config: PlanNotificationConfig;
+  template_notificacion: PlanNotificationTemplate;
 }
 
 export interface Subscription {

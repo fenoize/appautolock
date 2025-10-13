@@ -25,7 +25,7 @@ export function useSubscriptions(filters?: SubscriptionFilters) {
       
       const { data, error } = await query.order('fecha_vencimiento', { ascending: true });
       if (error) throw error;
-      return data as Subscription[];
+      return data as any as Subscription[];
     }
   });
 }
@@ -46,7 +46,7 @@ export function useSubscription(id: string) {
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data as Subscription;
+      return data as any as Subscription;
     },
     enabled: !!id
   });

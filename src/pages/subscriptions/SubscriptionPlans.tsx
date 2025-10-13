@@ -1,13 +1,16 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSubscriptionPlans, useUpdateSubscriptionPlan } from '@/hooks/useSubscriptionPlans';
+import { PageContainer } from '@/components/shared/PageContainer';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, DollarSign } from 'lucide-react';
+import { CalendarDays, DollarSign, Plus, ChevronRight } from 'lucide-react';
 
 export default function SubscriptionPlans() {
+  const navigate = useNavigate();
   const { data: plans, isLoading } = useSubscriptionPlans(false);
   const updateMutation = useUpdateSubscriptionPlan();
 
@@ -20,11 +23,17 @@ export default function SubscriptionPlans() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Planes de Suscripción</h1>
-        <p className="text-muted-foreground">Gestión de planes GPS disponibles</p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="Planes de Suscripción GPS"
+        description="Gestiona planes y configuración de notificaciones"
+        action={
+          <Button onClick={() => navigate('/subscriptions/plans/new')}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nuevo Plan
+          </Button>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -41,14 +50,19 @@ export default function SubscriptionPlans() {
                   <TableHead>Plan</TableHead>
                   <TableHead>Período</TableHead>
                   <TableHead>Precio</TableHead>
-                  <TableHead>Días de Gracia</TableHead>
+                  <TableHead>Recordatorios</TableHead>
                   <TableHead>Suspensión Auto</TableHead>
                   <TableHead>Activo</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {plans?.map((plan) => (
-                  <TableRow key={plan.id}>
+                  <TableRow 
+                    key={plan.id}
+                    onClick={() => navigate(`/subscriptions/plans/${plan.id}`)}
+                    className="cursor-pointer hover:bg-muted/50"
+                  >
                     <TableCell>
                       <div>
                         <p className="font-medium">{plan.nombre}</p>
@@ -70,19 +84,24 @@ export default function SubscriptionPlans() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{plan.dias_gracia} días</Badge>
+                      <Badge variant="outline">
+                        {plan.notificacion_config?.recordatorios?.filter(r => r.activo).length || 0} activos
+                      </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Switch
                         checked={plan.suspension_automatica}
                         onCheckedChange={() => handleToggleSuspension(plan.id, plan.suspension_automatica)}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Switch
                         checked={plan.activo}
                         onCheckedChange={() => handleToggleActive(plan.id, plan.activo)}
                       />
+                    </TableCell>
+                    <TableCell>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -91,6 +110,6 @@ export default function SubscriptionPlans() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }
