@@ -39,6 +39,21 @@ All colors MUST be HSL.
     /* Naranja para advertencias */
     --warning: 35 91% 55%;
     --warning-foreground: 0 0% 100%;
+    
+    /* Colores para gráficos y variedad */
+    --chart-1: 25 95% 53%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 221 83% 53%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 82% 52%;
+    --chart-6: 45 93% 47%;
+    
+    /* Backgrounds suaves para iconos */
+    --primary-soft: 25 95% 95%;
+    --accent-soft: 142 71% 95%;
+    --blue-soft: 221 83% 95%;
+    --purple-soft: 280 65% 95%;
+    --destructive-soft: 0 84% 95%;
 
     --border: 0 0% 85%;
     --input: 0 0% 85%;
@@ -175,4 +190,18 @@ All colors MUST be HSL.
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: hsl(var(--muted-foreground) / 0.5);
   }
+  
+  /* Backgrounds suaves para iconos en círculo */
+  .bg-primary-soft { background-color: hsl(var(--primary-soft)); }
+  .bg-accent-soft { background-color: hsl(var(--accent-soft)); }
+  .bg-blue-soft { background-color: hsl(var(--blue-soft)); }
+  .bg-purple-soft { background-color: hsl(var(--purple-soft)); }
+  .bg-destructive-soft { background-color: hsl(var(--destructive-soft)); }
+  
+  /* Bordes izquierdos de color */
+  .border-l-primary { border-left-color: hsl(var(--primary)); }
+  .border-l-accent { border-left-color: hsl(var(--accent)); }
+  .border-l-blue { border-left-color: hsl(var(--chart-3)); }
+  .border-l-purple { border-left-color: hsl(var(--chart-4)); }
+  .border-l-destructive { border-left-color: hsl(var(--destructive)); }
 }

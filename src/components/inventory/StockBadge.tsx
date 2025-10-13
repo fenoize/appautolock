@@ -7,12 +7,12 @@ interface StockBadgeProps {
 
 export function StockBadge({ stock, stockMinimo }: StockBadgeProps) {
   if (stock <= 0) {
-    return <Badge variant="destructive">Sin Stock</Badge>;
+    return <Badge variant="destructive" className="font-medium">Sin Stock</Badge>;
   }
   
   if (stock < stockMinimo) {
-    return <Badge className="bg-orange-500">Bajo Mínimo</Badge>;
+    return <Badge variant="warning" className="font-medium">Bajo Mínimo</Badge>;
   }
   
-  return <Badge className="bg-green-500">Normal</Badge>;
+  return <Badge variant="success" className="font-medium">Normal</Badge>;
 }

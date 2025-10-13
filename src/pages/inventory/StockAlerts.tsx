@@ -1,79 +1,193 @@
 import { useStockAlerts, useResolverAlerta } from '@/hooks/useStockAlerts';
+import { PageContainer } from '@/components/shared/PageContainer';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { AlertTriangle, CheckCircle, Package, TrendingDown } from 'lucide-react';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { SkeletonCard } from '@/components/shared/SkeletonCard';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { animations } from '@/lib/animations';
+import { StockBadge } from '@/components/inventory/StockBadge';
+import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 export default function StockAlerts() {
   const { data: alerts, isLoading } = useStockAlerts(false);
   const resolverAlerta = useResolverAlerta();
+  const navigate = useNavigate();
 
-  if (isLoading) return <div>Cargando...</div>;
+  if (isLoading) {
+    return (
+      <PageContainer>
+        <PageHeader
+          title="Alertas de Stock"
+          description="Productos con stock crítico o bajo mínimo"
+        />
+        <div className="grid gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (!alerts || alerts.length === 0) {
+    return (
+      <PageContainer>
+        <PageHeader
+          title="Alertas de Stock"
+          description="Productos con stock crítico o bajo mínimo"
+        />
+        <EmptyState
+          icon={CheckCircle}
+          title="No hay alertas de stock"
+          description="Todos los productos tienen stock suficiente. ¡Todo en orden!"
+          action={
+            <Button onClick={() => navigate('/inventory')}>
+              <Package className="mr-2 h-4 w-4" />
+              Ver Inventario
+            </Button>
+          }
+        />
+      </PageContainer>
+    );
+  }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Alertas de Stock</h1>
-        <Badge variant="outline" className="text-lg">
-          {alerts?.length || 0} Pendientes
+    <PageContainer className={animations.pageEnter}>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Alertas de Stock</h1>
+          <p className="text-muted-foreground mt-1">
+            Productos con stock crítico o bajo mínimo
+          </p>
+        </div>
+        <Badge variant="destructive" className="text-base px-4 py-2">
+          {alerts.length} {alerts.length === 1 ? 'Alerta' : 'Alertas'}
         </Badge>
       </div>
 
-      <div className="space-y-4">
-        {alerts?.map((alert) => (
-          <Card key={alert.id}>
-            <CardHeader>
+      <div className="grid gap-4">
+        {alerts.map((alert, index) => (
+          <Card
+            key={alert.id}
+            className={cn(
+              "border-l-4",
+              alert.tipo === 'sin_stock' ? "border-l-destructive" : "border-l-[hsl(var(--warning))]",
+              "hover:shadow-lg transition-all duration-200"
+            )}
+            style={{ 
+              animationDelay: `${Math.min(index * 50, 300)}ms` 
+            }}
+          >
+            <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-orange-500 mt-1" />
+                <div className="flex items-center gap-4 flex-1">
+                  {/* Avatar del producto */}
+                  <Avatar className="h-12 w-12 border-2 border-border">
+                    <AvatarFallback className={cn(
+                      "font-semibold text-base",
+                      alert.tipo === 'sin_stock' 
+                        ? "bg-destructive-soft text-destructive"
+                        : "bg-yellow-50 text-warning"
+                    )}>
+                      {alert.product?.nombre?.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  {/* Info del producto */}
+                  <div className="flex-1">
+                    <CardTitle className="text-lg mb-1">
+                      {alert.product?.nombre}
+                    </CardTitle>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <span>SKU: {alert.product?.sku}</span>
+                      <span>•</span>
+                      <Badge variant="soft" className="font-normal">
+                        {alert.location?.nombre}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Badge de tipo */}
+                <StockBadge 
+                  stock={alert.stock_actual} 
+                  stockMinimo={alert.stock_minimo}
+                />
+              </div>
+            </CardHeader>
+            
+            <CardContent>
+              <div className="flex items-center justify-between">
+                {/* Métricas de stock */}
+                <div className="flex items-center gap-8">
                   <div>
-                    <CardTitle>{alert.product?.nombre}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      SKU: {alert.product?.sku} | {alert.location?.nombre}
+                    <p className="text-xs text-muted-foreground mb-1">Stock Actual</p>
+                    <p className="text-2xl font-bold font-mono">
+                      {alert.stock_actual}
+                    </p>
+                  </div>
+                  
+                  <TrendingDown className="h-5 w-5 text-muted-foreground" />
+                  
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Stock Mínimo</p>
+                    <p className="text-2xl font-semibold font-mono text-muted-foreground">
+                      {alert.stock_minimo}
+                    </p>
+                  </div>
+                  
+                  <div className="ml-4">
+                    <p className="text-xs text-muted-foreground mb-1">Diferencia</p>
+                    <p className={cn(
+                      "text-lg font-semibold font-mono",
+                      alert.stock_actual < alert.stock_minimo 
+                        ? "text-destructive"
+                        : "text-accent"
+                    )}>
+                      {alert.stock_actual - alert.stock_minimo > 0 ? '+' : ''}
+                      {alert.stock_actual - alert.stock_minimo}
                     </p>
                   </div>
                 </div>
-                <Badge variant={alert.tipo === 'sin_stock' ? 'destructive' : 'default'}>
-                  {alert.tipo === 'sin_stock' ? 'Sin Stock' : 'Bajo Mínimo'}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm">
-                    <span className="font-semibold">Stock Actual:</span> {alert.stock_actual}
-                  </p>
-                  <p className="text-sm">
-                    <span className="font-semibold">Stock Mínimo:</span> {alert.stock_minimo}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Creada: {format(new Date(alert.created_at), 'dd/MM/yyyy HH:mm')}
-                  </p>
+                
+                {/* Acciones */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => resolverAlerta.mutate(alert.id)}
+                    disabled={resolverAlerta.isPending}
+                  >
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Resolver
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    onClick={() => navigate(`/inventory/products/${alert.product?.id}`)}
+                  >
+                    Ver Producto
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => resolverAlerta.mutate(alert.id)}
-                  disabled={resolverAlerta.isPending}
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Marcar Resuelta
-                </Button>
+              </div>
+              
+              {/* Timestamp */}
+              <div className="mt-4 pt-4 border-t">
+                <p className="text-xs text-muted-foreground">
+                  Alerta creada el {format(new Date(alert.created_at), "PPP 'a las' HH:mm", { locale: es })}
+                </p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
-
-      {(!alerts || alerts.length === 0) && (
-        <div className="text-center py-12">
-          <CheckCircle className="mx-auto h-12 w-12 text-green-500 mb-4" />
-          <h3 className="text-lg font-semibold">No hay alertas pendientes</h3>
-          <p className="text-muted-foreground">Todos los productos tienen stock suficiente</p>
-        </div>
-      )}
-    </div>
+    </PageContainer>
   );
 }
