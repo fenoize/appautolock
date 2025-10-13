@@ -1,32 +1,33 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useSubscriptions } from '@/hooks/useSubscriptions';
 import { SubscriptionFilters } from '@/types/subscriptions';
 import { SubscriptionStatusBadge } from '@/components/subscriptions/SubscriptionStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PageContainer } from '@/components/shared/PageContainer';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Plus, CalendarDays } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function SubscriptionList() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<SubscriptionFilters>({});
   const { data: subscriptions, isLoading } = useSubscriptions(filters);
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Suscripciones GPS</h1>
-          <p className="text-muted-foreground">Gestión de suscripciones de rastreo GPS</p>
-        </div>
-        <Link to="/subscriptions/new">
-          <Button>
+    <PageContainer>
+      <PageHeader
+        title="Suscripciones GPS"
+        description="Gestión de suscripciones de rastreo GPS"
+        action={
+          <Button onClick={() => navigate('/subscriptions/new')}>
             <Plus className="h-4 w-4 mr-2" />
             Nueva Suscripción
           </Button>
-        </Link>
-      </div>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -35,7 +36,9 @@ export default function SubscriptionList() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p>Cargando...</p>
+            <p className="text-center py-12 text-muted-foreground">Cargando suscripciones...</p>
+          ) : !subscriptions || subscriptions.length === 0 ? (
+            <p className="text-center py-12 text-muted-foreground">No se encontraron suscripciones</p>
           ) : (
             <Table>
               <TableHeader>
@@ -50,7 +53,7 @@ export default function SubscriptionList() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {subscriptions?.map((sub) => (
+                {subscriptions.map((sub) => (
                   <TableRow key={sub.id}>
                     <TableCell className="font-medium">{sub.folio}</TableCell>
                     <TableCell>{sub.client?.razon_social || sub.client?.nombre_comercial}</TableCell>
@@ -77,6 +80,6 @@ export default function SubscriptionList() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }
