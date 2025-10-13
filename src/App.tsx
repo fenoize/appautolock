@@ -13,6 +13,9 @@ import ClientDetail from "./pages/clients/ClientDetail";
 import VehiclesList from "./pages/vehicles/VehiclesList";
 import NewVehicle from "./pages/vehicles/NewVehicle";
 import VehicleDetail from "./pages/vehicles/VehicleDetail";
+import WOList from "./pages/workOrders/WOList";
+import NewWO from "./pages/workOrders/NewWO";
+import WODetail from "./pages/workOrders/WODetail";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +35,9 @@ const App = () => (
           <Route path="/vehicles" element={<VehiclesList />} />
           <Route path="/vehicles/new" element={<NewVehicle />} />
           <Route path="/vehicles/:id" element={<VehicleDetail />} />
+          <Route path="/work-orders" element={<WOList />} />
+          <Route path="/work-orders/new" element={<NewWO />} />
+          <Route path="/work-orders/:id" element={<WODetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
