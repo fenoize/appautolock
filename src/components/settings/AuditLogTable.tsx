@@ -15,8 +15,8 @@ export const AuditLogTable = () => {
   const [filters, setFilters] = useState({
     fecha_desde: format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
     fecha_hasta: format(new Date(), 'yyyy-MM-dd'),
-    tabla: '',
-    accion: '',
+    tabla: 'all',
+    accion: 'all',
   });
 
   const { data: logs, isLoading } = useAuditLog(filters, 100);
@@ -91,7 +91,7 @@ export const AuditLogTable = () => {
                   <SelectValue placeholder="Todas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="clients">Clientes</SelectItem>
                   <SelectItem value="vehicles">Vehículos</SelectItem>
                   <SelectItem value="quotes">Cotizaciones</SelectItem>
@@ -106,7 +106,7 @@ export const AuditLogTable = () => {
                   <SelectValue placeholder="Todas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="INSERT">Crear</SelectItem>
                   <SelectItem value="UPDATE">Actualizar</SelectItem>
                   <SelectItem value="DELETE">Eliminar</SelectItem>
