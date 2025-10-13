@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, BarChart3, FileText, Bell, LogOut, Users } from "lucide-react";
+import { Calendar, BarChart3, FileText, Bell, LogOut, Users, Building, Car } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -35,10 +35,10 @@ const Dashboard = () => {
   };
 
   const stats = [
-    { title: "Agenda del Día", description: "Órdenes de trabajo programadas", icon: Calendar, count: 0 },
-    { title: "Analítica", description: "Reportes y métricas", icon: BarChart3, count: 0 },
+    { title: "Clientes", description: "Gestiona tu cartera", icon: Building, count: 0, link: "/clients" },
+    { title: "Vehículos", description: "Parque vehicular", icon: Car, count: 0, link: "/vehicles" },
     { title: "Cotizaciones", description: "Pendientes y activas", icon: FileText, count: 0 },
-    { title: "Alertas", description: "Suscripciones en mora", icon: Bell, count: 0 },
+    { title: "Órdenes de Trabajo", description: "OTs programadas", icon: Calendar, count: 0 },
   ];
 
   return (
@@ -64,7 +64,11 @@ const Dashboard = () => {
         <h2 className="text-3xl font-bold mb-8">Escritorio</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat) => (
-            <Card key={stat.title} className="hover:shadow-lg transition-shadow">
+            <Card 
+              key={stat.title} 
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => stat.link && navigate(stat.link)}
+            >
               <CardHeader>
                 <stat.icon className="h-8 w-8 text-primary mb-2" />
                 <CardTitle>{stat.title}</CardTitle>

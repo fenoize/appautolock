@@ -7,6 +7,12 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import ClientsList from "./pages/clients/ClientsList";
+import NewClient from "./pages/clients/NewClient";
+import ClientDetail from "./pages/clients/ClientDetail";
+import VehiclesList from "./pages/vehicles/VehiclesList";
+import NewVehicle from "./pages/vehicles/NewVehicle";
+import VehicleDetail from "./pages/vehicles/VehicleDetail";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +26,12 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/clients" element={<ClientsList />} />
+          <Route path="/clients/new" element={<NewClient />} />
+          <Route path="/clients/:id" element={<ClientDetail />} />
+          <Route path="/vehicles" element={<VehiclesList />} />
+          <Route path="/vehicles/new" element={<NewVehicle />} />
+          <Route path="/vehicles/:id" element={<VehicleDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
