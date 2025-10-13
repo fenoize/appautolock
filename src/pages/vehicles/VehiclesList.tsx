@@ -7,8 +7,11 @@ import { SearchBar } from '@/components/shared/SearchBar';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ViewToggle } from '@/components/shared/ViewToggle';
+import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { VehiclesTable } from '@/components/vehicles/VehiclesTable';
 import { useVehicles } from '@/hooks/useVehicles';
+import { cn } from '@/lib/utils';
+import { getStaggerStyle } from '@/lib/animations';
 
 export default function VehiclesList() {
   const navigate = useNavigate();
@@ -47,8 +50,10 @@ export default function VehiclesList() {
       />
 
       {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">
-          Cargando vehículos...
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       ) : !vehicles || vehicles.length === 0 ? (
         <div className="text-center py-12">
@@ -58,11 +63,15 @@ export default function VehiclesList() {
           </Button>
         </div>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {vehicles.map((vehicle: any) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {vehicles.map((vehicle: any, index: number) => (
             <Card
               key={vehicle.id}
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              style={getStaggerStyle(index)}
+              className={cn(
+                "cursor-pointer animate-in fade-in-0 slide-in-from-bottom-2",
+                "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+              )}
               onClick={() => navigate(`/vehicles/${vehicle.id}`)}
             >
               <CardContent className="p-6">

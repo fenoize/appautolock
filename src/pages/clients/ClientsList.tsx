@@ -5,14 +5,15 @@ import { Button } from '@/components/ui/button';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { SkeletonTable } from '@/components/shared/SkeletonTable';
+import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { ClientStatusBadge } from '@/components/clients/ClientStatusBadge';
 import { useClients } from '@/hooks/useClients';
 import { ClientFilters } from '@/types/clients';
+import { cn } from '@/lib/utils';
+import { getStaggerStyle } from '@/lib/animations';
 
 export default function ClientsList() {
   const navigate = useNavigate();
@@ -43,7 +44,11 @@ export default function ClientsList() {
 
       {/* Clients Grid */}
       {isLoading ? (
-        <SkeletonTable rows={6} columns={3} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       ) : !clients || clients.length === 0 ? (
         <EmptyState
           icon={Users}
@@ -57,11 +62,15 @@ export default function ClientsList() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {clients.map((client) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {clients.map((client, index) => (
             <Card
               key={client.id}
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              style={getStaggerStyle(index)}
+              className={cn(
+                "cursor-pointer animate-in fade-in-0 slide-in-from-bottom-2",
+                "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+              )}
               onClick={() => navigate(`/clients/${client.id}`)}
             >
               <CardContent className="p-6">

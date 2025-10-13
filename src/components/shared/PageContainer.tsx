@@ -21,7 +21,13 @@ export function PageContainer({
   };
 
   return (
-    <div className={cn('p-4 md:p-6 space-y-6 mx-auto', maxWidthClasses[maxWidth], className)}>
+    <div className={cn(
+      'mx-auto space-y-8',
+      'p-4 md:p-6 lg:p-8',
+      'animate-in fade-in-0 duration-300',
+      maxWidthClasses[maxWidth],
+      className
+    )}>
       {children}
     </div>
   );

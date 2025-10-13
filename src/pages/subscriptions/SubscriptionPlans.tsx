@@ -3,11 +3,12 @@ import { useSubscriptionPlans, useUpdateSubscriptionPlan } from '@/hooks/useSubs
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { SkeletonTableRow } from '@/components/shared/SkeletonTableRow';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, DollarSign, Plus, ChevronRight } from 'lucide-react';
+import { Plus, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function SubscriptionPlans() {
   const navigate = useNavigate();
@@ -35,33 +36,37 @@ export default function SubscriptionPlans() {
         }
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Planes Configurados</CardTitle>
-          <CardDescription>Lista de todos los planes de suscripción</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p>Cargando...</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Plan</TableHead>
-                  <TableHead>Período</TableHead>
-                  <TableHead>Precio</TableHead>
-                  <TableHead>Recordatorios</TableHead>
-                  <TableHead>Suspensión Auto</TableHead>
-                  <TableHead>Activo</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {plans?.map((plan) => (
+      <div className="relative rounded-lg border overflow-hidden">
+        <div className="overflow-x-auto scrollbar-thin">
+          <Table className="min-w-[800px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Plan</TableHead>
+                <TableHead>Período</TableHead>
+                <TableHead>Precio</TableHead>
+                <TableHead>Recordatorios</TableHead>
+                <TableHead>Suspensión Auto</TableHead>
+                <TableHead>Activo</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <SkeletonTableRow key={i} columns={7} />
+                ))
+              ) : (
+                plans?.map((plan) => (
                   <TableRow 
                     key={plan.id}
                     onClick={() => navigate(`/subscriptions/plans/${plan.id}`)}
-                    className="cursor-pointer hover:bg-muted/50"
+                    className={cn(
+                      "cursor-pointer group",
+                      "transition-all duration-150",
+                      "hover:bg-muted/50 hover:shadow-sm",
+                      "hover:border-l-4 hover:border-l-primary/50",
+                      "active:scale-[0.995]"
+                    )}
                   >
                     <TableCell>
                       <div>
@@ -71,45 +76,43 @@ export default function SubscriptionPlans() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                        <span>{plan.periodo_meses} {plan.periodo_meses === 1 ? 'mes' : 'meses'}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">${plan.precio.toLocaleString('es-CL')}</span>
-                      </div>
-                    </TableCell>
+                    <TableCell>{plan.periodo_meses} {plan.periodo_meses === 1 ? 'mes' : 'meses'}</TableCell>
+                    <TableCell className="font-medium">${plan.precio.toLocaleString('es-CL')}</TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {plan.notificacion_config?.recordatorios?.filter(r => r.activo).length || 0} activos
+                        {plan.notificacion_config?.recordatorios?.filter((r: any) => r.activo).length || 0} activos
                       </Badge>
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Switch
                         checked={plan.suspension_automatica}
                         onCheckedChange={() => handleToggleSuspension(plan.id, plan.suspension_automatica)}
+                        className="transition-opacity active:opacity-50"
                       />
                     </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Switch
                         checked={plan.activo}
                         onCheckedChange={() => handleToggleActive(plan.id, plan.activo)}
+                        className="transition-opacity active:opacity-50"
                       />
                     </TableCell>
                     <TableCell>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      <ChevronRight 
+                        className={cn(
+                          "h-4 w-4 text-muted-foreground",
+                          "transition-transform duration-200",
+                          "group-hover:translate-x-1 group-hover:text-primary"
+                        )} 
+                      />
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </PageContainer>
   );
 }

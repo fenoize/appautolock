@@ -81,6 +81,18 @@ All colors MUST be HSL.
     
     /* Transiciones suaves */
     --transition-base: all 0.2s ease-in-out;
+    
+    /* Sistema de espaciado */
+    --space-section: 2rem;      /* Entre PageHeader y contenido */
+    --space-cards: 1.5rem;      /* Entre cards en grid */
+    --space-card-padding: 1.5rem; /* Padding interno de cards */
+    --space-elements: 1rem;     /* Entre elementos relacionados */
+    --space-compact: 0.5rem;    /* Espaciado mínimo */
+    
+    /* Container responsive */
+    --container-padding-mobile: 1rem;
+    --container-padding-tablet: 1.5rem;
+    --container-padding-desktop: 2rem;
   }
 
   .dark {
@@ -137,5 +149,30 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .space-section {
+    margin-bottom: var(--space-section);
+  }
+  
+  .space-cards {
+    gap: var(--space-cards);
+  }
+  
+  /* Custom scrollbar for tables */
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
   }
 }
