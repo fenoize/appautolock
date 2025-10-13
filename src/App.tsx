@@ -41,6 +41,9 @@ import PDFSettings from "./pages/settings/PDFSettings";
 import IntegrationsSettings from "./pages/settings/IntegrationsSettings";
 import BackupsSettings from "./pages/settings/BackupsSettings";
 import AuditSettings from "./pages/settings/AuditSettings";
+import UsersList from "./pages/admin/UsersList";
+import UserDetail from "./pages/admin/UserDetail";
+import InviteUser from "./pages/admin/InviteUser";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +86,11 @@ const App = () => (
           
           {/* Analytics */}
           <Route path="/analytics" element={<ProtectedRoute><AppLayout><AnalyticsDashboard /></AppLayout></ProtectedRoute>} />
+          
+          {/* Admin - Usuarios */}
+          <Route path="/admin/users" element={<ProtectedRoute><AppLayout><UsersList /></AppLayout></ProtectedRoute>} />
+          <Route path="/admin/users/new" element={<ProtectedRoute><AppLayout><InviteUser /></AppLayout></ProtectedRoute>} />
+          <Route path="/admin/users/:id" element={<ProtectedRoute><AppLayout><UserDetail /></AppLayout></ProtectedRoute>} />
           
           {/* Settings */}
           <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsLayout /></AppLayout></ProtectedRoute>}>
