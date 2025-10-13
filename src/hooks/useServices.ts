@@ -208,7 +208,90 @@ export function useDeleteChecklistItem() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['service-checklist-items', variables.serviceId] });
+      queryClient.invalidateQueries({ queryKey: ['service-complete', variables.serviceId] });
       toast.success('Ítem eliminado');
+    }
+  });
+}
+
+// Hooks para gestionar productos de servicios
+export function useServiceProducts(serviceId: string) {
+  return useQuery({
+    queryKey: ['service-products', serviceId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('services_products')
+        .select('*, product:products(id, nombre, sku, precio_venta, serializable)')
+        .eq('service_id', serviceId);
+      
+      if (error) throw error;
+      return data as ServiceProduct[];
+    },
+    enabled: !!serviceId
+  });
+}
+
+export function useCreateServiceProduct() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (item: Omit<ServiceProduct, 'id' | 'created_at' | 'product'>) => {
+      const { data, error } = await supabase
+        .from('services_products')
+        .insert([item])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['service-products', variables.service_id] });
+      queryClient.invalidateQueries({ queryKey: ['service-complete', variables.service_id] });
+      toast.success('Material agregado');
+    }
+  });
+}
+
+export function useUpdateServiceProduct() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, serviceId, ...updates }: Partial<ServiceProduct> & { id: string; serviceId: string }) => {
+      const { data, error } = await supabase
+        .from('services_products')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['service-products', variables.serviceId] });
+      queryClient.invalidateQueries({ queryKey: ['service-complete', variables.serviceId] });
+      toast.success('Material actualizado');
+    }
+  });
+}
+
+export function useDeleteServiceProduct() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, serviceId }: { id: string; serviceId: string }) => {
+      const { error } = await supabase
+        .from('services_products')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['service-products', variables.serviceId] });
+      queryClient.invalidateQueries({ queryKey: ['service-complete', variables.serviceId] });
+      toast.success('Material eliminado');
     }
   });
 }

@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { useServiceComplete, useUpdateService } from "@/hooks/useServices";
 import { ArrowLeft, Edit, Copy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ServiceMaterialsEditor } from "@/components/services/ServiceMaterialsEditor";
+import { ServiceChecklistEditor } from "@/components/services/ServiceChecklistEditor";
 
 export default function ServiceDetail() {
   const { id } = useParams<{ id: string }>();
@@ -109,58 +111,17 @@ export default function ServiceDetail() {
         </TabsContent>
 
         <TabsContent value="materiales">
-          <Card>
-            <CardHeader>
-              <CardTitle>Materiales Requeridos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {service.services_products && service.services_products.length > 0 ? (
-                <div className="space-y-2">
-                  {service.services_products.map((sp) => (
-                    <div key={sp.id} className="flex justify-between items-center p-3 border rounded">
-                      <div>
-                        <p className="font-medium">{sp.product?.nombre}</p>
-                        <p className="text-sm text-muted-foreground">SKU: {sp.product?.sku}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold">Cantidad: {sp.cantidad}</p>
-                        {sp.es_sustituible && (
-                          <Badge variant="outline" className="text-xs">Sustituible</Badge>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-8">No hay materiales asignados</p>
-              )}
-            </CardContent>
-          </Card>
+          <ServiceMaterialsEditor 
+            serviceId={service.id} 
+            materials={service.services_products || []} 
+          />
         </TabsContent>
 
         <TabsContent value="checklist">
-          <Card>
-            <CardHeader>
-              <CardTitle>Items del Checklist</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {service.service_checklist_items && service.service_checklist_items.length > 0 ? (
-                <div className="space-y-2">
-                  {service.service_checklist_items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 border rounded">
-                      <span className="font-mono text-sm text-muted-foreground">{item.orden}.</span>
-                      <p className="flex-1">{item.titulo}</p>
-                      {item.obligatorio && (
-                        <Badge variant="destructive" className="text-xs">Obligatorio</Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-8">No hay items en el checklist</p>
-              )}
-            </CardContent>
-          </Card>
+          <ServiceChecklistEditor 
+            serviceId={service.id} 
+            items={service.service_checklist_items || []} 
+          />
         </TabsContent>
 
         <TabsContent value="compatibilidad">
