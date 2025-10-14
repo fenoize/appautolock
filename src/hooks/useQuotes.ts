@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Quote, QuoteFilters, QuoteItem, QuoteStats } from '@/types/quotes';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export function useQuotes(filters?: QuoteFilters) {
   return useQuery({
@@ -309,25 +310,112 @@ export function useDeleteQuote() {
 
 export function useConvertQuoteToWO() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   
   return useMutation({
     mutationFn: async (quoteId: string) => {
-      const { data, error } = await supabase.rpc('convert_quote_to_wo', {
+      const { data, error } = await supabase.rpc('convert_quote_to_wo_v2', {
         p_quote_id: quoteId
       });
       
       if (error) throw error;
-      return data;
+      return data as string;
     },
-    onSuccess: (_woId, quoteId) => {
+    onSuccess: (woId: string, quoteId: string) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quote', quoteId] });
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
       toast.success('Cotización convertida a OT exitosamente');
+      navigate(`/work-orders/${woId}`);
     },
     onError: (error: any) => {
       toast.error(error.message || 'Error al convertir cotización');
     }
+  });
+}
+
+// Aprobar cotización manualmente
+export function useApproveQuoteManually() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ quoteId, comprobantePagoUrl }: { quoteId: string; comprobantePagoUrl?: string }) => {
+      const { data, error } = await supabase
+        .from('quotes')
+        .update({
+          estado: 'aceptada',
+          comprobante_pago_url: comprobantePagoUrl,
+          metodo_aprobacion: 'manual',
+        })
+        .eq('id', quoteId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Cotización aprobada exitosamente');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al aprobar cotización');
+    },
+  });
+}
+
+// Rechazar cotización
+export function useRejectQuote() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ quoteId, motivo }: { quoteId: string; motivo: string }) => {
+      const { data, error } = await supabase
+        .from('quotes')
+        .update({
+          estado: 'rechazada',
+          notas: motivo,
+        })
+        .eq('id', quoteId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Cotización rechazada');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al rechazar cotización');
+    },
+  });
+}
+
+// Marcar como en revisión
+export function useMarkQuoteInReview() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (quoteId: string) => {
+      const { data, error } = await supabase
+        .from('quotes')
+        .update({ estado: 'en_revision' })
+        .eq('id', quoteId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Cotización marcada como en revisión');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al actualizar estado');
+    },
   });
 }
 

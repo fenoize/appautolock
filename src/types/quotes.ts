@@ -1,6 +1,6 @@
 import { Client } from './clients';
 
-export type QuoteStatus = 'borrador' | 'enviada' | 'aceptada' | 'rechazada' | 'expirada' | 'convertida_ot' | 'cancelada';
+export type QuoteStatus = 'borrador' | 'enviada' | 'en_revision' | 'aceptada' | 'rechazada' | 'expirada' | 'convertida_ot' | 'cancelada';
 
 export interface Quote {
   id: string;
@@ -17,6 +17,8 @@ export interface Quote {
   total: number;
   notas?: string;
   pdf_url?: string;
+  comprobante_pago_url?: string;
+  metodo_aprobacion?: 'email' | 'manual';
   created_at: string;
   updated_at: string;
   

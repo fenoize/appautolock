@@ -8,6 +8,7 @@ interface QuoteStatusBadgeProps {
 const statusConfig: Record<QuoteStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   borrador: { label: "Borrador", variant: "secondary" },
   enviada: { label: "Enviada", variant: "default" },
+  en_revision: { label: "En Revisión", variant: "outline" },
   aceptada: { label: "Aceptada", variant: "default" },
   convertida_ot: { label: "Convertida a OT", variant: "default" },
   rechazada: { label: "Rechazada", variant: "destructive" },

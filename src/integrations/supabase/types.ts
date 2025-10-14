@@ -605,11 +605,13 @@ export type Database = {
           nombre: string
           precio_costo: number | null
           precio_venta: number | null
+          requiere_suscripcion: boolean | null
           serializable: boolean | null
           sku: string
           stock_minimo: number | null
           supplier_id: string | null
           tipo: string | null
+          tipos_suscripcion_disponibles: Json | null
           unidad_medida: string | null
           updated_at: string | null
         }
@@ -621,11 +623,13 @@ export type Database = {
           nombre: string
           precio_costo?: number | null
           precio_venta?: number | null
+          requiere_suscripcion?: boolean | null
           serializable?: boolean | null
           sku: string
           stock_minimo?: number | null
           supplier_id?: string | null
           tipo?: string | null
+          tipos_suscripcion_disponibles?: Json | null
           unidad_medida?: string | null
           updated_at?: string | null
         }
@@ -637,11 +641,13 @@ export type Database = {
           nombre?: string
           precio_costo?: number | null
           precio_venta?: number | null
+          requiere_suscripcion?: boolean | null
           serializable?: boolean | null
           sku?: string
           stock_minimo?: number | null
           supplier_id?: string | null
           tipo?: string | null
+          tipos_suscripcion_disponibles?: Json | null
           unidad_medida?: string | null
           updated_at?: string | null
         }
@@ -791,12 +797,14 @@ export type Database = {
         Row: {
           branch_id: string
           client_id: string
+          comprobante_pago_url: string | null
           created_at: string | null
           estado: Database["public"]["Enums"]["quote_status"] | null
           fecha_emision: string | null
           folio: string
           id: string
           iva: number | null
+          metodo_aprobacion: string | null
           neto: number | null
           notas: string | null
           pdf_url: string | null
@@ -809,12 +817,14 @@ export type Database = {
         Insert: {
           branch_id: string
           client_id: string
+          comprobante_pago_url?: string | null
           created_at?: string | null
           estado?: Database["public"]["Enums"]["quote_status"] | null
           fecha_emision?: string | null
           folio: string
           id?: string
           iva?: number | null
+          metodo_aprobacion?: string | null
           neto?: number | null
           notas?: string | null
           pdf_url?: string | null
@@ -827,12 +837,14 @@ export type Database = {
         Update: {
           branch_id?: string
           client_id?: string
+          comprobante_pago_url?: string | null
           created_at?: string | null
           estado?: Database["public"]["Enums"]["quote_status"] | null
           fecha_emision?: string | null
           folio?: string
           id?: string
           iva?: number | null
+          metodo_aprobacion?: string | null
           neto?: number | null
           notas?: string | null
           pdf_url?: string | null
@@ -1047,8 +1059,10 @@ export type Database = {
           nombre: string
           precio_base: number
           requiere_checklist: boolean | null
+          requiere_suscripcion: boolean | null
           solo_cotizable_externo: boolean | null
           tiempo_estimado_minutos: number
+          tipos_suscripcion_disponibles: Json | null
           updated_at: string | null
           version: number | null
         }
@@ -1061,8 +1075,10 @@ export type Database = {
           nombre: string
           precio_base: number
           requiere_checklist?: boolean | null
+          requiere_suscripcion?: boolean | null
           solo_cotizable_externo?: boolean | null
           tiempo_estimado_minutos?: number
+          tipos_suscripcion_disponibles?: Json | null
           updated_at?: string | null
           version?: number | null
         }
@@ -1075,8 +1091,10 @@ export type Database = {
           nombre?: string
           precio_base?: number
           requiere_checklist?: boolean | null
+          requiere_suscripcion?: boolean | null
           solo_cotizable_externo?: boolean | null
           tiempo_estimado_minutos?: number
+          tipos_suscripcion_disponibles?: Json | null
           updated_at?: string | null
           version?: number | null
         }
@@ -1511,10 +1529,12 @@ export type Database = {
           folio: string
           id: string
           notas: string | null
+          numeros_serie: Json | null
           plan_id: string
           ultima_notificacion_enviada: string | null
           updated_at: string | null
           vehicle_id: string | null
+          wo_id: string | null
         }
         Insert: {
           client_id: string
@@ -1526,10 +1546,12 @@ export type Database = {
           folio: string
           id?: string
           notas?: string | null
+          numeros_serie?: Json | null
           plan_id: string
           ultima_notificacion_enviada?: string | null
           updated_at?: string | null
           vehicle_id?: string | null
+          wo_id?: string | null
         }
         Update: {
           client_id?: string
@@ -1541,10 +1563,12 @@ export type Database = {
           folio?: string
           id?: string
           notas?: string | null
+          numeros_serie?: Json | null
           plan_id?: string
           ultima_notificacion_enviada?: string | null
           updated_at?: string | null
           vehicle_id?: string | null
+          wo_id?: string | null
         }
         Relationships: [
           {
@@ -1566,6 +1590,13 @@ export type Database = {
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_wo_id_fkey"
+            columns: ["wo_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
             referencedColumns: ["id"]
           },
         ]
@@ -1783,6 +1814,57 @@ export type Database = {
           },
         ]
       }
+      wo_subscription_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          item_tipo: string
+          nombre: string
+          numeros_serie: Json | null
+          ref_id: string | null
+          requiere_suscripcion: boolean | null
+          subscription_id: string | null
+          wo_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item_tipo: string
+          nombre: string
+          numeros_serie?: Json | null
+          ref_id?: string | null
+          requiere_suscripcion?: boolean | null
+          subscription_id?: string | null
+          wo_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item_tipo?: string
+          nombre?: string
+          numeros_serie?: Json | null
+          ref_id?: string | null
+          requiere_suscripcion?: boolean | null
+          subscription_id?: string | null
+          wo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wo_subscription_items_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wo_subscription_items_wo_id_fkey"
+            columns: ["wo_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wo_substitutions: {
         Row: {
           autorizado_por: string | null
@@ -1882,6 +1964,7 @@ export type Database = {
       }
       work_orders: {
         Row: {
+          alertas_stock: Json | null
           branch_id: string
           checklist_data: Json | null
           client_id: string
@@ -1902,6 +1985,7 @@ export type Database = {
           notas: string | null
           observaciones_cierre: string | null
           pdf_informe_url: string | null
+          puede_editar: boolean | null
           quote_id: string | null
           tecnico_id: string | null
           ubicacion_lat: number | null
@@ -1913,6 +1997,7 @@ export type Database = {
           ventana_inicio: string | null
         }
         Insert: {
+          alertas_stock?: Json | null
           branch_id: string
           checklist_data?: Json | null
           client_id: string
@@ -1933,6 +2018,7 @@ export type Database = {
           notas?: string | null
           observaciones_cierre?: string | null
           pdf_informe_url?: string | null
+          puede_editar?: boolean | null
           quote_id?: string | null
           tecnico_id?: string | null
           ubicacion_lat?: number | null
@@ -1944,6 +2030,7 @@ export type Database = {
           ventana_inicio?: string | null
         }
         Update: {
+          alertas_stock?: Json | null
           branch_id?: string
           checklist_data?: Json | null
           client_id?: string
@@ -1964,6 +2051,7 @@ export type Database = {
           notas?: string | null
           observaciones_cierre?: string | null
           pdf_informe_url?: string | null
+          puede_editar?: boolean | null
           quote_id?: string | null
           tecnico_id?: string | null
           ubicacion_lat?: number | null
@@ -2214,6 +2302,19 @@ export type Database = {
         Args: { p_quote_id: string }
         Returns: string
       }
+      convert_quote_to_wo_v2: {
+        Args: { p_quote_id: string }
+        Returns: string
+      }
+      create_subscription_from_wo_item: {
+        Args: {
+          p_fecha_inicio?: string
+          p_numeros_serie: Json
+          p_plan_id: string
+          p_wo_subscription_item_id: string
+        }
+        Returns: string
+      }
       expirar_cotizaciones_vencidas: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2408,6 +2509,7 @@ export type Database = {
         | "expirada"
         | "convertida_ot"
         | "cancelada"
+        | "en_revision"
       stock_location_type: "bodega" | "camioneta"
       stock_move_type:
         | "compra"
@@ -2575,6 +2677,7 @@ export const Constants = {
         "expirada",
         "convertida_ot",
         "cancelada",
+        "en_revision",
       ],
       stock_location_type: ["bodega", "camioneta"],
       stock_move_type: [
