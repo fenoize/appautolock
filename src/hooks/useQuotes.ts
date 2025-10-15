@@ -245,7 +245,7 @@ export function useGenerateQuotePDF() {
   });
 }
 
-export function useSendQuoteEmail() {
+export function useSendQuoteEmailWithRecipient() {
   return useMutation({
     mutationFn: async ({ quoteId, email }: { quoteId: string; email: string }) => {
       const { data, error } = await supabase.functions.invoke('send-quote-email', {
@@ -286,8 +286,53 @@ export function useApproveQuote() {
   });
 }
 
+export function useSendQuoteEmail() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('quotes')
+        .update({ estado: 'enviada' })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Cotización enviada');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al enviar cotización');
+    }
+  });
+}
+
+export function useCancelQuote() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, motivo }: { id: string; motivo?: string }) => {
+      const { error } = await supabase
+        .from('quotes')
+        .update({ estado: 'cancelada', notas: motivo })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Cotización cancelada');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al cancelar');
+    }
+  });
+}
+
 export function useDeleteQuote() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   
   return useMutation({
     mutationFn: async (quoteId: string) => {
@@ -300,10 +345,11 @@ export function useDeleteQuote() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      toast.success('Cotización eliminada exitosamente');
+      toast.success('Cotización eliminada');
+      navigate('/quotes');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Error al eliminar cotización');
+      toast.error(error.message || 'Error al eliminar');
     }
   });
 }
@@ -416,6 +462,83 @@ export function useMarkQuoteInReview() {
     onError: (error: any) => {
       toast.error(error.message || 'Error al actualizar estado');
     },
+  });
+}
+
+export function useDuplicateQuote() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  
+  return useMutation({
+    mutationFn: async (originalId: string) => {
+      const { data: original, error: fetchError } = await supabase
+        .from('quotes')
+        .select('*, items:quote_items(*)')
+        .eq('id', originalId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No autenticado');
+
+      // Generar folio
+      const { data: folio, error: folioError } = await supabase
+        .rpc('generar_folio', { prefijo: 'COT' });
+      
+      if (folioError) throw folioError;
+
+      // Crear nueva cotización
+      const { data: newQuote, error: createError } = await supabase
+        .from('quotes')
+        .insert([{
+          folio,
+          client_id: original.client_id,
+          vehicle_id: original.vehicle_id,
+          branch_id: original.branch_id,
+          vendedor_id: user.id,
+          validez_dias: original.validez_dias,
+          estado: 'borrador' as const,
+          notas: `Duplicado de ${original.folio}`,
+        }])
+        .select()
+        .single();
+
+      if (createError) throw createError;
+      
+      // Copiar items
+      if (original.items && original.items.length > 0) {
+        const itemsToInsert = original.items.map((item: any) => {
+          const subtotal = item.cantidad * item.precio_unitario * (1 - (item.descuento_porcentaje || 0) / 100);
+          return {
+            quote_id: newQuote.id,
+            item_tipo: item.item_tipo,
+            ref_id: item.ref_id,
+            nombre: item.nombre,
+            cantidad: item.cantidad,
+            precio_unitario: item.precio_unitario,
+            descuento_porcentaje: item.descuento_porcentaje || 0,
+            subtotal: Math.round(subtotal),
+          };
+        });
+        
+        const { error: itemsError } = await supabase
+          .from('quote_items')
+          .insert(itemsToInsert);
+        
+        if (itemsError) throw itemsError;
+      }
+      
+      return newQuote;
+    },
+    onSuccess: (newQuote) => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      toast.success('Cotización duplicada');
+      navigate(`/quotes/${newQuote.id}`);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al duplicar cotización');
+    }
   });
 }
 

@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useQuote, useConvertQuoteToWO, useMarkQuoteInReview } from '@/hooks/useQuotes';
+import { 
+  useQuote, 
+  useConvertQuoteToWO, 
+  useMarkQuoteInReview, 
+  useSendQuoteEmail, 
+  useCancelQuote, 
+  useDeleteQuote,
+  useDuplicateQuote 
+} from '@/hooks/useQuotes';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +26,9 @@ import { QuoteStatusBadge } from '@/components/quotes/QuoteStatusBadge';
 import { QuoteApprovalDialog } from '@/components/quotes/QuoteApprovalDialog';
 import { QuoteRejectDialog } from '@/components/quotes/QuoteRejectDialog';
 import { QuoteToWODialog } from '@/components/quotes/QuoteToWODialog';
+import { QuoteEmailDialog } from '@/components/quotes/QuoteEmailDialog';
+import { QuoteCancelDialog } from '@/components/quotes/QuoteCancelDialog';
+import { QuoteDeleteDialog } from '@/components/quotes/QuoteDeleteDialog';
 import {
   ArrowLeft,
   FileText,
@@ -27,6 +38,10 @@ import {
   FileCheck,
   AlertCircle,
   Eye,
+  Edit,
+  Trash2,
+  Copy,
+  FileDown,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -35,11 +50,19 @@ export default function QuoteDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: quote, isLoading } = useQuote(id!);
+  
   const markInReviewMutation = useMarkQuoteInReview();
+  const sendEmailMutation = useSendQuoteEmail();
+  const cancelMutation = useCancelQuote();
+  const deleteMutation = useDeleteQuote();
+  const duplicateMutation = useDuplicateQuote();
   
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -64,9 +87,117 @@ export default function QuoteDetail() {
     );
   }
 
-  const canConvertToWO = quote.estado === 'aceptada';
-  const canApproveManually = quote.estado === 'en_revision';
-  const canMarkInReview = quote.estado === 'enviada';
+  const renderActionButtons = () => {
+    switch (quote.estado) {
+      case 'borrador':
+        return (
+          <>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/quotes/${id}/edit`)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setEmailDialogOpen(true)}>
+              <Mail className="mr-2 h-4 w-4" />
+              Enviar
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Eliminar
+            </Button>
+          </>
+        );
+      
+      case 'enviada':
+        return (
+          <>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/quotes/${id}/edit`)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => markInReviewMutation.mutate(quote.id)}>
+              <FileCheck className="mr-2 h-4 w-4" />
+              Marcar en Revisión
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setEmailDialogOpen(true)}>
+              <Mail className="mr-2 h-4 w-4" />
+              Reenviar
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => setCancelDialogOpen(true)}>
+              <X className="mr-2 h-4 w-4" />
+              Cancelar
+            </Button>
+          </>
+        );
+      
+      case 'en_revision':
+        return (
+          <>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/quotes/${id}/edit`)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
+            </Button>
+            <Button variant="default" size="sm" onClick={() => setApprovalDialogOpen(true)}>
+              <Check className="mr-2 h-4 w-4" />
+              Aprobar
+            </Button>
+            <Button variant="destructive" size="sm" onClick={() => setRejectDialogOpen(true)}>
+              <X className="mr-2 h-4 w-4" />
+              Rechazar
+            </Button>
+          </>
+        );
+      
+      case 'aceptada':
+        return (
+          <>
+            {quote.vehicle_id ? (
+              <Button onClick={() => setConvertDialogOpen(true)}>
+                <FileText className="mr-2 h-4 w-4" />
+                Convertir a OT
+              </Button>
+            ) : (
+              <Button variant="outline" disabled>
+                <AlertCircle className="mr-2 h-4 w-4" />
+                Asignar Vehículo Primero
+              </Button>
+            )}
+          </>
+        );
+      
+      case 'convertida_ot':
+        return (
+          <>
+            <Button variant="outline" size="sm">
+              <Eye className="mr-2 h-4 w-4" />
+              Ver OT
+            </Button>
+            <Button variant="outline" size="sm">
+              <FileDown className="mr-2 h-4 w-4" />
+              Descargar PDF
+            </Button>
+          </>
+        );
+      
+      case 'rechazada':
+        return (
+          <Button variant="outline" size="sm" onClick={() => duplicateMutation.mutate(quote.id)}>
+            <Copy className="mr-2 h-4 w-4" />
+            Duplicar
+          </Button>
+        );
+      
+      case 'cancelada':
+        return (
+          <Button variant="outline" size="sm" disabled>
+            <Eye className="mr-2 h-4 w-4" />
+            Cancelada
+          </Button>
+        );
+      
+      default:
+        return null;
+    }
+  };
 
   return (
     <PageContainer>
@@ -97,53 +228,7 @@ export default function QuoteDetail() {
 
           {/* Actions */}
           <div className="flex gap-2">
-            {canMarkInReview && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => markInReviewMutation.mutate(quote.id)}
-              >
-                <FileCheck className="mr-2 h-4 w-4" />
-                Marcar en Revisión
-              </Button>
-            )}
-            
-            {canApproveManually && (
-              <>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => setApprovalDialogOpen(true)}
-                >
-                  <Check className="mr-2 h-4 w-4" />
-                  Aprobar
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setRejectDialogOpen(true)}
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Rechazar
-                </Button>
-              </>
-            )}
-
-            {canConvertToWO && quote.vehicle_id && (
-              <Button
-                onClick={() => setConvertDialogOpen(true)}
-              >
-                <FileText className="mr-2 h-4 w-4" />
-                Convertir a OT
-              </Button>
-            )}
-
-            {canConvertToWO && !quote.vehicle_id && (
-              <Button variant="outline" disabled>
-                <AlertCircle className="mr-2 h-4 w-4" />
-                Asignar Vehículo Primero
-              </Button>
-            )}
+            {renderActionButtons()}
           </div>
         </div>
       </div>
