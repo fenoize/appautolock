@@ -342,6 +342,7 @@ export default function QuoteDetail() {
         open={convertDialogOpen}
         onOpenChange={setConvertDialogOpen}
         quoteId={quote.id}
+        quote={quote}
       />
     </PageContainer>
   );

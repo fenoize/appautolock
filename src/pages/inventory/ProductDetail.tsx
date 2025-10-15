@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useProduct } from '@/hooks/useProducts';
+import { useProduct, useUpdateProduct } from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,11 +7,53 @@ import { ArrowLeft, Edit, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { SubscriptionPlanSelector } from '@/components/shared/SubscriptionPlanSelector';
+import { useState, useEffect } from 'react';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: product, isLoading } = useProduct(id!);
+  const updateProduct = useUpdateProduct();
+
+  const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
+  const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (product) {
+      setRequiereSuscripcion(product.requiere_suscripcion || false);
+      setPlanesSeleccionados(
+        Array.isArray(product.tipos_suscripcion_disponibles) 
+          ? product.tipos_suscripcion_disponibles 
+          : []
+      );
+    }
+  }, [product]);
+
+  const handleUpdateSuscripcion = async (requiere: boolean, planes: string[]) => {
+    if (id) {
+      await updateProduct.mutateAsync({
+        id,
+        requiere_suscripcion: requiere,
+        tipos_suscripcion_disponibles: planes as any
+      });
+    }
+  };
+
+  const handleToggleRequiereSuscripcion = (value: boolean) => {
+    setRequiereSuscripcion(value);
+    if (!value) {
+      setPlanesSeleccionados([]);
+      handleUpdateSuscripcion(false, []);
+    } else {
+      handleUpdateSuscripcion(value, planesSeleccionados);
+    }
+  };
+
+  const handleSelectPlanes = (planes: string[]) => {
+    setPlanesSeleccionados(planes);
+    handleUpdateSuscripcion(requiereSuscripcion, planes);
+  };
 
   if (isLoading) return <div>Cargando...</div>;
   if (!product) return <div>Producto no encontrado</div>;
@@ -47,6 +89,7 @@ export default function ProductDetail() {
           <TabsTrigger value="stock">Stock por Ubicación</TabsTrigger>
           <TabsTrigger value="kardex">Kardex</TabsTrigger>
           {product.serializable && <TabsTrigger value="serials">Números de Serie</TabsTrigger>}
+          <TabsTrigger value="suscripciones">Suscripciones</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info">
@@ -131,6 +174,15 @@ export default function ProductDetail() {
             </Card>
           </TabsContent>
         )}
+
+        <TabsContent value="suscripciones">
+          <SubscriptionPlanSelector
+            requiereSuscripcion={requiereSuscripcion}
+            planesSeleccionados={planesSeleccionados}
+            onToggleRequiereSuscripcion={handleToggleRequiereSuscripcion}
+            onSelectPlanes={handleSelectPlanes}
+          />
+        </TabsContent>
       </Tabs>
     </PageContainer>
   );

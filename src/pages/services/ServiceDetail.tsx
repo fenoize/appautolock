@@ -10,12 +10,28 @@ import { ArrowLeft, Edit, Copy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ServiceMaterialsEditor } from "@/components/services/ServiceMaterialsEditor";
 import { ServiceChecklistEditor } from "@/components/services/ServiceChecklistEditor";
+import { SubscriptionPlanSelector } from "@/components/shared/SubscriptionPlanSelector";
+import { useState, useEffect } from "react";
 
 export default function ServiceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: service, isLoading } = useServiceComplete(id!);
   const updateService = useUpdateService();
+  
+  const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
+  const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (service) {
+      setRequiereSuscripcion(service.requiere_suscripcion || false);
+      setPlanesSeleccionados(
+        Array.isArray(service.tipos_suscripcion_disponibles) 
+          ? service.tipos_suscripcion_disponibles 
+          : []
+      );
+    }
+  }, [service]);
 
   if (isLoading) {
     return (
@@ -44,6 +60,29 @@ export default function ServiceDetail() {
       id: service.id,
       activo: !service.activo
     });
+  };
+
+  const handleUpdateSuscripcion = async (requiere: boolean, planes: string[]) => {
+    await updateService.mutateAsync({
+      id: service.id,
+      requiere_suscripcion: requiere,
+      tipos_suscripcion_disponibles: planes as any
+    });
+  };
+
+  const handleToggleRequiereSuscripcion = (value: boolean) => {
+    setRequiereSuscripcion(value);
+    if (!value) {
+      setPlanesSeleccionados([]);
+      handleUpdateSuscripcion(false, []);
+    } else {
+      handleUpdateSuscripcion(value, planesSeleccionados);
+    }
+  };
+
+  const handleSelectPlanes = (planes: string[]) => {
+    setPlanesSeleccionados(planes);
+    handleUpdateSuscripcion(requiereSuscripcion, planes);
   };
 
   return (
@@ -80,6 +119,7 @@ export default function ServiceDetail() {
           <TabsTrigger value="materiales">Materiales</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="compatibilidad">Compatibilidad</TabsTrigger>
+          <TabsTrigger value="suscripciones">Suscripciones</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumen">
@@ -148,6 +188,15 @@ export default function ServiceDetail() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="suscripciones">
+          <SubscriptionPlanSelector
+            requiereSuscripcion={requiereSuscripcion}
+            planesSeleccionados={planesSeleccionados}
+            onToggleRequiereSuscripcion={handleToggleRequiereSuscripcion}
+            onSelectPlanes={handleSelectPlanes}
+          />
         </TabsContent>
       </Tabs>
     </PageContainer>

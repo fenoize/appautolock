@@ -16,6 +16,8 @@ export interface Service {
   branch_id?: string;
   version: number;
   solo_cotizable_externo: boolean;
+  requiere_suscripcion?: boolean;
+  tipos_suscripcion_disponibles?: string[];
   created_at: string;
   updated_at: string;
 }

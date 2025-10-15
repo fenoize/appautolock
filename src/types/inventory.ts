@@ -17,6 +17,8 @@ export interface Product {
   unidad_medida: string;
   supplier_id?: string;
   activo: boolean;
+  requiere_suscripcion?: boolean;
+  tipos_suscripcion_disponibles?: string[];
   created_at: string;
   updated_at: string;
   

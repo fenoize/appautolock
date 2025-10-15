@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
+import { WOSubscriptionsTab } from '@/components/workOrders/WOSubscriptionsTab';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -87,6 +88,7 @@ export default function WODetail() {
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="evidencias">Evidencias</TabsTrigger>
           <TabsTrigger value="inventario">Inventario</TabsTrigger>
+          <TabsTrigger value="suscripciones">Suscripciones</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info">
@@ -241,6 +243,10 @@ export default function WODetail() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="suscripciones">
+          <WOSubscriptionsTab woId={wo.id} woStatus={wo.estado} />
         </TabsContent>
       </Tabs>
     </div>
