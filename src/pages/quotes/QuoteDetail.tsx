@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   useQuote, 
   useConvertQuoteToWO, 
@@ -7,28 +7,26 @@ import {
   useSendQuoteEmail, 
   useCancelQuote, 
   useDeleteQuote,
-  useDuplicateQuote 
+  useDuplicateQuote,
+  useAssignVehicle
 } from '@/hooks/useQuotes';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
-import { QuoteStatusBadge } from '@/components/quotes/QuoteStatusBadge';
 import { QuoteApprovalDialog } from '@/components/quotes/QuoteApprovalDialog';
 import { QuoteRejectDialog } from '@/components/quotes/QuoteRejectDialog';
 import { QuoteToWODialog } from '@/components/quotes/QuoteToWODialog';
 import { QuoteEmailDialog } from '@/components/quotes/QuoteEmailDialog';
 import { QuoteCancelDialog } from '@/components/quotes/QuoteCancelDialog';
 import { QuoteDeleteDialog } from '@/components/quotes/QuoteDeleteDialog';
+import { AssignVehicleDialog } from '@/components/quotes/AssignVehicleDialog';
+import { InvoiceHeader } from '@/components/quotes/InvoiceHeader';
+import { InvoiceInfo } from '@/components/quotes/InvoiceInfo';
+import { InvoiceItemsTable } from '@/components/quotes/InvoiceItemsTable';
+import { InvoiceSummary } from '@/components/quotes/InvoiceSummary';
 import {
   ArrowLeft,
   FileText,
@@ -42,9 +40,10 @@ import {
   Trash2,
   Copy,
   FileDown,
+  Car,
+  AlertTriangle,
+  Download
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
 
 export default function QuoteDetail() {
   const { id } = useParams();
@@ -56,6 +55,7 @@ export default function QuoteDetail() {
   const cancelMutation = useCancelQuote();
   const deleteMutation = useDeleteQuote();
   const duplicateMutation = useDuplicateQuote();
+  const assignVehicleMutation = useAssignVehicle();
   
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -63,6 +63,7 @@ export default function QuoteDetail() {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [assignVehicleDialogOpen, setAssignVehicleDialogOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -75,17 +76,19 @@ export default function QuoteDetail() {
   if (!quote) {
     return (
       <PageContainer>
-        <Card>
-          <CardHeader>
-            <CardTitle>Cotización no encontrada</CardTitle>
-            <CardDescription>
-              La cotización que buscas no existe o no tienes permisos para verla.
-            </CardDescription>
-          </CardHeader>
+        <Card className="p-8 text-center">
+          <h2 className="text-xl font-semibold mb-2">Cotización no encontrada</h2>
+          <p className="text-muted-foreground">
+            La cotización que buscas no existe o no tienes permisos para verla.
+          </p>
         </Card>
       </PageContainer>
     );
   }
+
+  const handleAssignVehicle = (vehicleId: string) => {
+    assignVehicleMutation.mutate({ quoteId: quote.id, vehicleId });
+  };
 
   const renderActionButtons = () => {
     switch (quote.estado) {
@@ -136,7 +139,7 @@ export default function QuoteDetail() {
               <Edit className="mr-2 h-4 w-4" />
               Editar
             </Button>
-            <Button variant="default" size="sm" onClick={() => setApprovalDialogOpen(true)}>
+            <Button size="sm" onClick={() => setApprovalDialogOpen(true)}>
               <Check className="mr-2 h-4 w-4" />
               Aprobar
             </Button>
@@ -150,17 +153,21 @@ export default function QuoteDetail() {
       case 'aceptada':
         return (
           <>
-            {quote.vehicle_id ? (
+            {!quote.vehicle_id ? (
+              <Button onClick={() => setAssignVehicleDialogOpen(true)}>
+                <Car className="mr-2 h-4 w-4" />
+                Asignar Vehículo
+              </Button>
+            ) : (
               <Button onClick={() => setConvertDialogOpen(true)}>
                 <FileText className="mr-2 h-4 w-4" />
                 Convertir a OT
               </Button>
-            ) : (
-              <Button variant="outline" disabled>
-                <AlertCircle className="mr-2 h-4 w-4" />
-                Asignar Vehículo Primero
-              </Button>
             )}
+            <Button variant="outline" size="sm" onClick={() => navigate(`/quotes/${id}/edit`)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Editar
+            </Button>
           </>
         );
       
@@ -172,25 +179,19 @@ export default function QuoteDetail() {
               Ver OT
             </Button>
             <Button variant="outline" size="sm">
-              <FileDown className="mr-2 h-4 w-4" />
+              <Download className="mr-2 h-4 w-4" />
               Descargar PDF
             </Button>
           </>
         );
       
       case 'rechazada':
+      case 'cancelada':
+      case 'expirada':
         return (
           <Button variant="outline" size="sm" onClick={() => duplicateMutation.mutate(quote.id)}>
             <Copy className="mr-2 h-4 w-4" />
             Duplicar
-          </Button>
-        );
-      
-      case 'cancelada':
-        return (
-          <Button variant="outline" size="sm" disabled>
-            <Eye className="mr-2 h-4 w-4" />
-            Cancelada
           </Button>
         );
       
@@ -201,216 +202,64 @@ export default function QuoteDetail() {
 
   return (
     <PageContainer>
-      {/* Header */}
-      <div className="mb-6">
+      {/* Breadcrumbs y Navegación */}
+      <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/quotes')}
-          className="mb-4"
+          className="gap-2"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" />
           Volver a Cotizaciones
         </Button>
-
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{quote.folio}</h1>
-            <div className="flex items-center gap-3">
-              <QuoteStatusBadge status={quote.estado} />
-              {quote.metodo_aprobacion && (
-                <Badge variant="outline">
-                  Aprobada: {quote.metodo_aprobacion === 'email' ? 'Por Email' : 'Manual'}
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-2">
-            {renderActionButtons()}
-          </div>
-        </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="info" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="info">Información</TabsTrigger>
-          <TabsTrigger value="items">Items ({quote.items?.length || 0})</TabsTrigger>
-        </TabsList>
+      {/* Documento tipo Factura */}
+      <Card className="p-8 max-w-5xl mx-auto">
+        {/* Header con logo y datos emisor/cliente */}
+        <InvoiceHeader quote={quote} />
 
-        <TabsContent value="info" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Cliente */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Cliente</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div>
-                  <p className="text-sm font-medium">Razón Social</p>
-                  <p className="text-sm text-muted-foreground">
-                    {quote.client?.razon_social || quote.client?.nombre_comercial || '-'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">RUT</p>
-                  <p className="text-sm text-muted-foreground">
-                    {quote.client?.rut ? `${quote.client.rut}-${quote.client.dv}` : '-'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Email</p>
-                  <p className="text-sm text-muted-foreground">
-                    {quote.client?.email_principal || '-'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Información clave (folio, fecha, estado, vendedor) */}
+        <InvoiceInfo quote={quote} />
 
-            {/* Vehículo */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Vehículo</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {quote.vehicle ? (
-                  <>
-                    <div>
-                      <p className="text-sm font-medium">Patente</p>
-                      <p className="text-sm text-muted-foreground">{quote.vehicle.patente}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Marca/Modelo</p>
-                      <p className="text-sm text-muted-foreground">
-                        {quote.vehicle.marca} {quote.vehicle.modelo}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Año</p>
-                      <p className="text-sm text-muted-foreground">{quote.vehicle.anio || '-'}</p>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted-foreground italic">
-                    Sin vehículo asignado
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+        {/* Alert de vehículo si está aceptada sin vehículo */}
+        {quote.estado === 'aceptada' && !quote.vehicle_id && (
+          <Alert className="border-warning bg-warning/10 mb-6">
+            <AlertTriangle className="h-4 w-4 text-warning" />
+            <AlertDescription className="text-warning-foreground">
+              <strong>Acción requerida:</strong> Asigna un vehículo para poder convertir esta cotización en una Orden de Trabajo.
+            </AlertDescription>
+          </Alert>
+        )}
 
-            {/* Detalles */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Detalles de la Cotización</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div>
-                  <p className="text-sm font-medium">Vendedor</p>
-                  <p className="text-sm text-muted-foreground">
-                    {quote.vendedor?.nombre} {quote.vendedor?.apellido}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Sucursal</p>
-                  <p className="text-sm text-muted-foreground">
-                    {quote.branch?.nombre || '-'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Fecha de Emisión</p>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(quote.fecha_emision), "dd 'de' MMMM, yyyy", { locale: es })}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Validez</p>
-                  <p className="text-sm text-muted-foreground">{quote.validez_dias} días</p>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Alert de éxito si está aceptada con vehículo */}
+        {quote.estado === 'aceptada' && quote.vehicle_id && (
+          <Alert className="border-accent bg-accent/10 mb-6">
+            <Check className="h-4 w-4 text-accent" />
+            <AlertDescription className="text-accent-foreground">
+              <strong>Lista para convertir:</strong> Esta cotización está aprobada y tiene un vehículo asignado. Puedes convertirla a OT.
+            </AlertDescription>
+          </Alert>
+        )}
 
-            {/* Resumen Financiero */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Resumen Financiero</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">Neto:</span>
-                  <span className="text-sm">${quote.neto?.toLocaleString('es-CL')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-medium">IVA (19%):</span>
-                  <span className="text-sm">${quote.iva?.toLocaleString('es-CL')}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between">
-                  <span className="text-lg font-bold">Total:</span>
-                  <span className="text-lg font-bold text-primary">
-                    ${quote.total?.toLocaleString('es-CL')}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Tabla de Items */}
+        {quote.items && quote.items.length > 0 && (
+          <div className="mb-6">
+            <InvoiceItemsTable items={quote.items} />
           </div>
+        )}
 
-          {/* Notas */}
-          {quote.notas && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Notas</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {quote.notas}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
+        {/* Resumen Financiero */}
+        <InvoiceSummary quote={quote} />
 
-        <TabsContent value="items">
-          <Card>
-            <CardHeader>
-              <CardTitle>Items de la Cotización</CardTitle>
-              <CardDescription>
-                Lista de productos y servicios incluidos
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {quote.items?.map((item) => (
-                  <div key={item.id} className="flex justify-between items-start p-3 border rounded-lg">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={item.item_tipo === 'producto' ? 'default' : 'secondary'}>
-                          {item.item_tipo === 'producto' ? 'Producto' : 'Servicio'}
-                        </Badge>
-                        <h4 className="font-medium">{item.nombre}</h4>
-                      </div>
-                      {item.descripcion && (
-                        <p className="text-sm text-muted-foreground mt-1">{item.descripcion}</p>
-                      )}
-                      <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                        <span>Cantidad: {item.cantidad}</span>
-                        <span>Precio Unit.: ${item.precio_unitario.toLocaleString('es-CL')}</span>
-                        {item.descuento_porcentaje > 0 && (
-                          <span>Desc.: {item.descuento_porcentaje}%</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">${item.subtotal.toLocaleString('es-CL')}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        <Separator className="my-6" />
+
+        {/* Botones de Acción */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {renderActionButtons()}
+        </div>
+      </Card>
 
       {/* Dialogs */}
       <QuoteApprovalDialog
@@ -418,16 +267,45 @@ export default function QuoteDetail() {
         onOpenChange={setApprovalDialogOpen}
         quoteId={quote.id}
       />
+      
       <QuoteRejectDialog
         open={rejectDialogOpen}
         onOpenChange={setRejectDialogOpen}
         quoteId={quote.id}
       />
+      
       <QuoteToWODialog
         open={convertDialogOpen}
         onOpenChange={setConvertDialogOpen}
         quoteId={quote.id}
         quote={quote}
+      />
+      
+      <QuoteEmailDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        onConfirm={() => sendEmailMutation.mutate(quote.id)}
+        clientEmail={quote.client?.email_principal}
+      />
+      
+      <QuoteCancelDialog
+        open={cancelDialogOpen}
+        onOpenChange={setCancelDialogOpen}
+        onConfirm={(motivo) => cancelMutation.mutate({ id: quote.id, motivo })}
+      />
+      
+      <QuoteDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={() => deleteMutation.mutate(quote.id)}
+        quoteFolio={quote.folio}
+      />
+
+      <AssignVehicleDialog
+        open={assignVehicleDialogOpen}
+        onOpenChange={setAssignVehicleDialogOpen}
+        clientId={quote.client_id}
+        onSelectVehicle={handleAssignVehicle}
       />
     </PageContainer>
   );

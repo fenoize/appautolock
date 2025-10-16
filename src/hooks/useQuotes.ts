@@ -465,6 +465,32 @@ export function useMarkQuoteInReview() {
   });
 }
 
+export function useAssignVehicle() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ quoteId, vehicleId }: { quoteId: string; vehicleId: string }) => {
+      const { data, error } = await supabase
+        .from('quotes')
+        .update({ vehicle_id: vehicleId })
+        .eq('id', quoteId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['quotes', variables.quoteId] });
+      toast.success('Vehículo asignado exitosamente');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al asignar vehículo');
+    }
+  });
+}
+
 export function useDuplicateQuote() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
