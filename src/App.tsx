@@ -50,6 +50,7 @@ import InviteUser from "./pages/admin/InviteUser";
 import QuotesList from "./pages/quotes/QuotesList";
 import NewQuote from "./pages/quotes/NewQuote";
 import QuoteDetail from "./pages/quotes/QuoteDetail";
+import EditQuote from "./pages/quotes/EditQuote";
 import ServicesList from "./pages/services/ServicesList";
 import NewService from "./pages/services/NewService";
 import ServiceDetail from "./pages/services/ServiceDetail";
@@ -92,6 +93,7 @@ const App = () => (
           <Route path="/quotes" element={<ProtectedRoute><AppLayout><QuotesList /></AppLayout></ProtectedRoute>} />
           <Route path="/quotes/new" element={<ProtectedRoute><AppLayout><NewQuote /></AppLayout></ProtectedRoute>} />
           <Route path="/quotes/:id" element={<ProtectedRoute><AppLayout><QuoteDetail /></AppLayout></ProtectedRoute>} />
+          <Route path="/quotes/:id/edit" element={<ProtectedRoute><AppLayout><EditQuote /></AppLayout></ProtectedRoute>} />
           
           {/* Inventario */}
           <Route path="/inventory" element={<ProtectedRoute><AppLayout><ProductsList /></AppLayout></ProtectedRoute>} />
