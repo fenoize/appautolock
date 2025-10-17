@@ -2,7 +2,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { WOSubscriptionsTab } from '@/components/workOrders/WOSubscriptionsTab';
-import { WOInvoiceHeader } from '@/components/workOrders/WOInvoiceHeader';
+import { WODetailHeader } from '@/components/workOrders/WODetailHeader';
+import { WOItemsTable } from '@/components/workOrders/WOItemsTable';
+import { WONotesSection } from '@/components/workOrders/WONotesSection';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -61,13 +63,6 @@ export default function WODetail() {
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP',
-      minimumFractionDigits: 0
-    }).format(value);
-  };
 
   const renderStatusButtons = () => {
     switch (wo.estado) {
@@ -139,155 +134,39 @@ export default function WODetail() {
         </Button>
       </div>
 
-      {/* Documento tipo Factura */}
+      {/* Tarjeta de Orden de Trabajo */}
       <Card className="p-8 max-w-5xl mx-auto">
         {/* Header */}
-        <WOInvoiceHeader workOrder={wo} />
-
-        <Separator className="my-6" />
-
-        {/* Información Principal en Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {/* Folio */}
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Folio</p>
-            <p className="font-mono font-semibold text-foreground">{wo.folio}</p>
-          </div>
-
-          {/* Origen */}
-          {wo.quote_id && (
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Origen</p>
-              <Badge variant="outline">Cotización</Badge>
-            </div>
-          )}
-
-          {/* Fecha Programada */}
-          {wo.fecha_programada && (
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Programada</p>
-              <p className="font-medium text-foreground">
-                {format(new Date(wo.fecha_programada), "dd/MM/yyyy HH:mm", { locale: es })}
-              </p>
-            </div>
-          )}
-
-          {/* Duración */}
-          {wo.duracion_minutos && (
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Duración</p>
-              <p className="font-medium text-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {wo.duracion_minutos} min
-              </p>
-            </div>
-          )}
-        </div>
-
-        <Separator className="my-6" />
+        <WODetailHeader workOrder={wo} />
 
         {/* Tabs con contenido */}
-        <Tabs defaultValue="info" className="space-y-4">
-          <TabsList className="grid grid-cols-6 w-full">
-            <TabsTrigger value="info">Info</TabsTrigger>
+        <Tabs defaultValue="items" className="space-y-4">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="items">
-              Items
+              Trabajo a Realizar
               {wo.items && wo.items.length > 0 && (
                 <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5">
                   {wo.items.length}
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="notas">Instrucciones</TabsTrigger>
             <TabsTrigger value="checklist">Checklist</TabsTrigger>
             <TabsTrigger value="evidencias">Evidencias</TabsTrigger>
             <TabsTrigger value="inventario">Inventario</TabsTrigger>
-            <TabsTrigger value="suscripciones">
-              Suscripciones
-              <Bell className="ml-1 h-3 w-3" />
-            </TabsTrigger>
           </TabsList>
-
-          {/* Info Tab */}
-          <TabsContent value="info" className="space-y-4 pt-4">
-            {wo.notas && (
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                  Notas / Notes
-                </h3>
-                <p className="text-sm text-foreground whitespace-pre-wrap p-3 bg-muted/50 rounded-lg">
-                  {wo.notas}
-                </p>
-              </div>
-            )}
-
-            {wo.direccion_id && (
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                  Ubicación
-                </h3>
-                <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <p className="text-sm text-foreground">
-                    {wo.ubicacion_manual || 'Ubicación asignada'}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {wo.observaciones_cierre && (
-              <div>
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase mb-2">
-                  Observaciones de Cierre
-                </h3>
-                <p className="text-sm text-foreground p-3 bg-accent/10 rounded-lg border border-accent">
-                  {wo.observaciones_cierre}
-                </p>
-              </div>
-            )}
-          </TabsContent>
 
           {/* Items Tab */}
           <TabsContent value="items" className="pt-4">
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="w-[50%]">Descripción</TableHead>
-                    <TableHead className="text-center w-[15%]">Tipo</TableHead>
-                    <TableHead className="text-center w-[15%]">Cantidad</TableHead>
-                    <TableHead className="text-right w-[20%]">Precio</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {wo.items && wo.items.length > 0 ? (
-                    wo.items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <p className="font-medium text-foreground">{item.nombre}</p>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={item.item_tipo === 'producto' ? 'default' : 'secondary'}>
-                            {item.item_tipo === 'producto' ? '📦 Producto' : '🔧 Servicio'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center font-mono">
-                          {item.cantidad}
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {item.precio_unitario ? formatCurrency(item.precio_unitario) : '-'}
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                        No hay items en esta orden de trabajo
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            <WOItemsTable items={wo.items} />
+          </TabsContent>
+
+          {/* Notas Tab */}
+          <TabsContent value="notas" className="pt-4">
+            <WONotesSection 
+              notas={wo.notas} 
+              observaciones_cierre={wo.observaciones_cierre} 
+            />
           </TabsContent>
 
           {/* Checklist Tab */}
@@ -391,10 +270,6 @@ export default function WODetail() {
             )}
           </TabsContent>
 
-          {/* Suscripciones Tab */}
-          <TabsContent value="suscripciones" className="pt-4">
-            <WOSubscriptionsTab woId={wo.id} woStatus={wo.estado} />
-          </TabsContent>
         </Tabs>
 
         <Separator className="my-6" />
