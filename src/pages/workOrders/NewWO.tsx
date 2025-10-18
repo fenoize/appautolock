@@ -1,161 +1,434 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCreateWorkOrder, useCreateWOItem } from '@/hooks/useWorkOrders';
-import { useClients } from '@/hooks/useClients';
-import { useVehicles } from '@/hooks/useVehicles';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PageContainer } from '@/components/shared/PageContainer';
-import { PageHeader } from '@/components/shared/PageHeader';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Plus, AlertCircle, Package, Trash2 } from 'lucide-react';
+import { useClients } from '@/hooks/useClients';
+import { useVehiclesByClient } from '@/hooks/useVehicles';
+import { useCreateWorkOrder, useCreateWOItem } from '@/hooks/useWorkOrders';
+import { CreateClientDialog } from '@/components/quotes/CreateClientDialog';
+import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
+import { ItemSelector } from '@/components/quotes/ItemSelector';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface WOItemForm {
+  item_tipo: 'producto' | 'servicio';
+  ref_id?: string;
+  nombre: string;
+  cantidad: number;
+  precio_unitario?: number;
+}
 
 export default function NewWO() {
   const navigate = useNavigate();
-  const createWO = useCreateWorkOrder();
-  const createItem = useCreateWOItem();
-  const { data: clients } = useClients();
-  const [selectedClient, setSelectedClient] = useState('');
-  const { data: vehicles } = useVehicles({ client_id: selectedClient });
-
+  
+  // Datos del formulario
   const [formData, setFormData] = useState({
     client_id: '',
     vehicle_id: '',
     branch_id: '',
-    notas: '',
     fecha_programada: '',
     ventana_inicio: '',
     ventana_fin: '',
+    notas: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  // Items de la OT
+  const [items, setItems] = useState<WOItemForm[]>([]);
+
+  // Usuario actual
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Control de dialogs
+  const [showClientDialog, setShowClientDialog] = useState(false);
+  const [showVehicleDialog, setShowVehicleDialog] = useState(false);
+  const [showItemSelector, setShowItemSelector] = useState(false);
+
+  // Datos
+  const { data: clients } = useClients();
+  const { data: vehicles } = useVehiclesByClient(formData.client_id);
+
+  // Mutaciones
+  const createWO = useCreateWorkOrder();
+  const createWOItem = useCreateWOItem();
+
+  // Obtener usuario actual
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*, branch_id')
+          .eq('id', user.id)
+          .single();
+        
+        setCurrentUser(profile);
+        
+        if (profile?.branch_id && !formData.branch_id) {
+          setFormData(prev => ({ ...prev, branch_id: profile.branch_id }));
+        }
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  // Funciones para items
+  const handleAddItem = (newItem: {
+    tipo: 'producto' | 'servicio';
+    ref_id: string;
+    nombre: string;
+    precio_unitario: number;
+  }) => {
+    const item: WOItemForm = {
+      item_tipo: newItem.tipo,
+      ref_id: newItem.ref_id,
+      nombre: newItem.nombre,
+      cantidad: 1,
+      precio_unitario: newItem.precio_unitario,
+    };
+    setItems([...items, item]);
+    toast.success('Item agregado');
+  };
+
+  const updateItemQuantity = (index: number, cantidad: number) => {
+    if (cantidad <= 0) return;
+    const newItems = [...items];
+    newItems[index].cantidad = cantidad;
+    setItems(newItems);
+  };
+
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index));
+    toast.success('Item eliminado');
+  };
+
+  // Guardar OT
+  const handleSave = async () => {
     if (!formData.client_id) {
-      alert('Selecciona un cliente');
+      toast.error('Debes seleccionar un cliente');
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error('Debes agregar al menos un item de trabajo');
       return;
     }
 
     try {
-      const wo = await createWO.mutateAsync(formData as any);
+      const woData = {
+        client_id: formData.client_id,
+        vehicle_id: formData.vehicle_id || null,
+        branch_id: formData.branch_id || currentUser?.branch_id,
+        fecha_programada: formData.fecha_programada || null,
+        ventana_inicio: formData.ventana_inicio || null,
+        ventana_fin: formData.ventana_fin || null,
+        notas: formData.notas || null,
+        estado: 'pendiente' as const,
+      };
+
+      const wo = await createWO.mutateAsync(woData);
+
+      for (const item of items) {
+        await createWOItem.mutateAsync({
+          wo_id: wo.id,
+          item_tipo: item.item_tipo,
+          ref_id: item.ref_id || undefined,
+          nombre: item.nombre,
+          cantidad: item.cantidad,
+          precio_unitario: item.precio_unitario,
+        });
+      }
+
+      toast.success('Orden de trabajo creada exitosamente');
       navigate(`/work-orders/${wo.id}`);
-    } catch (error) {
-      console.error('Error al crear OT:', error);
+    } catch (error: any) {
+      toast.error(error.message || 'Error al crear orden de trabajo');
     }
   };
 
+  const canSave = formData.client_id && items.length > 0;
+
   return (
-    <PageContainer maxWidth="md">
+    <div className="container mx-auto p-6 max-w-7xl">
       <PageHeader
         title="Nueva Orden de Trabajo"
-        backButton={true}
+        description="Crea una nueva orden de trabajo para un cliente"
+        backButton
         backTo="/work-orders"
       />
 
-      <form onSubmit={handleSubmit}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Información Básica</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="client">Cliente *</Label>
-              <Select
-                value={formData.client_id}
-                onValueChange={(value) => {
-                  setFormData({ ...formData, client_id: value });
-                  setSelectedClient(value);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients?.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.razon_social || client.nombre_comercial}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedClient && vehicles && vehicles.length > 0 && (
-              <div>
-                <Label htmlFor="vehicle">Vehículo</Label>
-                <Select
-                  value={formData.vehicle_id}
-                  onValueChange={(value) => setFormData({ ...formData, vehicle_id: value })}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Columna Izquierda - 2/3 */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Card: Cliente y Vehículo */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Cliente y Vehículo</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Select Cliente */}
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Label>Cliente *</Label>
+                  <Select 
+                    value={formData.client_id} 
+                    onValueChange={(v) => {
+                      setFormData({ ...formData, client_id: v, vehicle_id: '' });
+                      const client = clients?.find(c => c.id === v);
+                      if (client?.branch_id) {
+                        setFormData(prev => ({ ...prev, branch_id: client.branch_id }));
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un cliente..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients?.map(client => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.razon_social || client.nombre_comercial} 
+                          {client.rut && ` (RUT: ${client.rut}-${client.dv})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={() => setShowClientDialog(true)}
+                  className="mt-8"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un vehículo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {vehicles.map((vehicle) => (
-                      <SelectItem key={vehicle.id} value={vehicle.id}>
-                        {vehicle.marca} {vehicle.modelo} - {vehicle.patente}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo
+                </Button>
               </div>
-            )}
 
-            <div>
-              <Label htmlFor="notas">Notas</Label>
-              <Textarea
-                id="notas"
-                value={formData.notas}
-                onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
-                placeholder="Descripción del trabajo a realizar"
-              />
-            </div>
+              {/* Select Vehículo */}
+              {formData.client_id && (
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Label>Vehículo (opcional)</Label>
+                    <Select 
+                      value={formData.vehicle_id} 
+                      onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona un vehículo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {vehicles?.map(vehicle => (
+                          <SelectItem key={vehicle.id} value={vehicle.id}>
+                            {vehicle.marca} {vehicle.modelo} - {vehicle.patente}
+                            {vehicle.anio && ` (${vehicle.anio})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowVehicleDialog(true)}
+                    className="mt-8"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nuevo
+                  </Button>
+                </div>
+              )}
 
-            <div className="grid grid-cols-2 gap-4">
+              {/* Advertencia sin vehículo */}
+              {formData.client_id && !formData.vehicle_id && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Sin vehículo asignado</AlertTitle>
+                  <AlertDescription>
+                    Puedes continuar sin vehículo y agregarlo después si es necesario.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Card: Items */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Trabajos a Realizar</CardTitle>
+              <Button 
+                onClick={() => setShowItemSelector(true)}
+                disabled={!formData.client_id}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar Trabajo
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {items.length === 0 ? (
+                <EmptyState
+                  icon={Package}
+                  title="Sin trabajos"
+                  description="Agrega productos o servicios que se realizarán en esta OT"
+                />
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead className="w-24">Cantidad</TableHead>
+                        <TableHead className="w-16"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {items.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Badge variant={item.item_tipo === 'producto' ? 'secondary' : 'default'}>
+                              {item.item_tipo === 'producto' ? 'Producto' : 'Servicio'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-medium">{item.nombre}</TableCell>
+                          <TableCell>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={item.cantidad}
+                              onChange={(e) => updateItemQuantity(index, parseFloat(e.target.value) || 1)}
+                              className="w-20"
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeItem(index)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Columna Derecha - 1/3 */}
+        <div className="space-y-6">
+          {/* Card: Programación */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Programación</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="fecha">Fecha Programada</Label>
+                <Label>Fecha Programada</Label>
                 <Input
-                  id="fecha"
                   type="datetime-local"
                   value={formData.fecha_programada}
                   onChange={(e) => setFormData({ ...formData, fecha_programada: e.target.value })}
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <Label htmlFor="inicio">Ventana Inicio</Label>
+                  <Label>Ventana Inicio</Label>
                   <Input
-                    id="inicio"
                     type="time"
                     value={formData.ventana_inicio}
                     onChange={(e) => setFormData({ ...formData, ventana_inicio: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="fin">Ventana Fin</Label>
+                  <Label>Ventana Fin</Label>
                   <Input
-                    id="fin"
                     type="time"
                     value={formData.ventana_fin}
                     onChange={(e) => setFormData({ ...formData, ventana_fin: e.target.value })}
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => navigate('/work-orders')}>
+              <div>
+                <Label>Instrucciones / Notas</Label>
+                <Textarea
+                  rows={4}
+                  value={formData.notas}
+                  onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+                  placeholder="Instrucciones especiales para el técnico..."
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card: Acciones */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Acciones</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button 
+                className="w-full"
+                onClick={handleSave}
+                disabled={!canSave || createWO.isPending}
+              >
+                Crear Orden de Trabajo
+              </Button>
+              <Button 
+                variant="ghost"
+                className="w-full"
+                onClick={() => navigate('/work-orders')}
+              >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createWO.isPending}>
-                {createWO.isPending ? 'Creando...' : 'Crear OT'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </form>
-    </PageContainer>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Dialogs */}
+      <CreateClientDialog
+        open={showClientDialog}
+        onOpenChange={setShowClientDialog}
+        onClientCreated={(clientId) => {
+          setFormData({ ...formData, client_id: clientId });
+          setShowClientDialog(false);
+        }}
+      />
+
+      <CreateVehicleDialog
+        open={showVehicleDialog}
+        onOpenChange={setShowVehicleDialog}
+        clientId={formData.client_id}
+        onVehicleCreated={(vehicleId) => {
+          setFormData({ ...formData, vehicle_id: vehicleId });
+          setShowVehicleDialog(false);
+        }}
+      />
+
+      <ItemSelector
+        open={showItemSelector}
+        onOpenChange={setShowItemSelector}
+        onSelectItem={handleAddItem}
+      />
+    </div>
   );
 }
