@@ -75,6 +75,12 @@ export interface NotificationTemplate {
   canal: NotificationChannel;
   asunto?: string;
   cuerpo: string;
+  html_content?: string;
+  variables_disponibles?: any;
+  categoria?: string;
+  descripcion?: string;
+  subject_preview?: string;
+  body_preview?: string;
   activa: boolean;
   created_at: string;
   updated_at: string;

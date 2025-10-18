@@ -10,10 +10,33 @@ export function useNotificationTemplates() {
       const { data, error } = await supabase
         .from('notification_templates')
         .select('*')
-        .order('evento');
+        .order('categoria', { ascending: true })
+        .order('evento', { ascending: true });
       if (error) throw error;
       return data as NotificationTemplate[];
     }
+  });
+}
+
+export function useTemplatesByCategory(categoria?: string) {
+  return useQuery({
+    queryKey: ['notification-templates', categoria],
+    queryFn: async () => {
+      let query = supabase
+        .from('notification_templates')
+        .select('*');
+      
+      if (categoria) {
+        query = query.eq('categoria', categoria);
+      }
+      
+      const { data, error } = await query
+        .order('evento', { ascending: true });
+      
+      if (error) throw error;
+      return data as NotificationTemplate[];
+    },
+    enabled: !!categoria
   });
 }
 

@@ -458,36 +458,122 @@ export type Database = {
           },
         ]
       }
+      notification_conditions: {
+        Row: {
+          activo: boolean | null
+          campo: string
+          created_at: string | null
+          id: string
+          operador: string
+          template_id: string | null
+          valor: string
+        }
+        Insert: {
+          activo?: boolean | null
+          campo: string
+          created_at?: string | null
+          id?: string
+          operador: string
+          template_id?: string | null
+          valor: string
+        }
+        Update: {
+          activo?: boolean | null
+          campo?: string
+          created_at?: string | null
+          id?: string
+          operador?: string
+          template_id?: string | null
+          valor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_conditions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "notification_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_templates: {
         Row: {
           activa: boolean | null
           asunto: string | null
+          body_preview: string | null
           canal: Database["public"]["Enums"]["notification_channel"]
+          categoria: string | null
           created_at: string | null
           cuerpo: string
+          descripcion: string | null
           evento: string
+          html_content: string | null
           id: string
+          subject_preview: string | null
           updated_at: string | null
+          variables_disponibles: Json | null
         }
         Insert: {
           activa?: boolean | null
           asunto?: string | null
+          body_preview?: string | null
           canal: Database["public"]["Enums"]["notification_channel"]
+          categoria?: string | null
           created_at?: string | null
           cuerpo: string
+          descripcion?: string | null
           evento: string
+          html_content?: string | null
           id?: string
+          subject_preview?: string | null
           updated_at?: string | null
+          variables_disponibles?: Json | null
         }
         Update: {
           activa?: boolean | null
           asunto?: string | null
+          body_preview?: string | null
           canal?: Database["public"]["Enums"]["notification_channel"]
+          categoria?: string | null
           created_at?: string | null
           cuerpo?: string
+          descripcion?: string | null
           evento?: string
+          html_content?: string | null
           id?: string
+          subject_preview?: string | null
           updated_at?: string | null
+          variables_disponibles?: Json | null
+        }
+        Relationships: []
+      }
+      notification_variables: {
+        Row: {
+          categoria: string
+          created_at: string | null
+          descripcion: string | null
+          ejemplo: string | null
+          id: string
+          tipo_dato: string | null
+          variable: string
+        }
+        Insert: {
+          categoria: string
+          created_at?: string | null
+          descripcion?: string | null
+          ejemplo?: string | null
+          id?: string
+          tipo_dato?: string | null
+          variable: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string | null
+          descripcion?: string | null
+          ejemplo?: string | null
+          id?: string
+          tipo_dato?: string | null
+          variable?: string
         }
         Relationships: []
       }
