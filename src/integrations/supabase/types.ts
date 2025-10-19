@@ -2380,6 +2380,10 @@ export type Database = {
         Args: { p_notas?: string; p_subscription_id: string }
         Returns: undefined
       }
+      check_pending_notifications: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       consumir_inventario_wo: {
         Args: { p_wo_id: string }
         Returns: undefined

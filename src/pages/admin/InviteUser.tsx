@@ -97,9 +97,36 @@ export default function InviteUser() {
 
       if (invitationError) throw invitationError;
 
+      // Enviar email de invitación
+      const inviteLink = `${window.location.origin}/signup?token=${token}`;
+      
+      try {
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            evento: 'user_invited',
+            data: {
+              invitation: {
+                email: formData.email,
+                nombre: formData.nombre || formData.email,
+                apellido: formData.apellido || '',
+                rol: selectedRoles[0]
+              },
+              sistema: {
+                empresa_nombre: 'Autolock',
+                link_registro: inviteLink
+              }
+            },
+            recipient: formData.email
+          }
+        });
+      } catch (emailError) {
+        console.error('Error sending invitation email:', emailError);
+        // No bloquear si falla el email
+      }
+
       toast({
         title: 'Invitación creada',
-        description: `Se ha creado la invitación para ${formData.email}. El usuario recibirá un email con instrucciones.`
+        description: `Se ha creado la invitación para ${formData.email} y se ha enviado el email con instrucciones.`
       });
 
       navigate('/admin/users');

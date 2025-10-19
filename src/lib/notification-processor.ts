@@ -5,7 +5,7 @@ import { es } from 'date-fns/locale';
 /**
  * Formatea un valor como moneda chilena
  */
-function formatCurrency(value: number | string): string {
+export function formatCurrency(value: number | string): string {
   const numValue = typeof value === 'string' ? parseFloat(value) : value;
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
@@ -17,7 +17,7 @@ function formatCurrency(value: number | string): string {
 /**
  * Formatea una fecha en español
  */
-function formatDate(value: string | Date): string {
+export function formatDate(value: string | Date): string {
   const date = typeof value === 'string' ? new Date(value) : value;
   return format(date, "d 'de' MMMM 'de' yyyy", { locale: es });
 }

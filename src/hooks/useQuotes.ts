@@ -291,16 +291,62 @@ export function useSendQuoteEmail() {
   
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      // 1. Obtener cotización completa con relaciones
+      const { data: quote, error: fetchError } = await supabase
+        .from('quotes')
+        .select(`
+          *,
+          client:clients(*),
+          vehicle:vehicles(*),
+          vendedor:profiles!vendedor_id(*),
+          items:quote_items(*)
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // 2. Actualizar estado a 'enviada'
+      const { error: updateError } = await supabase
         .from('quotes')
         .update({ estado: 'enviada' })
         .eq('id', id);
       
-      if (error) throw error;
+      if (updateError) throw updateError;
+      
+      // 3. Enviar notificación por email
+      try {
+        await supabase.functions.invoke('send-notification', {
+          body: {
+            evento: 'quote_sent',
+            data: {
+              cotizacion: {
+                folio: quote.folio,
+                total: quote.total,
+                neto: quote.neto,
+                iva: quote.iva,
+                fecha_emision: quote.fecha_emision,
+                validez_dias: quote.validez_dias
+              },
+              cliente: quote.client,
+              vehiculo: quote.vehicle,
+              vendedor: quote.vendedor,
+              sistema: {
+                empresa_nombre: 'Autolock',
+                fecha_actual: new Date().toISOString()
+              }
+            },
+            recipient: quote.client.email_principal
+          }
+        });
+      } catch (emailError) {
+        console.error('Error sending quote email:', emailError);
+        // No bloquear si falla el email
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      toast.success('Cotización enviada');
+      toast.success('Cotización enviada exitosamente');
     },
     onError: (error: any) => {
       toast.error(error.message || 'Error al enviar cotización');

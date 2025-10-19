@@ -6,12 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Eye, Code } from "lucide-react";
+import { Loader2, Eye, Code, Send } from "lucide-react";
 import { useUpdateNotificationTemplate } from "@/hooks/useNotificationTemplates";
 import { NotificationTemplate } from "@/types/subscriptions";
 import { VariablePicker } from "./VariablePicker";
-import { TemplatePreview } from "./TemplatePreview";
+import { TemplatePreview, defaultSampleData } from "./TemplatePreview";
 import { sanitizeHtml } from "@/lib/notification-processor";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface RichTemplateEditorProps {
   template: NotificationTemplate;
@@ -60,6 +62,26 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
       html_content: sanitizedHtml,
       activa,
     });
+  };
+
+  const handleTestSend = async () => {
+    const testEmail = prompt('Ingresa el email para enviar prueba:');
+    
+    if (!testEmail) return;
+    
+    try {
+      await supabase.functions.invoke('send-notification', {
+        body: {
+          evento: template.evento,
+          data: defaultSampleData,
+          recipient: testEmail
+        }
+      });
+      
+      toast.success('Email de prueba enviado correctamente');
+    } catch (error: any) {
+      toast.error(error.message || 'Error al enviar email de prueba');
+    }
   };
 
   return (
@@ -129,14 +151,24 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
               <Label htmlFor="activa">Plantilla activa</Label>
             </div>
 
-            <Button 
-              onClick={handleSave} 
-              disabled={updateTemplate.isPending}
-              className="w-full"
-            >
-              {updateTemplate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Guardar Plantilla
-            </Button>
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline"
+                onClick={handleTestSend}
+                className="gap-2"
+              >
+                <Send className="h-4 w-4" />
+                Enviar Prueba
+              </Button>
+              
+              <Button 
+                onClick={handleSave} 
+                disabled={updateTemplate.isPending}
+              >
+                {updateTemplate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Guardar
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

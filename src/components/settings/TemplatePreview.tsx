@@ -9,8 +9,8 @@ interface TemplatePreviewProps {
   sampleData?: TemplateData;
 }
 
-// Datos de ejemplo por defecto
-const defaultSampleData: TemplateData = {
+// Datos de ejemplo por defecto - exportado para uso en otros componentes
+export const defaultSampleData: TemplateData = {
   cliente: {
     razon_social: "Transportes ABC S.A.",
     nombre_comercial: "Transportes ABC",

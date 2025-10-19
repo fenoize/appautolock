@@ -3,7 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EventAccordion } from "@/components/settings/EventAccordion";
 import { ReminderManager } from "@/components/settings/ReminderManager";
-import { Mail, Bell, AlertCircle } from "lucide-react";
+import { NotificationHistory } from "@/components/settings/NotificationHistory";
+import { Mail, Bell, History } from "lucide-react";
 
 export default function NotificationsSettings() {
   return (
@@ -14,14 +15,18 @@ export default function NotificationsSettings() {
       />
       
       <Tabs defaultValue="templates" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:w-auto">
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto">
           <TabsTrigger value="templates" className="gap-2">
             <Mail className="h-4 w-4" />
-            Templates por Evento
+            Templates
           </TabsTrigger>
           <TabsTrigger value="reminders" className="gap-2">
             <Bell className="h-4 w-4" />
             Recordatorios
+          </TabsTrigger>
+          <TabsTrigger value="history" className="gap-2">
+            <History className="h-4 w-4" />
+            Historial
           </TabsTrigger>
         </TabsList>
         
@@ -51,6 +56,10 @@ export default function NotificationsSettings() {
               <ReminderManager />
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="history" className="space-y-4">
+          <NotificationHistory />
         </TabsContent>
       </Tabs>
     </div>
