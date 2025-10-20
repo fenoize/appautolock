@@ -181,3 +181,74 @@ export function useToggleUserStatus() {
     }
   });
 }
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (data: {
+      email: string;
+      password: string;
+      nombre: string;
+      apellido?: string;
+      phone?: string;
+      branch_id?: string;
+      roles: AppRole[];
+    }) => {
+      // 1. Create auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            nombre: data.nombre,
+            apellido: data.apellido
+          }
+        }
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('No se pudo crear el usuario');
+
+      // 2. Update profile with additional data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          nombre: data.nombre,
+          apellido: data.apellido || null,
+          phone: data.phone || null,
+          branch_id: data.branch_id || null,
+          estado: true
+        })
+        .eq('id', authData.user.id);
+
+      if (profileError) throw profileError;
+
+      // 3. Assign roles
+      if (data.roles.length > 0) {
+        const { error: rolesError } = await supabase
+          .from('user_roles')
+          .insert(data.roles.map(role => ({ user_id: authData.user.id, role })));
+
+        if (rolesError) throw rolesError;
+      }
+
+      return authData.user;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({
+        title: 'Usuario creado',
+        description: 'El usuario se creó correctamente y puede acceder al sistema'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error al crear usuario',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+}

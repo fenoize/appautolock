@@ -6,6 +6,7 @@ import { SearchBar } from '@/components/shared/SearchBar';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { SkeletonTable } from '@/components/shared/SkeletonTable';
 import { UsersTable } from '@/components/users/UsersTable';
+import { CreateUserDialog } from '@/components/users/CreateUserDialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -15,17 +16,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useUsers } from '@/hooks/useUsers';
-import { UserPlus, Users } from 'lucide-react';
+import { useUsers, useCreateUser } from '@/hooks/useUsers';
+import { UserPlus, Users, UserCog } from 'lucide-react';
 import { AppRole } from '@/hooks/usePermissions';
 
 export default function UsersList() {
   const navigate = useNavigate();
   const { data: users, isLoading, error } = useUsers();
+  const createUser = useCreateUser();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const filteredUsers = useMemo(() => {
     if (!users) return [];
@@ -66,16 +69,27 @@ export default function UsersList() {
     );
   }
 
+  const handleCreateUser = async (data: any) => {
+    await createUser.mutateAsync(data);
+    setIsCreateDialogOpen(false);
+  };
+
   return (
     <PageContainer>
       <PageHeader
         title="Usuarios"
         description="Gestiona los usuarios del sistema"
         action={
-          <Button onClick={() => navigate('/admin/users/new')}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Invitar Usuario
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(true)}>
+              <UserCog className="h-4 w-4 mr-2" />
+              Crear Usuario
+            </Button>
+            <Button onClick={() => navigate('/admin/users/new')}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Invitar Usuario
+            </Button>
+          </div>
         }
       />
 
@@ -137,6 +151,13 @@ export default function UsersList() {
       ) : (
         <UsersTable users={filteredUsers} />
       )}
+
+      <CreateUserDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={handleCreateUser}
+        isLoading={createUser.isPending}
+      />
     </PageContainer>
   );
 }
