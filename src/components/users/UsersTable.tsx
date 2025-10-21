@@ -85,7 +85,7 @@ export function UsersTable({ users }: UsersTableProps) {
                 </div>
               </TableCell>
               <TableCell>
-                <UserStatusBadge active={user.estado} />
+                <UserStatusBadge status={user.estado} />
               </TableCell>
               <TableCell>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />

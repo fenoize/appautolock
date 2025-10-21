@@ -753,7 +753,7 @@ export type Database = {
           branch_id: string | null
           created_at: string | null
           email: string
-          estado: boolean | null
+          estado: Database["public"]["Enums"]["user_status"]
           id: string
           nombre: string
           phone: string | null
@@ -764,7 +764,7 @@ export type Database = {
           branch_id?: string | null
           created_at?: string | null
           email: string
-          estado?: boolean | null
+          estado?: Database["public"]["Enums"]["user_status"]
           id: string
           nombre: string
           phone?: string | null
@@ -775,7 +775,7 @@ export type Database = {
           branch_id?: string | null
           created_at?: string | null
           email?: string
-          estado?: boolean | null
+          estado?: Database["public"]["Enums"]["user_status"]
           id?: string
           nombre?: string
           phone?: string | null
@@ -2609,6 +2609,7 @@ export type Database = {
         | "devolucion"
         | "ajuste"
       subscription_status: "activa" | "mora" | "suspendida" | "cancelada"
+      user_status: "activo" | "inactivo" | "invitado"
       wo_status:
         | "programada"
         | "en_ruta"
@@ -2779,6 +2780,7 @@ export const Constants = {
         "ajuste",
       ],
       subscription_status: ["activa", "mora", "suspendida", "cancelada"],
+      user_status: ["activo", "inactivo", "invitado"],
       wo_status: [
         "programada",
         "en_ruta",

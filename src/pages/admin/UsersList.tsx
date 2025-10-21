@@ -27,7 +27,7 @@ export default function UsersList() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<AppRole | 'all'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'activo' | 'inactivo' | 'invitado'>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const filteredUsers = useMemo(() => {
@@ -49,8 +49,7 @@ export default function UsersList() {
       }
 
       // Status filter
-      if (statusFilter === 'active' && !user.estado) return false;
-      if (statusFilter === 'inactive' && user.estado) return false;
+      if (statusFilter !== 'all' && user.estado !== statusFilter) return false;
 
       return true;
     });
@@ -116,14 +115,15 @@ export default function UsersList() {
               </SelectContent>
             </Select>
 
-            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as 'all' | 'active' | 'inactive')}>
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as 'all' | 'activo' | 'inactivo' | 'invitado')}>
               <SelectTrigger>
                 <SelectValue placeholder="Filtrar por estado" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="active">Activos</SelectItem>
-                <SelectItem value="inactive">Inactivos</SelectItem>
+                <SelectItem value="activo">Activos</SelectItem>
+                <SelectItem value="inactivo">Inactivos</SelectItem>
+                <SelectItem value="invitado">Invitados</SelectItem>
               </SelectContent>
             </Select>
           </div>

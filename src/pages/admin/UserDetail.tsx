@@ -84,13 +84,14 @@ export default function UserDetail() {
 
   const handleToggleStatus = () => {
     if (!id || !user) return;
-    toggleStatus.mutate({ userId: id, estado: !user.estado });
+    const newEstado = user.estado === 'activo' ? 'inactivo' : 'activo';
+    toggleStatus.mutate({ userId: id, estado: newEstado });
   };
 
   const handleDeactivate = () => {
     if (!id || !user) return;
     toggleStatus.mutate(
-      { userId: id, estado: false },
+      { userId: id, estado: 'inactivo' },
       {
         onSuccess: () => {
           setDeleteDialogOpen(false);
@@ -202,16 +203,16 @@ export default function UserDetail() {
 
                 <div className="space-y-2">
                   <Label htmlFor="estado">Estado</Label>
-                  <div className="flex items-center space-x-2">
-                    <Switch
-                      id="estado"
-                      checked={user.estado}
-                      onCheckedChange={handleToggleStatus}
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {user.estado ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </div>
+                  <Select value={user.estado} onValueChange={(value) => toggleStatus.mutate({ userId: id!, estado: value as 'activo' | 'inactivo' | 'invitado' })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="activo">Activo</SelectItem>
+                      <SelectItem value="inactivo">Inactivo</SelectItem>
+                      <SelectItem value="invitado">Invitado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

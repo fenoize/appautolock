@@ -154,7 +154,7 @@ export function useToggleUserStatus() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ userId, estado }: { userId: string; estado: boolean }) => {
+    mutationFn: async ({ userId, estado }: { userId: string; estado: 'activo' | 'inactivo' | 'invitado' }) => {
       const { error } = await supabase
         .from('profiles')
         .update({ estado })
@@ -166,8 +166,8 @@ export function useToggleUserStatus() {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       queryClient.invalidateQueries({ queryKey: ['user'] });
       toast({
-        title: variables.estado ? 'Usuario activado' : 'Usuario desactivado',
-        description: variables.estado 
+        title: `Usuario ${variables.estado}`,
+        description: `El estado del usuario se cambió a ${variables.estado}`
           ? 'El usuario puede acceder al sistema nuevamente' 
           : 'El usuario no podrá acceder al sistema'
       });
@@ -219,7 +219,7 @@ export function useCreateUser() {
           apellido: data.apellido || null,
           phone: data.phone || null,
           branch_id: data.branch_id || null,
-          estado: true
+          estado: 'invitado'
         })
         .eq('id', authData.user.id);
 

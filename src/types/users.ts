@@ -1,5 +1,7 @@
 import { AppRole } from '@/hooks/usePermissions';
 
+export type UserStatus = 'activo' | 'inactivo' | 'invitado';
+
 export interface User {
   id: string;
   email: string;
@@ -7,7 +9,7 @@ export interface User {
   apellido?: string;
   phone?: string;
   branch_id?: string;
-  estado: boolean;
+  estado: UserStatus;
   created_at: string;
   updated_at: string;
 }
@@ -37,5 +39,5 @@ export interface UpdateUserData {
   apellido?: string;
   phone?: string;
   branch_id?: string;
-  estado?: boolean;
+  estado?: UserStatus;
 }

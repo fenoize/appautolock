@@ -1,13 +1,22 @@
 import { Badge } from '@/components/ui/badge';
+import { UserStatus } from '@/types/users';
 
 interface UserStatusBadgeProps {
-  active: boolean;
+  status: UserStatus;
 }
 
-export function UserStatusBadge({ active }: UserStatusBadgeProps) {
+export function UserStatusBadge({ status }: UserStatusBadgeProps) {
+  const variants = {
+    activo: { variant: 'default' as const, className: 'bg-green-500', label: 'Activo' },
+    inactivo: { variant: 'destructive' as const, className: '', label: 'Inactivo' },
+    invitado: { variant: 'secondary' as const, className: 'bg-blue-500', label: 'Invitado' },
+  };
+  
+  const { variant, className, label } = variants[status];
+  
   return (
-    <Badge variant={active ? 'default' : 'destructive'} className={active ? 'bg-green-500' : ''}>
-      {active ? 'Activo' : 'Inactivo'}
+    <Badge variant={variant} className={className}>
+      {label}
     </Badge>
   );
 }

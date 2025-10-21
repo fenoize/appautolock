@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RoleBadge } from '@/components/users/RoleBadge';
 import { AppRole } from '@/hooks/usePermissions';
 import { useBranches } from '@/hooks/useBranches';
+import { UserStatus } from '@/types/users';
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ export interface CreateUserData {
   phone?: string;
   branch_id?: string;
   roles: AppRole[];
+  estado?: UserStatus;
 }
 
 const roleDescriptions: Record<AppRole, string> = {
@@ -44,7 +46,8 @@ export function CreateUserDialog({ open, onOpenChange, onSubmit, isLoading }: Cr
     apellido: '',
     phone: '',
     branch_id: '',
-    roles: []
+    roles: [],
+    estado: 'invitado'
   });
 
   const handleRoleToggle = (role: AppRole, checked: boolean) => {
@@ -67,7 +70,8 @@ export function CreateUserDialog({ open, onOpenChange, onSubmit, isLoading }: Cr
       apellido: '',
       phone: '',
       branch_id: '',
-      roles: []
+      roles: [],
+      estado: 'invitado'
     });
   };
 
@@ -192,6 +196,20 @@ export function CreateUserDialog({ open, onOpenChange, onSubmit, isLoading }: Cr
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="estado">Estado</Label>
+            <Select value={formData.estado} onValueChange={(value) => setFormData({ ...formData, estado: value as UserStatus })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="activo">Activo</SelectItem>
+                <SelectItem value="inactivo">Inactivo</SelectItem>
+                <SelectItem value="invitado">Invitado</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>
