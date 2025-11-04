@@ -2320,10 +2320,7 @@ export type Database = {
       }
     }
     Functions: {
-      actualizar_estado_suscripciones: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      actualizar_estado_suscripciones: { Args: never; Returns: undefined }
       ajustar_stock: {
         Args: {
           p_cantidad_nueva: number
@@ -2380,22 +2377,10 @@ export type Database = {
         Args: { p_notas?: string; p_subscription_id: string }
         Returns: undefined
       }
-      check_pending_notifications: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      consumir_inventario_wo: {
-        Args: { p_wo_id: string }
-        Returns: undefined
-      }
-      convert_quote_to_wo: {
-        Args: { p_quote_id: string }
-        Returns: string
-      }
-      convert_quote_to_wo_v2: {
-        Args: { p_quote_id: string }
-        Returns: string
-      }
+      check_pending_notifications: { Args: never; Returns: undefined }
+      consumir_inventario_wo: { Args: { p_wo_id: string }; Returns: undefined }
+      convert_quote_to_wo: { Args: { p_quote_id: string }; Returns: string }
+      convert_quote_to_wo_v2: { Args: { p_quote_id: string }; Returns: string }
       create_subscription_from_wo_item: {
         Args: {
           p_fecha_inicio?: string
@@ -2405,22 +2390,13 @@ export type Database = {
         }
         Returns: string
       }
-      expirar_cotizaciones_vencidas: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      generar_folio: {
-        Args: { prefijo: string }
-        Returns: string
-      }
+      expirar_cotizaciones_vencidas: { Args: never; Returns: undefined }
+      generar_folio: { Args: { prefijo: string }; Returns: string }
       generar_token_aprobacion: {
         Args: { quote_id_param: string }
         Returns: string
       }
-      get_user_branch: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      get_user_branch: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2508,18 +2484,9 @@ export type Database = {
         Args: { p_subscription_id: string }
         Returns: undefined
       }
-      realizar_respaldo_sistema: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      refresh_service_usage_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      refresh_stock_by_location: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      realizar_respaldo_sistema: { Args: never; Returns: Json }
+      refresh_service_usage_stats: { Args: never; Returns: undefined }
+      refresh_stock_by_location: { Args: never; Returns: undefined }
       registrar_compra_stock: {
         Args: {
           p_cantidad: number
@@ -2536,10 +2503,7 @@ export type Database = {
         Args: { p_subscription_id: string }
         Returns: undefined
       }
-      reservar_inventario_wo: {
-        Args: { p_wo_id: string }
-        Returns: undefined
-      }
+      reservar_inventario_wo: { Args: { p_wo_id: string }; Returns: undefined }
       reservar_materiales_servicio: {
         Args: { p_service_id: string; p_wo_id: string }
         Returns: undefined
@@ -2569,10 +2533,7 @@ export type Database = {
         }
         Returns: string
       }
-      verificar_alertas_stock: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      verificar_alertas_stock: { Args: never; Returns: undefined }
       verificar_compatibilidad_items: {
         Args: { p_items: Json; p_vehicle_id: string }
         Returns: Json
