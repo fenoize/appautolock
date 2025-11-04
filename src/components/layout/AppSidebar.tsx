@@ -35,7 +35,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: stats } = useDashboardStats();
-  const { can } = usePermissions();
+  const { can, isAdmin } = usePermissions();
   const { isTablet } = useResponsiveLayout();
 
   const menuItems = [
@@ -48,7 +48,7 @@ export function AppSidebar() {
     {
       title: 'Clientes',
       icon: Users,
-      show: can('view', 'clients'),
+      show: isAdmin || can('view', 'clients'),
       items: [
         { title: 'Listado', path: '/clients' },
         { title: 'Reportes', path: '/clients/reports' },
@@ -58,13 +58,13 @@ export function AppSidebar() {
       title: 'Vehículos',
       icon: Car,
       path: '/vehicles',
-      show: can('view', 'vehicles')
+      show: isAdmin || can('view', 'vehicles')
     },
     {
       title: 'Cotizaciones',
       icon: FileText,
       badge: stats?.cotizaciones_abiertas,
-      show: can('view', 'quotes'),
+      show: isAdmin || can('view', 'quotes'),
       items: [
         { title: 'Nueva', path: '/quotes/new' },
         { title: 'Historial', path: '/quotes' },
@@ -75,7 +75,7 @@ export function AppSidebar() {
       title: 'Órdenes de Trabajo',
       icon: Wrench,
       badge: stats?.ots_hoy,
-      show: can('view', 'work_orders'),
+      show: isAdmin || can('view', 'work_orders'),
       items: [
         { title: 'Nueva', path: '/work-orders/new' },
         { title: 'Agenda', path: '/work-orders/agenda' },
@@ -87,7 +87,7 @@ export function AppSidebar() {
       icon: Radio,
       badge: stats?.subscripciones_vencen,
       badgeVariant: stats?.subscripciones_vencen && stats.subscripciones_vencen > 0 ? 'destructive' : 'default',
-      show: can('view', 'subscriptions'),
+      show: isAdmin || can('view', 'subscriptions'),
       items: [
         { title: 'Nueva', path: '/subscriptions/new' },
         { title: 'Listado', path: '/subscriptions' },
@@ -97,7 +97,7 @@ export function AppSidebar() {
     {
       title: 'Servicios',
       icon: Briefcase,
-      show: can('view', 'services'),
+      show: isAdmin || can('view', 'services'),
       items: [
         { title: 'Catálogo', path: '/services' },
       ]
@@ -107,7 +107,7 @@ export function AppSidebar() {
       icon: Package,
       badge: stats?.stock_critico,
       badgeVariant: stats?.stock_critico && stats.stock_critico > 0 ? 'destructive' : 'default',
-      show: can('view', 'inventory'),
+      show: isAdmin || can('view', 'inventory'),
       items: [
         { title: 'Productos', path: '/inventory' },
         { title: 'Alertas', path: '/inventory/alerts' },
@@ -117,7 +117,7 @@ export function AppSidebar() {
     {
       title: 'Usuarios',
       icon: UserCog,
-      show: can('view', 'users'),
+      show: isAdmin || can('view', 'users'),
       items: [
         { title: 'Listado', path: '/admin/users' },
       ]
