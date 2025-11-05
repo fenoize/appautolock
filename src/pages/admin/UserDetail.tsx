@@ -17,13 +17,15 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUserDetail, useUpdateUser, useUpdateUserRoles, useToggleUserStatus } from '@/hooks/useUsers';
+import { useUserDetail, useUpdateUser, useUpdateUserRoles, useToggleUserStatus, useResetUserPassword } from '@/hooks/useUsers';
 import { useBranches } from '@/hooks/useBranches';
 import { RoleBadge } from '@/components/users/RoleBadge';
 import { DeleteUserDialog } from '@/components/users/DeleteUserDialog';
+import { ResetPasswordDialog } from '@/components/users/ResetPasswordDialog';
 import { AppRole } from '@/hooks/usePermissions';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { KeyRound } from 'lucide-react';
 
 const roleDescriptions: Record<AppRole, string> = {
   admin: 'Acceso completo al sistema. Puede gestionar usuarios, configuración y todos los módulos.',
@@ -42,6 +44,7 @@ export default function UserDetail() {
   const updateUser = useUpdateUser();
   const updateRoles = useUpdateUserRoles();
   const toggleStatus = useToggleUserStatus();
+  const resetPassword = useResetUserPassword();
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -52,6 +55,8 @@ export default function UserDetail() {
 
   const [selectedRoles, setSelectedRoles] = useState<AppRole[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [isGlobalAdmin, setIsGlobalAdmin] = useState(false);
 
   // Initialize form data when user loads
   useState(() => {
@@ -63,12 +68,36 @@ export default function UserDetail() {
         branch_id: user.branch_id || ''
       });
       setSelectedRoles(user.roles);
+      setIsGlobalAdmin(!user.branch_id && user.roles.includes('admin'));
     }
   });
 
   const handleSaveInfo = () => {
     if (!id) return;
-    updateUser.mutate({ userId: id, data: formData });
+    const dataToUpdate = {
+      ...formData,
+      branch_id: isGlobalAdmin ? null : formData.branch_id
+    };
+    updateUser.mutate({ userId: id, data: dataToUpdate });
+  };
+
+  const handleResetPassword = (password: string) => {
+    if (!id) return;
+    resetPassword.mutate(
+      { userId: id, password },
+      {
+        onSuccess: () => {
+          setPasswordDialogOpen(false);
+        }
+      }
+    );
+  };
+
+  const handleGlobalAdminToggle = (checked: boolean) => {
+    setIsGlobalAdmin(checked);
+    if (checked) {
+      setFormData({ ...formData, branch_id: '' });
+    }
   };
 
   const handleRoleToggle = (role: AppRole, checked: boolean) => {
@@ -187,18 +216,34 @@ export default function UserDetail() {
 
                 <div className="space-y-2">
                   <Label htmlFor="branch">Sucursal</Label>
-                  <Select value={formData.branch_id} onValueChange={(value) => setFormData({ ...formData, branch_id: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar sucursal" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branches?.map((branch) => (
-                        <SelectItem key={branch.id} value={branch.id}>
-                          {branch.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="global-admin"
+                        checked={isGlobalAdmin}
+                        onCheckedChange={handleGlobalAdminToggle}
+                      />
+                      <Label htmlFor="global-admin" className="cursor-pointer">
+                        Administrador global (todas las sucursales)
+                      </Label>
+                    </div>
+                    <Select 
+                      value={formData.branch_id} 
+                      onValueChange={(value) => setFormData({ ...formData, branch_id: value })}
+                      disabled={isGlobalAdmin}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={isGlobalAdmin ? "Todas las sucursales" : "Seleccionar sucursal"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branches?.map((branch) => (
+                          <SelectItem key={branch.id} value={branch.id}>
+                            {branch.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -216,9 +261,16 @@ export default function UserDetail() {
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-4">
+              <div className="flex gap-2 pt-4 flex-wrap">
                 <Button onClick={handleSaveInfo} disabled={updateUser.isPending}>
                   Guardar cambios
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setPasswordDialogOpen(true)}
+                >
+                  <KeyRound className="w-4 h-4 mr-2" />
+                  Cambiar Contraseña
                 </Button>
                 <Button variant="ghost" onClick={() => navigate('/admin/users')}>
                   Cancelar
@@ -303,6 +355,14 @@ export default function UserDetail() {
         onOpenChange={setDeleteDialogOpen}
         userName={displayName}
         onConfirm={handleDeactivate}
+      />
+
+      <ResetPasswordDialog
+        open={passwordDialogOpen}
+        onOpenChange={setPasswordDialogOpen}
+        userName={displayName}
+        onConfirm={handleResetPassword}
+        isLoading={resetPassword.isPending}
       />
     </PageContainer>
   );

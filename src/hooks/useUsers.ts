@@ -182,6 +182,37 @@ export function useToggleUserStatus() {
   });
 }
 
+export function useResetUserPassword() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
+      const { data, error } = await supabase.auth.admin.updateUserById(
+        userId,
+        { password }
+      );
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({
+        title: 'Contraseña actualizada',
+        description: 'La contraseña se cambió correctamente'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   const { toast } = useToast();

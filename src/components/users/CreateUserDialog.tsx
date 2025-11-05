@@ -159,9 +159,10 @@ export function CreateUserDialog({ open, onOpenChange, onSubmit, isLoading }: Cr
               <Label htmlFor="branch">Sucursal</Label>
               <Select value={formData.branch_id} onValueChange={(value) => setFormData({ ...formData, branch_id: value })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar sucursal" />
+                  <SelectValue placeholder="Seleccionar sucursal (opcional para admin global)" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">Sin sucursal (Admin Global)</SelectItem>
                   {branches?.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id}>
                       {branch.nombre}
@@ -169,6 +170,9 @@ export function CreateUserDialog({ open, onOpenChange, onSubmit, isLoading }: Cr
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Los administradores pueden no tener sucursal para gestionar todas
+              </p>
             </div>
           </div>
 
