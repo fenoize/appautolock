@@ -211,17 +211,20 @@ export function useCreateUser() {
       if (authError) throw authError;
       if (!authData.user) throw new Error('No se pudo crear el usuario');
 
-      // 2. Update profile with additional data
+      // 2. Upsert profile with additional data (creates if doesn't exist)
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: authData.user.id,
+          email: data.email,
           nombre: data.nombre,
           apellido: data.apellido || null,
           phone: data.phone || null,
           branch_id: data.branch_id || null,
           estado: 'invitado'
-        })
-        .eq('id', authData.user.id);
+        }, {
+          onConflict: 'id'
+        });
 
       if (profileError) throw profileError;
 
