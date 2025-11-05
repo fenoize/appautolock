@@ -42,47 +42,5 @@ export function AppBreadcrumbs() {
     return null;
   }
 
-  return (
-    <div 
-      className="border-b bg-card sticky top-0 z-10"
-      style={{ height: 'var(--breadcrumbs-h)' }}
-    >
-      <div className="h-full px-6 flex items-center">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/dashboard">Inicio</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {pathnames.map((value, index) => {
-              const to = `/${pathnames.slice(0, index + 1).join('/')}`;
-              const isLast = index === pathnames.length - 1;
-              const label = routeNames[value] || value;
-
-              // Skip UUIDs in breadcrumbs
-              if (value.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-                return null;
-              }
-
-              return (
-                <Fragment key={to}>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    {isLast ? (
-                      <BreadcrumbPage>{label}</BreadcrumbPage>
-                    ) : (
-                      <BreadcrumbLink asChild>
-                        <Link to={to}>{label}</Link>
-                      </BreadcrumbLink>
-                    )}
-                  </BreadcrumbItem>
-                </Fragment>
-              );
-            })}
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-    </div>
-  );
+  return null;
 }
