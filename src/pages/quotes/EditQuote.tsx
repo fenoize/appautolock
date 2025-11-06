@@ -16,6 +16,7 @@ import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useQuote, useUpdateQuote, useCreateQuoteItem, useDeleteQuoteItem } from '@/hooks/useQuotes';
 import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface QuoteItemForm {
@@ -119,19 +120,69 @@ export default function EditQuote() {
     }
   };
 
-  const updateItemQuantity = (index: number, cantidad: number) => {
+  const updateItemQuantity = async (index: number, cantidad: number) => {
     if (cantidad <= 0) return;
+    const item = items[index];
     const newItems = [...items];
     newItems[index].cantidad = cantidad;
     newItems[index].subtotal = calcularSubtotal(newItems[index]);
     setItems(newItems);
+
+    // Persistir cambio en base de datos
+    if (item.id) {
+      try {
+        const subtotal = calcularSubtotal({ ...item, cantidad });
+        await supabase
+          .from('quote_items')
+          .update({ cantidad, subtotal })
+          .eq('id', item.id);
+      } catch (error) {
+        console.error('Error updating item:', error);
+      }
+    }
   };
 
-  const updateItemDiscount = (index: number, descuento: number) => {
+  const updateItemPrice = async (index: number, precio: number) => {
+    if (precio < 0) return;
+    const item = items[index];
+    const newItems = [...items];
+    newItems[index].precio_unitario = precio;
+    newItems[index].subtotal = calcularSubtotal(newItems[index]);
+    setItems(newItems);
+
+    // Persistir cambio en base de datos
+    if (item.id) {
+      try {
+        const subtotal = calcularSubtotal({ ...item, precio_unitario: precio });
+        await supabase
+          .from('quote_items')
+          .update({ precio_unitario: precio, subtotal })
+          .eq('id', item.id);
+      } catch (error) {
+        console.error('Error updating item:', error);
+      }
+    }
+  };
+
+  const updateItemDiscount = async (index: number, descuento: number) => {
     const newItems = [...items];
     newItems[index].descuento_porcentaje = Math.min(100, Math.max(0, descuento));
     newItems[index].subtotal = calcularSubtotal(newItems[index]);
     setItems(newItems);
+
+    // Persistir cambio en base de datos
+    const item = items[index];
+    if (item.id) {
+      try {
+        const subtotal = calcularSubtotal(newItems[index]);
+        await supabase
+          .from('quote_items')
+          .update({ descuento_porcentaje: newItems[index].descuento_porcentaje, subtotal })
+          .eq('id', item.id);
+      } catch (error) {
+        console.error('Error updating item:', error);
+      }
+    }
   };
 
   const removeItem = async (index: number) => {
@@ -249,13 +300,13 @@ export default function EditQuote() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Tipo</TableHead>
+                      <TableHead className="w-24">Tipo</TableHead>
                       <TableHead>Nombre</TableHead>
-                      <TableHead>Cantidad</TableHead>
-                      <TableHead>Precio Unit.</TableHead>
-                      <TableHead>Desc. %</TableHead>
-                      <TableHead>Subtotal</TableHead>
-                      <TableHead></TableHead>
+                      <TableHead className="w-24">Cant.</TableHead>
+                      <TableHead className="w-32">Precio Unit.</TableHead>
+                      <TableHead className="w-24">Desc. %</TableHead>
+                      <TableHead className="w-32">Subtotal</TableHead>
+                      <TableHead className="w-16"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -263,35 +314,51 @@ export default function EditQuote() {
                       <TableRow key={index}>
                         <TableCell>
                           <Badge variant={item.item_tipo === 'producto' ? 'secondary' : 'default'}>
-                            {item.item_tipo === 'producto' ? 'Producto' : 'Servicio'}
+                            {item.item_tipo === 'producto' ? 'Prod' : 'Serv'}
                           </Badge>
                         </TableCell>
-                        <TableCell>{item.nombre}</TableCell>
+                        <TableCell className="font-medium">{item.nombre}</TableCell>
                         <TableCell>
                           <Input
                             type="number"
                             min="1"
+                            step="1"
                             value={item.cantidad}
                             onChange={(e) => updateItemQuantity(index, parseFloat(e.target.value) || 1)}
                             className="w-20"
                           />
                         </TableCell>
-                        <TableCell>${item.precio_unitario.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="100"
+                            value={item.precio_unitario}
+                            onChange={(e) => updateItemPrice(index, parseFloat(e.target.value) || 0)}
+                            className="w-28"
+                          />
+                        </TableCell>
                         <TableCell>
                           <Input
                             type="number"
                             min="0"
                             max="100"
+                            step="1"
                             value={item.descuento_porcentaje}
                             onChange={(e) => updateItemDiscount(index, parseFloat(e.target.value) || 0)}
                             className="w-20"
                           />
                         </TableCell>
                         <TableCell className="font-semibold">
-                          ${item.subtotal.toLocaleString()}
+                          ${item.subtotal.toLocaleString('es-CL')}
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => removeItem(index)}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => removeItem(index)}
+                            className="text-destructive hover:text-destructive"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
@@ -311,19 +378,19 @@ export default function EditQuote() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Neto:</span>
-                  <span className="font-medium">${totals.neto.toLocaleString()}</span>
+                  <span className="font-medium">${totals.neto.toLocaleString('es-CL')}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">IVA (19%):</span>
-                  <span className="font-medium">${totals.iva.toLocaleString()}</span>
+                  <span className="font-medium">${totals.iva.toLocaleString('es-CL')}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">Total:</span>
                   <span className="text-2xl font-bold text-primary">
-                    ${totals.total.toLocaleString()}
+                    ${totals.total.toLocaleString('es-CL')}
                   </span>
                 </div>
               </div>
@@ -356,13 +423,16 @@ export default function EditQuote() {
           </Card>
 
           <Card>
-            <CardContent className="pt-6 space-y-2">
+            <CardHeader>
+              <CardTitle>Acciones</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
               <Button 
                 className="w-full"
                 onClick={handleSave}
                 disabled={updateQuote.isPending || items.length === 0}
               >
-                Guardar Cambios
+                {updateQuote.isPending ? 'Guardando...' : 'Guardar Cambios'}
               </Button>
               <Button 
                 variant="outline"
