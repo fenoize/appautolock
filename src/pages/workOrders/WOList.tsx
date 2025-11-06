@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SearchBar } from '@/components/shared/SearchBar';
-import { Plus } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { WOFilters } from '@/types/workOrders';
@@ -22,10 +22,16 @@ export default function WOList() {
         title="Órdenes de Trabajo"
         description="Gestiona las órdenes de trabajo del sistema"
         action={
-          <Button onClick={() => navigate('/work-orders/new')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nueva OT
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/work-orders/calendar')}>
+              <Calendar className="mr-2 h-4 w-4" />
+              Calendario
+            </Button>
+            <Button onClick={() => navigate('/work-orders/new')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nueva OT
+            </Button>
+          </div>
         }
       />
 
