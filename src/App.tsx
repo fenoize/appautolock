@@ -48,6 +48,7 @@ import AuditSettings from "./pages/settings/AuditSettings";
 import UsersList from "./pages/admin/UsersList";
 import UserDetail from "./pages/admin/UserDetail";
 import InviteUser from "./pages/admin/InviteUser";
+import UserProfile from "./pages/settings/UserProfile";
 import QuotesList from "./pages/quotes/QuotesList";
 import NewQuote from "./pages/quotes/NewQuote";
 import QuoteDetail from "./pages/quotes/QuoteDetail";
@@ -117,6 +118,9 @@ const App = () => (
           <Route path="/admin/users" element={<ProtectedRoute><AppLayout><UsersList /></AppLayout></ProtectedRoute>} />
           <Route path="/admin/users/new" element={<ProtectedRoute><AppLayout><InviteUser /></AppLayout></ProtectedRoute>} />
           <Route path="/admin/users/:id" element={<ProtectedRoute><AppLayout><UserDetail /></AppLayout></ProtectedRoute>} />
+          
+          {/* User Profile */}
+          <Route path="/profile" element={<ProtectedRoute><AppLayout><UserProfile /></AppLayout></ProtectedRoute>} />
           
           {/* Settings */}
           <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsLayout /></AppLayout></ProtectedRoute>}>
