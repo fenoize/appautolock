@@ -277,7 +277,7 @@ export default function WOCalendar() {
                 locale="es"
                 height="auto"
                 events={events}
-                resources={viewMode === 'timeline' ? resources : undefined}
+                {...(viewMode === 'timeline' && { resources })}
                 editable={true}
                 droppable={true}
                 eventDrop={handleEventDrop}
