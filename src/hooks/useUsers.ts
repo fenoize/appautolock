@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { UserWithRoles, UpdateUserData } from '@/types/users';
+import { UserWithRoles, UpdateUserData, CreateUserInvitation } from '@/types/users';
 import { AppRole } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 
@@ -218,23 +218,17 @@ export function useCreateUser() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (data: {
-      email: string;
-      password: string;
-      nombre: string;
-      apellido?: string;
-      phone?: string;
-      branch_id?: string;
-      roles: AppRole[];
-    }) => {
-      // 1. Create auth user
+    mutationFn: async (invitation: CreateUserInvitation) => {
+      // Create auth user via Supabase
+      const temporaryPassword = `Temp${Math.random().toString(36).substring(2, 15)}!`;
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
+        email: invitation.email,
+        password: temporaryPassword,
         options: {
           data: {
-            nombre: data.nombre,
-            apellido: data.apellido
+            nombre: invitation.nombre,
+            apellido: invitation.apellido
           }
         }
       });
@@ -242,28 +236,30 @@ export function useCreateUser() {
       if (authError) throw authError;
       if (!authData.user) throw new Error('No se pudo crear el usuario');
 
-      // 2. Upsert profile with additional data (creates if doesn't exist)
+      // Upsert profile
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
           id: authData.user.id,
-          email: data.email,
-          nombre: data.nombre,
-          apellido: data.apellido || null,
-          phone: data.phone || null,
-          branch_id: data.branch_id || null,
+          email: invitation.email,
+          nombre: invitation.nombre || '',
+          apellido: invitation.apellido || '',
+          branch_id: invitation.branch_id || null,
           estado: 'invitado'
-        }, {
-          onConflict: 'id'
         });
 
       if (profileError) throw profileError;
 
-      // 3. Assign roles
-      if (data.roles.length > 0) {
+      // Insert roles
+      if (invitation.roles && invitation.roles.length > 0) {
+        const roleInserts = invitation.roles.map(role => ({
+          user_id: authData.user.id,
+          role
+        }));
+
         const { error: rolesError } = await supabase
           .from('user_roles')
-          .insert(data.roles.map(role => ({ user_id: authData.user.id, role })));
+          .insert(roleInserts);
 
         if (rolesError) throw rolesError;
       }
@@ -274,12 +270,40 @@ export function useCreateUser() {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
         title: 'Usuario creado',
-        description: 'El usuario se creó correctamente y puede acceder al sistema'
+        description: 'El usuario ha sido creado exitosamente.'
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Error al crear usuario',
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+}
+
+// Delete user
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      // Delete from auth.users (cascade will handle profiles and user_roles)
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast({
+        title: 'Usuario eliminado',
+        description: 'El usuario ha sido eliminado permanentemente del sistema.'
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error al eliminar',
         description: error.message,
         variant: 'destructive'
       });

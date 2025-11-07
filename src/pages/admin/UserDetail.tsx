@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useUserDetail, useUpdateUser, useUpdateUserRoles, useToggleUserStatus, useResetUserPassword } from '@/hooks/useUsers';
+import { useUserDetail, useUpdateUser, useUpdateUserRoles, useToggleUserStatus, useResetUserPassword, useDeleteUser } from '@/hooks/useUsers';
 import { useBranches } from '@/hooks/useBranches';
 import { RoleBadge } from '@/components/users/RoleBadge';
 import { DeleteUserDialog } from '@/components/users/DeleteUserDialog';
@@ -45,6 +45,7 @@ export default function UserDetail() {
   const updateRoles = useUpdateUserRoles();
   const toggleStatus = useToggleUserStatus();
   const resetPassword = useResetUserPassword();
+  const deleteUser = useDeleteUser();
 
   const [formData, setFormData] = useState({
     nombre: '',
@@ -117,16 +118,14 @@ export default function UserDetail() {
     toggleStatus.mutate({ userId: id, estado: newEstado });
   };
 
-  const handleDeactivate = () => {
+  const handleDeleteUser = () => {
     if (!id || !user) return;
-    toggleStatus.mutate(
-      { userId: id, estado: 'inactivo' },
-      {
-        onSuccess: () => {
-          setDeleteDialogOpen(false);
-        }
+    deleteUser.mutate(id, {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        navigate('/admin/users');
       }
-    );
+    });
   };
 
   if (isLoading) {
@@ -275,15 +274,13 @@ export default function UserDetail() {
                 <Button variant="ghost" onClick={() => navigate('/admin/users')}>
                   Cancelar
                 </Button>
-                {user.estado && (
-                  <Button 
-                    variant="destructive" 
-                    onClick={() => setDeleteDialogOpen(true)}
-                    className="ml-auto"
-                  >
-                    Desactivar usuario
-                  </Button>
-                )}
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="ml-auto"
+                >
+                  Eliminar usuario
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -354,7 +351,7 @@ export default function UserDetail() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         userName={displayName}
-        onConfirm={handleDeactivate}
+        onConfirm={handleDeleteUser}
       />
 
       <ResetPasswordDialog

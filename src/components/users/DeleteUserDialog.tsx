@@ -26,16 +26,20 @@ export function DeleteUserDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Desactivar usuario?</AlertDialogTitle>
-          <AlertDialogDescription>
-            El usuario <strong>{userName}</strong> será desactivado y no podrá acceder al sistema.
-            Esta acción es reversible desde la página de detalle del usuario.
+          <AlertDialogTitle>¿Eliminar usuario permanentemente?</AlertDialogTitle>
+          <AlertDialogDescription className="space-y-2">
+            <p>
+              El usuario <strong>{userName}</strong> será eliminado permanentemente del sistema.
+            </p>
+            <p className="text-destructive font-medium">
+              Esta acción NO se puede revertir. Se eliminarán todos los datos asociados al usuario.
+            </p>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>
-            Desactivar
+          <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            Eliminar permanentemente
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
