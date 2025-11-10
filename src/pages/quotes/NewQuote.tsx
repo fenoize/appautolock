@@ -22,6 +22,8 @@ import { ItemSelector } from '@/components/quotes/ItemSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+const STORAGE_KEY = 'newQuoteFormData';
+
 interface QuoteItemForm {
   item_tipo: 'producto' | 'servicio';
   ref_id?: string;
@@ -35,17 +37,51 @@ interface QuoteItemForm {
 export default function NewQuote() {
   const navigate = useNavigate();
   
-  // Datos del formulario
-  const [formData, setFormData] = useState({
-    client_id: '',
-    vehicle_id: '',
-    branch_id: '',
-    validez_dias: 30,
-    notas: '',
+  // Datos del formulario con auto-guardado
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          client_id: parsed.client_id || '',
+          vehicle_id: parsed.vehicle_id || '',
+          branch_id: parsed.branch_id || '',
+          validez_dias: parsed.validez_dias || 30,
+          notas: parsed.notas || '',
+        };
+      } catch {
+        return {
+          client_id: '',
+          vehicle_id: '',
+          branch_id: '',
+          validez_dias: 30,
+          notas: '',
+        };
+      }
+    }
+    return {
+      client_id: '',
+      vehicle_id: '',
+      branch_id: '',
+      validez_dias: 30,
+      notas: '',
+    };
   });
 
-  // Items de la cotización
-  const [items, setItems] = useState<QuoteItemForm[]>([]);
+  // Items de la cotización con auto-guardado
+  const [items, setItems] = useState<QuoteItemForm[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.items || [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
 
   // Usuario actual
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -84,6 +120,11 @@ export default function NewQuote() {
 
     fetchCurrentUser();
   }, []);
+
+  // Auto-guardar en localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...formData, items }));
+  }, [formData, items]);
 
   // Calcular totales
   const totals = useMemo(() => {
@@ -191,6 +232,8 @@ export default function NewQuote() {
         });
       }
 
+      // Limpiar localStorage después de guardar exitosamente
+      localStorage.removeItem(STORAGE_KEY);
       toast.success(`Cotización ${estado === 'borrador' ? 'guardada' : 'enviada'} exitosamente`);
       navigate(`/quotes/${quote.id}`);
     } catch (error: any) {

@@ -21,6 +21,8 @@ import { ItemSelector } from '@/components/quotes/ItemSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+const STORAGE_KEY = 'newWOFormData';
+
 interface WOItemForm {
   item_tipo: 'producto' | 'servicio';
   ref_id?: string;
@@ -32,19 +34,57 @@ interface WOItemForm {
 export default function NewWO() {
   const navigate = useNavigate();
   
-  // Datos del formulario
-  const [formData, setFormData] = useState({
-    client_id: '',
-    vehicle_id: '',
-    branch_id: '',
-    fecha_programada: '',
-    ventana_inicio: '',
-    ventana_fin: '',
-    notas: '',
+  // Datos del formulario con auto-guardado
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          client_id: parsed.client_id || '',
+          vehicle_id: parsed.vehicle_id || '',
+          branch_id: parsed.branch_id || '',
+          fecha_programada: parsed.fecha_programada || '',
+          ventana_inicio: parsed.ventana_inicio || '',
+          ventana_fin: parsed.ventana_fin || '',
+          notas: parsed.notas || '',
+        };
+      } catch {
+        return {
+          client_id: '',
+          vehicle_id: '',
+          branch_id: '',
+          fecha_programada: '',
+          ventana_inicio: '',
+          ventana_fin: '',
+          notas: '',
+        };
+      }
+    }
+    return {
+      client_id: '',
+      vehicle_id: '',
+      branch_id: '',
+      fecha_programada: '',
+      ventana_inicio: '',
+      ventana_fin: '',
+      notas: '',
+    };
   });
 
-  // Items de la OT
-  const [items, setItems] = useState<WOItemForm[]>([]);
+  // Items de la OT con auto-guardado
+  const [items, setItems] = useState<WOItemForm[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.items || [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
 
   // Usuario actual
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -83,6 +123,11 @@ export default function NewWO() {
 
     fetchCurrentUser();
   }, []);
+
+  // Auto-guardar en localStorage
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...formData, items }));
+  }, [formData, items]);
 
   // Funciones para items
   const handleAddItem = (newItem: {
@@ -151,6 +196,8 @@ export default function NewWO() {
         });
       }
 
+      // Limpiar localStorage después de guardar exitosamente
+      localStorage.removeItem(STORAGE_KEY);
       toast.success('Orden de trabajo creada exitosamente');
       navigate(`/work-orders/${wo.id}`);
     } catch (error: any) {

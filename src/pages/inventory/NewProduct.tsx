@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useEffect } from 'react';
 import { useCreateProduct } from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
+
+const STORAGE_KEY = 'newProductFormData';
 
 const formSchema = z.object({
   sku: z.string().min(1, 'SKU requerido'),
@@ -28,20 +31,48 @@ export default function NewProduct() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      sku: '',
-      nombre: '',
-      precio_venta: 0,
-      stock_minimo: 0,
-      unidad_medida: 'UND',
-      serializable: false,
-      aplica_iva: true,
+    defaultValues: () => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return {
+            sku: '',
+            nombre: '',
+            precio_venta: 0,
+            stock_minimo: 0,
+            unidad_medida: 'UND',
+            serializable: false,
+            aplica_iva: true,
+          };
+        }
+      }
+      return {
+        sku: '',
+        nombre: '',
+        precio_venta: 0,
+        stock_minimo: 0,
+        unidad_medida: 'UND',
+        serializable: false,
+        aplica_iva: true,
+      };
     },
   });
+
+  // Auto-guardar en localStorage
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     createProduct.mutate(values as any, {
       onSuccess: () => {
+        // Limpiar localStorage después de guardar exitosamente
+        localStorage.removeItem(STORAGE_KEY);
         navigate('/inventory');
       },
     });
