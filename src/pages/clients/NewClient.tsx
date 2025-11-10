@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,23 +13,52 @@ import { ClientType, ClientStatus } from '@/types/clients';
 import { validateRUT, formatRUT } from '@/lib/rut-validation';
 import { toast } from 'sonner';
 
+const STORAGE_KEY = 'newClientFormData';
+
 export default function NewClient() {
   const navigate = useNavigate();
   const createClient = useCreateClient();
   
-  const [formData, setFormData] = useState({
-    tipo: 'empresa' as ClientType,
-    rut: '',
-    dv: '',
-    pasaporte: '',
-    razon_social: '',
-    giro: '',
-    nombre_comercial: '',
-    email_principal: '',
-    telefonos: [''],
-    estado: 'prospecto' as ClientStatus,
-    notas: ''
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return {
+          tipo: 'empresa' as ClientType,
+          rut: '',
+          dv: '',
+          pasaporte: '',
+          razon_social: '',
+          giro: '',
+          nombre_comercial: '',
+          email_principal: '',
+          telefonos: [''],
+          estado: 'prospecto' as ClientStatus,
+          notas: ''
+        };
+      }
+    }
+    return {
+      tipo: 'empresa' as ClientType,
+      rut: '',
+      dv: '',
+      pasaporte: '',
+      razon_social: '',
+      giro: '',
+      nombre_comercial: '',
+      email_principal: '',
+      telefonos: [''],
+      estado: 'prospecto' as ClientStatus,
+      notas: ''
+    };
   });
+
+  // Auto-guardar en localStorage cuando cambia el formulario
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+  }, [formData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +82,8 @@ export default function NewClient() {
         ...formData,
         telefonos: formData.telefonos.filter(t => t.trim() !== '')
       });
+      // Limpiar localStorage después de guardar exitosamente
+      localStorage.removeItem(STORAGE_KEY);
       navigate(`/clients/${result.id}`);
     } catch (error) {
       // Error handled by mutation
