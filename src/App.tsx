@@ -15,6 +15,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ClientsList from "./pages/clients/ClientsList";
 import NewClient from "./pages/clients/NewClient";
 import ClientDetail from "./pages/clients/ClientDetail";
+import EditClient from "./pages/clients/EditClient";
 import VehiclesList from "./pages/vehicles/VehiclesList";
 import NewVehicle from "./pages/vehicles/NewVehicle";
 import VehicleDetail from "./pages/vehicles/VehicleDetail";
@@ -77,6 +78,7 @@ const App = () => (
           <Route path="/clients" element={<ProtectedRoute><AppLayout><ClientsList /></AppLayout></ProtectedRoute>} />
           <Route path="/clients/new" element={<ProtectedRoute><AppLayout><NewClient /></AppLayout></ProtectedRoute>} />
           <Route path="/clients/:id" element={<ProtectedRoute><AppLayout><ClientDetail /></AppLayout></ProtectedRoute>} />
+          <Route path="/clients/:id/edit" element={<ProtectedRoute><AppLayout><EditClient /></AppLayout></ProtectedRoute>} />
           <Route path="/vehicles" element={<ProtectedRoute><AppLayout><VehiclesList /></AppLayout></ProtectedRoute>} />
           <Route path="/vehicles/new" element={<ProtectedRoute><AppLayout><NewVehicle /></AppLayout></ProtectedRoute>} />
           <Route path="/vehicles/:id" element={<ProtectedRoute><AppLayout><VehicleDetail /></AppLayout></ProtectedRoute>} />

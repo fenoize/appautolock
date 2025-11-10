@@ -184,7 +184,7 @@ export function ClientsTable({ clients }: ClientsTableProps) {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
-                        // TODO: Implement edit
+                        navigate(`/clients/${client.id}/edit`);
                       }}>
                         <Edit className="mr-2 h-4 w-4" />
                         Editar
