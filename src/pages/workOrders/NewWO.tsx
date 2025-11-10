@@ -171,11 +171,18 @@ export default function NewWO() {
       return;
     }
 
+    // Validar que exista branch_id
+    const branchId = formData.branch_id || currentUser?.branch_id;
+    if (!branchId) {
+      toast.error('No se puede crear la orden de trabajo sin una sucursal asignada. Por favor, contacta al administrador.');
+      return;
+    }
+
     try {
       const woData = {
         client_id: formData.client_id,
         vehicle_id: formData.vehicle_id || null,
-        branch_id: formData.branch_id || currentUser?.branch_id,
+        branch_id: branchId,
         fecha_programada: formData.fecha_programada || null,
         ventana_inicio: formData.ventana_inicio || null,
         ventana_fin: formData.ventana_fin || null,

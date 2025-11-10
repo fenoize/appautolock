@@ -7,8 +7,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { Vehicle } from '@/types/vehicles';
-import { ChevronRight } from 'lucide-react';
+import { MoreVertical, Eye, Edit } from 'lucide-react';
 
 interface VehiclesTableProps {
   vehicles: Vehicle[];
@@ -33,11 +40,7 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
         </TableHeader>
         <TableBody>
           {vehicles.map((vehicle) => (
-            <TableRow
-              key={vehicle.id}
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => navigate(`/vehicles/${vehicle.id}`)}
-            >
+            <TableRow key={vehicle.id}>
               <TableCell className="font-semibold text-primary">
                 {vehicle.patente}
               </TableCell>
@@ -57,7 +60,23 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
                 {vehicle.clients?.razon_social || vehicle.clients?.nombre_comercial || '-'}
               </TableCell>
               <TableCell>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => navigate(`/vehicles/${vehicle.id}`)}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver Detalles
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(`/vehicles/${vehicle.id}/edit`)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TableCell>
             </TableRow>
           ))}

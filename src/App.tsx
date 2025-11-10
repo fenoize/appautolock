@@ -19,6 +19,7 @@ import EditClient from "./pages/clients/EditClient";
 import VehiclesList from "./pages/vehicles/VehiclesList";
 import NewVehicle from "./pages/vehicles/NewVehicle";
 import VehicleDetail from "./pages/vehicles/VehicleDetail";
+import EditVehicle from "./pages/vehicles/EditVehicle";
 import WOList from "./pages/workOrders/WOList";
 import NewWO from "./pages/workOrders/NewWO";
 import WODetail from "./pages/workOrders/WODetail";
@@ -82,6 +83,7 @@ const App = () => (
           <Route path="/vehicles" element={<ProtectedRoute><AppLayout><VehiclesList /></AppLayout></ProtectedRoute>} />
           <Route path="/vehicles/new" element={<ProtectedRoute><AppLayout><NewVehicle /></AppLayout></ProtectedRoute>} />
           <Route path="/vehicles/:id" element={<ProtectedRoute><AppLayout><VehicleDetail /></AppLayout></ProtectedRoute>} />
+          <Route path="/vehicles/:id/edit" element={<ProtectedRoute><AppLayout><EditVehicle /></AppLayout></ProtectedRoute>} />
           <Route path="/work-orders" element={<ProtectedRoute><AppLayout><WOList /></AppLayout></ProtectedRoute>} />
           <Route path="/work-orders/calendar" element={<ProtectedRoute><AppLayout><WOCalendar /></AppLayout></ProtectedRoute>} />
           <Route path="/work-orders/new" element={<ProtectedRoute><AppLayout><NewWO /></AppLayout></ProtectedRoute>} />

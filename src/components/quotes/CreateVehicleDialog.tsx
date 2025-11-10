@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
 
 interface CreateVehicleDialogProps {
   open: boolean;
@@ -38,8 +39,19 @@ export function CreateVehicleDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validar que clientId no esté vacío
+    if (!clientId || clientId.trim() === '') {
+      toast.error('No se puede crear vehículo sin un cliente válido');
+      return;
+    }
+    
     try {
-      const vehicle = await createVehicle.mutateAsync(formData as any);
+      const vehicleData = {
+        ...formData,
+        client_id: clientId,
+      };
+      
+      const vehicle = await createVehicle.mutateAsync(vehicleData as any);
       onVehicleCreated(vehicle.id);
       onOpenChange(false);
       setFormData({
@@ -51,8 +63,10 @@ export function CreateVehicleDialog({
         combustible: '',
         color: '',
       });
+      toast.success('Vehículo creado exitosamente');
     } catch (error) {
       console.error('Error al crear vehículo:', error);
+      toast.error('Error al crear el vehículo');
     }
   };
 
