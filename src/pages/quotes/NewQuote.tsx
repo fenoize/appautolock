@@ -114,8 +114,16 @@ export default function NewQuote() {
         
         setCurrentUser(profile);
         
-        if (profile?.branch_id && !formData.branch_id) {
-          setFormData(prev => ({ ...prev, branch_id: profile.branch_id }));
+        // Establecer branch_id inmediatamente si no hay uno guardado
+        if (profile?.branch_id) {
+          setFormData(prev => {
+            // Solo actualizar si branch_id es null o vacío
+            if (!prev.branch_id) {
+              console.log('✅ Estableciendo branch_id desde perfil:', profile.branch_id);
+              return { ...prev, branch_id: profile.branch_id };
+            }
+            return prev;
+          });
         }
       }
       setIsLoadingUser(false);
@@ -123,13 +131,6 @@ export default function NewQuote() {
 
     fetchCurrentUser();
   }, []);
-
-  // Sincronizar branch_id cuando currentUser se carga
-  useEffect(() => {
-    if (currentUser?.branch_id && !formData.branch_id) {
-      setFormData(prev => ({ ...prev, branch_id: currentUser.branch_id }));
-    }
-  }, [currentUser]);
 
   // Auto-guardar en localStorage
   useEffect(() => {
@@ -260,6 +261,17 @@ export default function NewQuote() {
 
   const hasBranchId = Boolean(formData.branch_id || currentUser?.branch_id);
   const canSave = !isLoadingUser && formData.client_id && items.length > 0 && hasBranchId;
+
+  // Debug: Log para verificar condiciones
+  console.log('🔍 Debug canSave:', {
+    isLoadingUser,
+    client_id: formData.client_id,
+    itemsLength: items.length,
+    formData_branch_id: formData.branch_id,
+    currentUser_branch_id: currentUser?.branch_id,
+    hasBranchId,
+    canSave
+  });
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
