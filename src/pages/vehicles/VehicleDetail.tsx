@@ -3,6 +3,7 @@ import { ArrowLeft, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useVehicle } from '@/hooks/useVehicles';
+import { VehicleServiceHistory } from '@/components/vehicles/VehicleServiceHistory';
 
 export default function VehicleDetail() {
   const { id } = useParams<{ id: string }>();
@@ -123,16 +124,7 @@ export default function VehicleDetail() {
         </Card>
 
         {/* Historial de Servicios */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Historial de Servicios</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground py-8">
-              No hay órdenes de trabajo registradas para este vehículo
-            </p>
-          </CardContent>
-        </Card>
+        <VehicleServiceHistory vehicleId={id!} />
       </div>
     </div>
   );
