@@ -36,6 +36,7 @@ interface QuoteItemForm {
 
 export default function NewQuote() {
   const navigate = useNavigate();
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
   
   // Datos del formulario con auto-guardado
   const [formData, setFormData] = useState(() => {
@@ -102,6 +103,7 @@ export default function NewQuote() {
   // Obtener usuario actual
   useEffect(() => {
     const fetchCurrentUser = async () => {
+      setIsLoadingUser(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
@@ -112,14 +114,22 @@ export default function NewQuote() {
         
         setCurrentUser(profile);
         
-        if (profile?.branch_id && (!formData.branch_id || formData.branch_id === '')) {
+        if (profile?.branch_id && !formData.branch_id) {
           setFormData(prev => ({ ...prev, branch_id: profile.branch_id }));
         }
       }
+      setIsLoadingUser(false);
     };
 
     fetchCurrentUser();
   }, []);
+
+  // Sincronizar branch_id cuando currentUser se carga
+  useEffect(() => {
+    if (currentUser?.branch_id && !formData.branch_id) {
+      setFormData(prev => ({ ...prev, branch_id: currentUser.branch_id }));
+    }
+  }, [currentUser]);
 
   // Auto-guardar en localStorage
   useEffect(() => {
@@ -248,7 +258,8 @@ export default function NewQuote() {
     }
   };
 
-  const canSave = formData.client_id && items.length > 0 && (formData.branch_id || currentUser?.branch_id);
+  const hasBranchId = Boolean(formData.branch_id || currentUser?.branch_id);
+  const canSave = !isLoadingUser && formData.client_id && items.length > 0 && hasBranchId;
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
