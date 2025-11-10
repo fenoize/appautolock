@@ -46,7 +46,7 @@ export default function NewQuote() {
         return {
           client_id: parsed.client_id || '',
           vehicle_id: parsed.vehicle_id || '',
-          branch_id: parsed.branch_id || '',
+          branch_id: parsed.branch_id || null,
           validez_dias: parsed.validez_dias || 30,
           notas: parsed.notas || '',
         };
@@ -54,7 +54,7 @@ export default function NewQuote() {
         return {
           client_id: '',
           vehicle_id: '',
-          branch_id: '',
+          branch_id: null,
           validez_dias: 30,
           notas: '',
         };
@@ -63,7 +63,7 @@ export default function NewQuote() {
     return {
       client_id: '',
       vehicle_id: '',
-      branch_id: '',
+      branch_id: null,
       validez_dias: 30,
       notas: '',
     };
@@ -112,7 +112,7 @@ export default function NewQuote() {
         
         setCurrentUser(profile);
         
-        if (profile?.branch_id && !formData.branch_id) {
+        if (profile?.branch_id && (!formData.branch_id || formData.branch_id === '')) {
           setFormData(prev => ({ ...prev, branch_id: profile.branch_id }));
         }
       }
@@ -193,6 +193,13 @@ export default function NewQuote() {
       return;
     }
 
+    // Validar que existe branch_id
+    const branchId = formData.branch_id || currentUser?.branch_id;
+    if (!branchId) {
+      toast.error('No se pudo obtener la sucursal. Por favor, recarga la página.');
+      return;
+    }
+
     if (estado === 'enviada') {
       const client = clients?.find(c => c.id === formData.client_id);
       if (!client?.email_principal) {
@@ -208,7 +215,7 @@ export default function NewQuote() {
       const quoteData = {
         client_id: formData.client_id,
         vehicle_id: formData.vehicle_id || null,
-        branch_id: formData.branch_id || currentUser?.branch_id,
+        branch_id: branchId,
         vendedor_id: user.id,
         validez_dias: formData.validez_dias,
         estado,
@@ -241,7 +248,7 @@ export default function NewQuote() {
     }
   };
 
-  const canSave = formData.client_id && items.length > 0;
+  const canSave = formData.client_id && items.length > 0 && (formData.branch_id || currentUser?.branch_id);
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
