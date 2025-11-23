@@ -15,6 +15,7 @@ import { Plus, AlertCircle, Package, Trash2 } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
 import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useCreateWorkOrder, useCreateWOItem } from '@/hooks/useWorkOrders';
+import { useBranches } from '@/hooks/useBranches';
 import { CreateClientDialog } from '@/components/quotes/CreateClientDialog';
 import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
@@ -97,6 +98,7 @@ export default function NewWO() {
   // Datos
   const { data: clients } = useClients();
   const { data: vehicles } = useVehiclesByClient(formData.client_id);
+  const { data: branches } = useBranches();
 
   // Mutaciones
   const createWO = useCreateWorkOrder();
@@ -327,6 +329,26 @@ export default function NewWO() {
                   </Button>
                 </div>
               )}
+
+              {/* Select Sucursal */}
+              <div>
+                <Label>Sucursal *</Label>
+                <Select 
+                  value={formData.branch_id} 
+                  onValueChange={(v) => setFormData({ ...formData, branch_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una sucursal..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches?.map(branch => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.nombre} ({branch.codigo})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               {/* Advertencia sin vehículo */}
               {formData.client_id && !formData.vehicle_id && (
