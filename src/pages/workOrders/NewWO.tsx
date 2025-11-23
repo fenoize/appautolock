@@ -102,7 +102,7 @@ export default function NewWO() {
   const createWO = useCreateWorkOrder();
   const createWOItem = useCreateWOItem();
 
-  // Obtener usuario actual
+  // Obtener usuario actual y establecer branch_id automáticamente
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -115,8 +115,15 @@ export default function NewWO() {
         
         setCurrentUser(profile);
         
-        if (profile?.branch_id && !formData.branch_id) {
-          setFormData(prev => ({ ...prev, branch_id: profile.branch_id }));
+        // Establecer branch_id del usuario si no hay uno asignado
+        if (profile?.branch_id) {
+          setFormData(prev => {
+            if (!prev.branch_id) {
+              console.log('✅ Estableciendo branch_id desde perfil usuario:', profile.branch_id);
+              return { ...prev, branch_id: profile.branch_id };
+            }
+            return prev;
+          });
         }
       }
     };
@@ -173,6 +180,13 @@ export default function NewWO() {
 
     // Validar que exista branch_id
     const branchId = formData.branch_id || currentUser?.branch_id;
+    console.log('💾 Intentando guardar OT con:', {
+      client_id: formData.client_id,
+      branch_id: branchId,
+      formData_branch_id: formData.branch_id,
+      currentUser_branch_id: currentUser?.branch_id
+    });
+
     if (!branchId) {
       toast.error('No se puede crear la orden de trabajo sin una sucursal asignada. Por favor, contacta al administrador.');
       return;
@@ -239,11 +253,21 @@ export default function NewWO() {
                   <Select 
                     value={formData.client_id} 
                     onValueChange={(v) => {
-                      setFormData({ ...formData, client_id: v, vehicle_id: '' });
                       const client = clients?.find(c => c.id === v);
-                      if (client?.branch_id) {
-                        setFormData(prev => ({ ...prev, branch_id: client.branch_id }));
-                      }
+                      // Priorizar branch_id del cliente, luego del usuario
+                      const branchId = client?.branch_id || formData.branch_id || currentUser?.branch_id;
+                      console.log('🔄 Seleccionando cliente:', { 
+                        clientBranch: client?.branch_id, 
+                        currentFormBranch: formData.branch_id,
+                        userBranch: currentUser?.branch_id,
+                        finalBranch: branchId 
+                      });
+                      setFormData({ 
+                        ...formData, 
+                        client_id: v, 
+                        vehicle_id: '',
+                        branch_id: branchId 
+                      });
                     }}
                   >
                     <SelectTrigger>
