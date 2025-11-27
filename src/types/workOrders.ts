@@ -24,6 +24,9 @@ export interface WorkOrder {
   ventana_inicio?: string;
   ventana_fin?: string;
   direccion_id?: string;
+  direccion?: string;
+  comuna?: string;
+  region?: string;
   ubicacion_manual?: string;
   notas?: string;
   checklist_data?: ChecklistData;

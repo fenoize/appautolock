@@ -2054,7 +2054,9 @@ export type Database = {
           branch_id: string
           checklist_data: Json | null
           client_id: string
+          comuna: string | null
           created_at: string | null
+          direccion: string | null
           direccion_id: string | null
           duracion_minutos: number | null
           estado: Database["public"]["Enums"]["wo_status"] | null
@@ -2073,6 +2075,7 @@ export type Database = {
           pdf_informe_url: string | null
           puede_editar: boolean | null
           quote_id: string | null
+          region: string | null
           tecnico_id: string | null
           ubicacion_lat: number | null
           ubicacion_lng: number | null
@@ -2087,7 +2090,9 @@ export type Database = {
           branch_id: string
           checklist_data?: Json | null
           client_id: string
+          comuna?: string | null
           created_at?: string | null
+          direccion?: string | null
           direccion_id?: string | null
           duracion_minutos?: number | null
           estado?: Database["public"]["Enums"]["wo_status"] | null
@@ -2106,6 +2111,7 @@ export type Database = {
           pdf_informe_url?: string | null
           puede_editar?: boolean | null
           quote_id?: string | null
+          region?: string | null
           tecnico_id?: string | null
           ubicacion_lat?: number | null
           ubicacion_lng?: number | null
@@ -2120,7 +2126,9 @@ export type Database = {
           branch_id?: string
           checklist_data?: Json | null
           client_id?: string
+          comuna?: string | null
           created_at?: string | null
+          direccion?: string | null
           direccion_id?: string | null
           duracion_minutos?: number | null
           estado?: Database["public"]["Enums"]["wo_status"] | null
@@ -2139,6 +2147,7 @@ export type Database = {
           pdf_informe_url?: string | null
           puede_editar?: boolean | null
           quote_id?: string | null
+          region?: string | null
           tecnico_id?: string | null
           ubicacion_lat?: number | null
           ubicacion_lng?: number | null

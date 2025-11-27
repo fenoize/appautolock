@@ -67,16 +67,21 @@ export function WODetailHeader({ workOrder }: WODetailHeaderProps) {
           </div>
         )}
 
-        {(workOrder.ubicacion_manual || workOrder.direccion_id) && (
+        {(workOrder.ubicacion_manual || workOrder.direccion_id || workOrder.direccion) && (
           <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-lg bg-secondary/10 flex items-center justify-center flex-shrink-0">
               <MapPin className="h-5 w-5 text-secondary" />
             </div>
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase">Ubicación</p>
-              <p className="text-sm font-medium text-foreground mt-0.5 line-clamp-2">
-                {workOrder.ubicacion_manual || 'Dirección del cliente'}
+              <p className="text-xs font-semibold text-muted-foreground uppercase">Dirección de Instalación</p>
+              <p className="text-sm font-medium text-foreground mt-0.5">
+                {workOrder.direccion || workOrder.ubicacion_manual || 'Dirección del cliente'}
               </p>
+              {workOrder.comuna && workOrder.region && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {workOrder.comuna}, {workOrder.region}
+                </p>
+              )}
             </div>
           </div>
         )}
