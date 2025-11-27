@@ -254,7 +254,7 @@ export default function EditQuote() {
                 <div className="flex-1">
                   <Label>Vehículo (opcional)</Label>
                   <Select 
-                    value={formData.vehicle_id} 
+                    value={formData.vehicle_id || undefined} 
                     onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}
                   >
                     <SelectTrigger>

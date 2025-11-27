@@ -82,7 +82,7 @@ export function ServiceMaterialsEditor({ serviceId, materials }: ServiceMaterial
           <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
             <div className="space-y-2">
               <Label>Producto</Label>
-              <Select value={newMaterial.product_id} onValueChange={(value) => setNewMaterial({ ...newMaterial, product_id: value })}>
+              <Select value={newMaterial.product_id || undefined} onValueChange={(value) => setNewMaterial({ ...newMaterial, product_id: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar producto" />
                 </SelectTrigger>

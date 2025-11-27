@@ -78,7 +78,7 @@ export default function NewVehicle() {
               <div className="space-y-2">
                 <Label>Cliente Propietario *</Label>
                 <Select
-                  value={formData.client_id}
+                  value={formData.client_id || undefined}
                   onValueChange={(value) => setFormData({ ...formData, client_id: value })}
                 >
                   <SelectTrigger>
@@ -169,7 +169,7 @@ export default function NewVehicle() {
                 <div className="space-y-2">
                   <Label>Combustible</Label>
                   <Select
-                    value={formData.combustible}
+                    value={formData.combustible || undefined}
                     onValueChange={(value) => setFormData({ ...formData, combustible: value })}
                   >
                     <SelectTrigger>

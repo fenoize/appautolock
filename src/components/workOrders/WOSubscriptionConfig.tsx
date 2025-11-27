@@ -103,7 +103,7 @@ export function WOSubscriptionConfig({
           {/* Selección de Plan */}
           <div className="space-y-2">
             <Label htmlFor="plan">Plan de Suscripción *</Label>
-            <Select value={planId} onValueChange={setPlanId}>
+            <Select value={planId || undefined} onValueChange={setPlanId}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un plan" />
               </SelectTrigger>

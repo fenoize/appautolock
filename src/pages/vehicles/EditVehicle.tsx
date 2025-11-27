@@ -224,7 +224,7 @@ export default function EditVehicle() {
               <div>
                 <Label htmlFor="combustible">Combustible</Label>
                 <Select
-                  value={form.watch('combustible') || ''}
+                  value={form.watch('combustible') || undefined}
                   onValueChange={(value) => form.setValue('combustible', value)}
                 >
                   <SelectTrigger id="combustible">
