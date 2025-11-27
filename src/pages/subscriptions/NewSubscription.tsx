@@ -77,7 +77,7 @@ export default function NewSubscription() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Cliente</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar cliente" />
@@ -103,7 +103,7 @@ export default function NewSubscription() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Vehículo (Opcional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Seleccionar vehículo" />
@@ -130,7 +130,7 @@ export default function NewSubscription() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Plan</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar plan" />

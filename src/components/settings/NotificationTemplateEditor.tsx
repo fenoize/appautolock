@@ -59,7 +59,7 @@ export const NotificationTemplateEditor = () => {
       <CardContent className="space-y-4">
         <div>
           <Label>Seleccionar Plantilla</Label>
-          <Select value={selectedTemplate} onValueChange={handleSelectTemplate}>
+          <Select value={selectedTemplate || undefined} onValueChange={handleSelectTemplate}>
             <SelectTrigger>
               <SelectValue placeholder="Selecciona una plantilla" />
             </SelectTrigger>

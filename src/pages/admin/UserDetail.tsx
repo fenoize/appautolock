@@ -227,7 +227,7 @@ export default function UserDetail() {
                       </Label>
                     </div>
                     <Select 
-                      value={formData.branch_id} 
+                      value={formData.branch_id || undefined} 
                       onValueChange={(value) => setFormData({ ...formData, branch_id: value })}
                       disabled={isGlobalAdmin}
                     >

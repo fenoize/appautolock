@@ -193,7 +193,7 @@ export default function InviteUser() {
 
               <div className="space-y-2">
                 <Label htmlFor="branch">Sucursal</Label>
-                <Select value={formData.branch_id} onValueChange={(value) => setFormData({ ...formData, branch_id: value })}>
+                <Select value={formData.branch_id || undefined} onValueChange={(value) => setFormData({ ...formData, branch_id: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar sucursal" />
                   </SelectTrigger>

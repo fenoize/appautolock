@@ -296,7 +296,7 @@ export default function NewQuote() {
                 <div className="flex-1">
                   <Label>Cliente *</Label>
                   <Select 
-                    value={formData.client_id} 
+                    value={formData.client_id || undefined} 
                     onValueChange={(v) => {
                       setFormData({ ...formData, client_id: v, vehicle_id: '' });
                       const client = clients?.find(c => c.id === v);
@@ -335,7 +335,7 @@ export default function NewQuote() {
                   <div className="flex-1">
                     <Label>Vehículo (opcional)</Label>
                     <Select 
-                      value={formData.vehicle_id} 
+                      value={formData.vehicle_id || undefined} 
                       onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}
                     >
                       <SelectTrigger>

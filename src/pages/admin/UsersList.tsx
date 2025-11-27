@@ -101,7 +101,7 @@ export default function UsersList() {
               placeholder="Buscar por nombre o email..."
             />
             
-            <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as AppRole | 'all')}>
+            <Select value={roleFilter || undefined} onValueChange={(value) => setRoleFilter(value as AppRole | 'all')}>
               <SelectTrigger>
                 <SelectValue placeholder="Filtrar por rol" />
               </SelectTrigger>
@@ -115,7 +115,7 @@ export default function UsersList() {
               </SelectContent>
             </Select>
 
-            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as 'all' | 'activo' | 'inactivo' | 'invitado')}>
+            <Select value={statusFilter || undefined} onValueChange={(value) => setStatusFilter(value as 'all' | 'activo' | 'inactivo' | 'invitado')}>
               <SelectTrigger>
                 <SelectValue placeholder="Filtrar por estado" />
               </SelectTrigger>

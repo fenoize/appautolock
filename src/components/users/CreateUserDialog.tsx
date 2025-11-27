@@ -59,7 +59,12 @@ export function CreateUserDialog({ open, onOpenChange, onSubmit, isLoading }: Cr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Convertir "none" a undefined para indicar sin sucursal
+    const submitData = {
+      ...formData,
+      branch_id: formData.branch_id === 'none' ? undefined : formData.branch_id
+    };
+    onSubmit(submitData);
   };
 
   const resetForm = () => {
@@ -157,12 +162,12 @@ export function CreateUserDialog({ open, onOpenChange, onSubmit, isLoading }: Cr
 
             <div className="space-y-2">
               <Label htmlFor="branch">Sucursal</Label>
-              <Select value={formData.branch_id} onValueChange={(value) => setFormData({ ...formData, branch_id: value })}>
+              <Select value={formData.branch_id || undefined} onValueChange={(value) => setFormData({ ...formData, branch_id: value })}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar sucursal (opcional para admin global)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin sucursal (Admin Global)</SelectItem>
+                  <SelectItem value="none">Sin sucursal (Admin Global)</SelectItem>
                   {branches?.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id}>
                       {branch.nombre}
