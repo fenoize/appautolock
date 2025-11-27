@@ -38,8 +38,9 @@ export function useAssignTechnician() {
       if (techError) throw techError;
       
       // 4. Enviar notificación al técnico
+      let emailWarning = null;
       try {
-        await supabase.functions.invoke('send-notification', {
+        const { data: notifResult, error: notifError } = await supabase.functions.invoke('send-notification', {
           body: {
             evento: 'wo_assigned',
             data: {
@@ -65,14 +66,27 @@ export function useAssignTechnician() {
             recipient: technician.email
           }
         });
+        
+        if (notifError || notifResult?.warning) {
+          emailWarning = notifResult?.warning || 'No se pudo enviar la notificación por email';
+        }
       } catch (emailError) {
         console.error('Error sending technician notification:', emailError);
-        // No bloquear si falla el email
+        emailWarning = 'No se pudo enviar la notificación por email';
       }
+      
+      return { emailWarning };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
-      toast.success('Técnico asignado y notificado');
+      
+      if (result?.emailWarning) {
+        toast.success('Técnico asignado correctamente', {
+          description: `⚠️ ${result.emailWarning}. Verifica tu dominio en Resend para enviar emails.`
+        });
+      } else {
+        toast.success('Técnico asignado y notificado');
+      }
     },
     onError: (error: any) => {
       toast.error(error.message || 'Error al asignar técnico');

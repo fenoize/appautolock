@@ -143,9 +143,21 @@ serve(async (req) => {
       html: template.html_content ? processedBody : `<pre>${processedBody}</pre>`,
     });
 
+    let emailStatus = 'enviada';
+    let emailWarning = null;
+
     if (emailError) {
       console.error("Resend error:", emailError);
-      throw emailError;
+      emailStatus = 'fallida';
+      emailWarning = emailError.message || 'Error al enviar email';
+      
+      // If it's a domain verification error, don't fail the whole operation
+      if (emailError.message?.includes('verify a domain')) {
+        console.log("Domain not verified - notification logged but not sent");
+      } else {
+        // For other errors, we might want to fail
+        throw emailError;
+      }
     }
 
     console.log("Email sent successfully:", emailData);
@@ -159,8 +171,8 @@ serve(async (req) => {
         canal: 'email',
         plantilla: template.id,
         payload: data,
-        estado: 'enviada',
-        enviado_at: new Date().toISOString(),
+        estado: emailStatus,
+        enviado_at: emailStatus === 'enviada' ? new Date().toISOString() : null,
       });
 
     if (logError) {
@@ -172,7 +184,9 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         emailId: emailData?.id,
-        template: template.evento 
+        template: template.evento,
+        warning: emailWarning,
+        emailSent: emailStatus === 'enviada'
       }),
       { 
         status: 200,
