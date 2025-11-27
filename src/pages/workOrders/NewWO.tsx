@@ -253,7 +253,7 @@ export default function NewWO() {
                 <div className="flex-1">
                   <Label>Cliente *</Label>
                   <Select 
-                    value={formData.client_id} 
+                    value={formData.client_id || undefined} 
                     onValueChange={(v) => {
                       const client = clients?.find(c => c.id === v);
                       // Priorizar branch_id del cliente, luego del usuario
@@ -302,7 +302,7 @@ export default function NewWO() {
                   <div className="flex-1">
                     <Label>Vehículo (opcional)</Label>
                     <Select 
-                      value={formData.vehicle_id} 
+                      value={formData.vehicle_id || undefined} 
                       onValueChange={(v) => setFormData({ ...formData, vehicle_id: v })}
                     >
                       <SelectTrigger>
@@ -334,7 +334,7 @@ export default function NewWO() {
               <div>
                 <Label>Sucursal *</Label>
                 <Select 
-                  value={formData.branch_id} 
+                  value={formData.branch_id || undefined} 
                   onValueChange={(v) => setFormData({ ...formData, branch_id: v })}
                 >
                   <SelectTrigger>
