@@ -16,6 +16,7 @@ import { useClients } from '@/hooks/useClients';
 import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useCreateWorkOrder, useCreateWOItem } from '@/hooks/useWorkOrders';
 import { useBranches } from '@/hooks/useBranches';
+import { useClientAddresses } from '@/hooks/useClientAddresses';
 import { CreateClientDialog } from '@/components/quotes/CreateClientDialog';
 import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
@@ -48,6 +49,9 @@ export default function NewWO() {
           fecha_programada: parsed.fecha_programada || '',
           ventana_inicio: parsed.ventana_inicio || '',
           ventana_fin: parsed.ventana_fin || '',
+          direccion: parsed.direccion || '',
+          comuna: parsed.comuna || '',
+          region: parsed.region || '',
           notas: parsed.notas || '',
         };
       } catch {
@@ -58,6 +62,9 @@ export default function NewWO() {
           fecha_programada: '',
           ventana_inicio: '',
           ventana_fin: '',
+          direccion: '',
+          comuna: '',
+          region: '',
           notas: '',
         };
       }
@@ -69,6 +76,9 @@ export default function NewWO() {
       fecha_programada: '',
       ventana_inicio: '',
       ventana_fin: '',
+      direccion: '',
+      comuna: '',
+      region: '',
       notas: '',
     };
   });
@@ -99,6 +109,7 @@ export default function NewWO() {
   const { data: clients } = useClients();
   const { data: vehicles } = useVehiclesByClient(formData.client_id);
   const { data: branches } = useBranches();
+  const { data: clientAddresses } = useClientAddresses(formData.client_id);
 
   // Mutaciones
   const createWO = useCreateWorkOrder();
@@ -137,6 +148,22 @@ export default function NewWO() {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...formData, items }));
   }, [formData, items]);
+
+  // Cargar dirección predeterminada del cliente cuando se selecciona
+  useEffect(() => {
+    if (formData.client_id && clientAddresses && clientAddresses.length > 0) {
+      // Solo establecer dirección si está vacía
+      if (!formData.direccion) {
+        const defaultAddress = clientAddresses.find(addr => addr.es_predeterminada) || clientAddresses[0];
+        setFormData(prev => ({
+          ...prev,
+          direccion: defaultAddress.direccion,
+          comuna: defaultAddress.comuna,
+          region: defaultAddress.region,
+        }));
+      }
+    }
+  }, [formData.client_id, clientAddresses]);
 
   // Funciones para items
   const handleAddItem = (newItem: {
@@ -202,6 +229,9 @@ export default function NewWO() {
         fecha_programada: formData.fecha_programada || null,
         ventana_inicio: formData.ventana_inicio || null,
         ventana_fin: formData.ventana_fin || null,
+        direccion: formData.direccion || null,
+        comuna: formData.comuna || null,
+        region: formData.region || null,
         notas: formData.notas || null,
         estado: 'pendiente' as const,
       };
@@ -475,6 +505,47 @@ export default function NewWO() {
                   onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
                   placeholder="Instrucciones especiales para el técnico..."
                 />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card: Dirección de Instalación */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Dirección de Instalación</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Dirección *</Label>
+                <Input
+                  value={formData.direccion}
+                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                  placeholder="Calle, número, depto..."
+                />
+                {formData.client_id && !formData.direccion && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Se usará la dirección predeterminada del cliente
+                  </p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label>Comuna *</Label>
+                  <Input
+                    value={formData.comuna}
+                    onChange={(e) => setFormData({ ...formData, comuna: e.target.value })}
+                    placeholder="Comuna"
+                  />
+                </div>
+                <div>
+                  <Label>Región *</Label>
+                  <Input
+                    value={formData.region}
+                    onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                    placeholder="Región"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

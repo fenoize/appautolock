@@ -204,10 +204,10 @@ export default function NewQuote() {
       return;
     }
 
-    // Validar que existe branch_id
+    // Validar que existe branch_id (usar el efectivo)
     const branchId = formData.branch_id || currentUser?.branch_id;
     if (!branchId) {
-      toast.error('No se pudo obtener la sucursal. Por favor, recarga la página.');
+      toast.error('No se detectó una sucursal asignada. Verifica tu perfil de usuario.');
       return;
     }
 
@@ -259,19 +259,9 @@ export default function NewQuote() {
     }
   };
 
-  const hasBranchId = Boolean(formData.branch_id || currentUser?.branch_id);
-  const canSave = !isLoadingUser && formData.client_id && items.length > 0 && hasBranchId;
-
-  // Debug: Log para verificar condiciones
-  console.log('🔍 Debug canSave:', {
-    isLoadingUser,
-    client_id: formData.client_id,
-    itemsLength: items.length,
-    formData_branch_id: formData.branch_id,
-    currentUser_branch_id: currentUser?.branch_id,
-    hasBranchId,
-    canSave
-  });
+  // Validación mejorada para habilitar botones de guardado
+  const effectiveBranchId = formData.branch_id || currentUser?.branch_id;
+  const canSave = !isLoadingUser && Boolean(formData.client_id) && items.length > 0 && Boolean(effectiveBranchId);
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">

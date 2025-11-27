@@ -1,10 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { WOSubscriptionsTab } from '@/components/workOrders/WOSubscriptionsTab';
 import { WODetailHeader } from '@/components/workOrders/WODetailHeader';
 import { WOItemsTable } from '@/components/workOrders/WOItemsTable';
 import { WONotesSection } from '@/components/workOrders/WONotesSection';
+import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnicianDialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -32,6 +34,7 @@ export default function WODetail() {
   const navigate = useNavigate();
   const { data: wo, isLoading } = useWorkOrder(id!);
   const updateWO = useUpdateWorkOrder();
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
 
   if (isLoading) {
     return (
@@ -68,7 +71,7 @@ export default function WODetail() {
     switch (wo.estado) {
       case 'pendiente':
         return (
-          <Button onClick={() => handleChangeStatus('asignada')}>
+          <Button onClick={() => setShowAssignDialog(true)}>
             <Wrench className="mr-2 h-4 w-4" />
             Asignar Técnico
           </Button>
@@ -291,6 +294,14 @@ export default function WODetail() {
           </div>
         </div>
       </Card>
+
+      {/* Dialog de asignación de técnico */}
+      <AssignTechnicianDialog
+        open={showAssignDialog}
+        onOpenChange={setShowAssignDialog}
+        workOrderId={wo.id}
+        branchId={wo.branch_id}
+      />
     </div>
   );
 }
