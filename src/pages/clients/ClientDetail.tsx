@@ -48,7 +48,7 @@ export default function ClientDetail() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => navigate(`/clients/${id}/edit`)}>
             <Edit className="h-4 w-4 mr-2" />
             Editar
           </Button>
