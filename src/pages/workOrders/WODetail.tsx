@@ -24,7 +24,8 @@ import {
   Wrench,
   Calendar,
   FileText,
-  Bell
+  Bell,
+  Edit
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -125,7 +126,7 @@ export default function WODetail() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Breadcrumbs */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="flex items-center justify-between">
         <Button
           variant="ghost"
           size="sm"
@@ -135,6 +136,12 @@ export default function WODetail() {
           <ArrowLeft className="h-4 w-4" />
           Volver a Órdenes de Trabajo
         </Button>
+        {wo.estado !== 'completada' && wo.estado !== 'cancelada' && (
+          <Button variant="outline" onClick={() => navigate(`/work-orders/${id}/edit`)}>
+            <Edit className="h-4 w-4 mr-2" />
+            Editar
+          </Button>
+        )}
       </div>
 
       {/* Tarjeta de Orden de Trabajo */}
