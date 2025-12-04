@@ -83,8 +83,13 @@ export function useCreateQuote() {
       client_id: string; 
       vendedor_id: string; 
       branch_id: string;
+      vehicle_id?: string | null;
       validez_dias?: number;
-      notas?: string;
+      notas?: string | null;
+      estado?: 'borrador' | 'enviada';
+      neto?: number;
+      iva?: number;
+      total?: number;
     }) => {
       // Generar folio
       const { data: folio, error: folioError } = await supabase
@@ -98,7 +103,7 @@ export function useCreateQuote() {
           ...quote, 
           folio,
           validez_dias: quote.validez_dias || 30,
-          estado: 'borrador' as const
+          estado: quote.estado || 'borrador'
         }])
         .select()
         .single();
@@ -108,7 +113,6 @@ export function useCreateQuote() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
-      toast.success('Cotización creada exitosamente');
     },
     onError: (error: any) => {
       toast.error(error.message || 'Error al crear cotización');
