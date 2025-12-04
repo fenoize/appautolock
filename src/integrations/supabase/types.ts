@@ -1606,7 +1606,10 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          app_alojada: string | null
           client_id: string
+          compania: string | null
+          correo_usuario: string | null
           created_at: string | null
           estado: Database["public"]["Enums"]["subscription_status"] | null
           fecha_inicio: string
@@ -1614,7 +1617,12 @@ export type Database = {
           fecha_vencimiento: string
           folio: string
           id: string
+          imei_gps: string | null
+          imei_pcs: string | null
+          instalador: string | null
+          modelo_gps: string | null
           notas: string | null
+          numero_pcs: string | null
           numeros_serie: Json | null
           plan_id: string
           ultima_notificacion_enviada: string | null
@@ -1623,7 +1631,10 @@ export type Database = {
           wo_id: string | null
         }
         Insert: {
+          app_alojada?: string | null
           client_id: string
+          compania?: string | null
+          correo_usuario?: string | null
           created_at?: string | null
           estado?: Database["public"]["Enums"]["subscription_status"] | null
           fecha_inicio: string
@@ -1631,7 +1642,12 @@ export type Database = {
           fecha_vencimiento: string
           folio: string
           id?: string
+          imei_gps?: string | null
+          imei_pcs?: string | null
+          instalador?: string | null
+          modelo_gps?: string | null
           notas?: string | null
+          numero_pcs?: string | null
           numeros_serie?: Json | null
           plan_id: string
           ultima_notificacion_enviada?: string | null
@@ -1640,7 +1656,10 @@ export type Database = {
           wo_id?: string | null
         }
         Update: {
+          app_alojada?: string | null
           client_id?: string
+          compania?: string | null
+          correo_usuario?: string | null
           created_at?: string | null
           estado?: Database["public"]["Enums"]["subscription_status"] | null
           fecha_inicio?: string
@@ -1648,7 +1667,12 @@ export type Database = {
           fecha_vencimiento?: string
           folio?: string
           id?: string
+          imei_gps?: string | null
+          imei_pcs?: string | null
+          instalador?: string | null
+          modelo_gps?: string | null
           notas?: string | null
+          numero_pcs?: string | null
           numeros_serie?: Json | null
           plan_id?: string
           ultima_notificacion_enviada?: string | null

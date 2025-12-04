@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { RefreshCw, Pause, Play, X } from 'lucide-react';
+import { RefreshCw, Pause, Play, X, Cpu, Smartphone, User, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function SubscriptionDetail() {
@@ -80,6 +80,7 @@ export default function SubscriptionDetail() {
       <Tabs defaultValue="info" className="w-full">
         <TabsList>
           <TabsTrigger value="info">Información</TabsTrigger>
+          <TabsTrigger value="gps">Datos GPS</TabsTrigger>
           <TabsTrigger value="timeline">Historial</TabsTrigger>
         </TabsList>
 
@@ -128,6 +129,94 @@ export default function SubscriptionDetail() {
                     <p className="font-medium">{subscription.notas}</p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="gps">
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Datos del Equipo GPS */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Cpu className="h-5 w-5" />
+                  Equipo GPS
+                </CardTitle>
+                <CardDescription>Información técnica del dispositivo</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Modelo del GPS</p>
+                  <p className="font-medium">{subscription.modelo_gps || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">IMEI GPS</p>
+                  <p className="font-medium font-mono">{subscription.imei_gps || '-'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Datos del PCS/Chip */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Smartphone className="h-5 w-5" />
+                  Chip / PCS
+                </CardTitle>
+                <CardDescription>Información del chip de datos</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">IMEI PCS</p>
+                  <p className="font-medium font-mono">{subscription.imei_pcs || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Número PCS</p>
+                  <p className="font-medium">{subscription.numero_pcs || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Compañía</p>
+                  <p className="font-medium">{subscription.compania || '-'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Datos de Acceso */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Acceso de Usuario
+                </CardTitle>
+                <CardDescription>Credenciales y plataforma</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Correo Usuario</p>
+                  <p className="font-medium">{subscription.correo_usuario || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">App Alojada</p>
+                  <p className="font-medium">{subscription.app_alojada || '-'}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Datos del Servicio */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Servicio
+                </CardTitle>
+                <CardDescription>Responsable de instalación</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-sm text-muted-foreground">Instalador</p>
+                  <p className="font-medium">{subscription.instalador || '-'}</p>
+                </div>
               </CardContent>
             </Card>
           </div>

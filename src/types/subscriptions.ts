@@ -52,6 +52,16 @@ export interface Subscription {
   created_at: string;
   updated_at: string;
   
+  // Campos GPS
+  modelo_gps?: string;
+  imei_gps?: string;
+  imei_pcs?: string;
+  numero_pcs?: string;
+  compania?: string;
+  correo_usuario?: string;
+  app_alojada?: string;
+  instalador?: string;
+  
   // Relaciones
   client?: any;
   vehicle?: any;

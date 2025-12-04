@@ -30,6 +30,17 @@ interface WOSubscriptionConfigProps {
   woFechaFin?: string;
 }
 
+interface GPSData {
+  modelo_gps: string;
+  imei_gps: string;
+  imei_pcs: string;
+  numero_pcs: string;
+  compania: string;
+  correo_usuario: string;
+  app_alojada: string;
+  instalador: string;
+}
+
 export function WOSubscriptionConfig({
   open,
   onOpenChange,
@@ -43,6 +54,18 @@ export function WOSubscriptionConfig({
   ]);
   const [fechaInicio, setFechaInicio] = useState(woFechaFin || new Date().toISOString().split('T')[0]);
   const [notas, setNotas] = useState('');
+  
+  // GPS Data
+  const [gpsData, setGpsData] = useState<GPSData>({
+    modelo_gps: '',
+    imei_gps: '',
+    imei_pcs: '',
+    numero_pcs: '',
+    compania: '',
+    correo_usuario: '',
+    app_alojada: '',
+    instalador: '',
+  });
 
   const { data: allPlans } = useSubscriptionPlans();
   const createMutation = useCreateSubscriptionFromWOItem();
@@ -70,6 +93,10 @@ export function WOSubscriptionConfig({
     setNumerosSerietext(updated);
   };
 
+  const handleGpsDataChange = (field: keyof GPSData, value: string) => {
+    setGpsData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleSubmit = async () => {
     if (!planId) {
       return;
@@ -84,6 +111,7 @@ export function WOSubscriptionConfig({
       planId,
       numerosSerietext: seriesjson,
       fechaInicio,
+      gpsData,
     });
 
     onOpenChange(false);
@@ -91,7 +119,7 @@ export function WOSubscriptionConfig({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Configurar Suscripción</DialogTitle>
           <DialogDescription>
@@ -119,10 +147,107 @@ export function WOSubscriptionConfig({
 
           <Separator />
 
+          {/* Datos del GPS */}
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Datos del Equipo GPS</Label>
+            
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="modelo_gps">Modelo del GPS</Label>
+                <Input
+                  id="modelo_gps"
+                  value={gpsData.modelo_gps}
+                  onChange={(e) => handleGpsDataChange('modelo_gps', e.target.value)}
+                  placeholder="Ej: GT06N, TK103B"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="imei_gps">IMEI GPS</Label>
+                <Input
+                  id="imei_gps"
+                  value={gpsData.imei_gps}
+                  onChange={(e) => handleGpsDataChange('imei_gps', e.target.value)}
+                  placeholder="Ej: 123456789012345"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="imei_pcs">IMEI PCS</Label>
+                <Input
+                  id="imei_pcs"
+                  value={gpsData.imei_pcs}
+                  onChange={(e) => handleGpsDataChange('imei_pcs', e.target.value)}
+                  placeholder="IMEI del PCS"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="numero_pcs">Número PCS</Label>
+                <Input
+                  id="numero_pcs"
+                  value={gpsData.numero_pcs}
+                  onChange={(e) => handleGpsDataChange('numero_pcs', e.target.value)}
+                  placeholder="Número del chip"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="compania">Compañía</Label>
+                <Input
+                  id="compania"
+                  value={gpsData.compania}
+                  onChange={(e) => handleGpsDataChange('compania', e.target.value)}
+                  placeholder="Ej: Entel, Movistar"
+                />
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Datos de Acceso */}
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Datos de Acceso y Servicio</Label>
+            
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="correo_usuario">Correo Usuario</Label>
+                <Input
+                  id="correo_usuario"
+                  type="email"
+                  value={gpsData.correo_usuario}
+                  onChange={(e) => handleGpsDataChange('correo_usuario', e.target.value)}
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="app_alojada">App Alojada</Label>
+                <Input
+                  id="app_alojada"
+                  value={gpsData.app_alojada}
+                  onChange={(e) => handleGpsDataChange('app_alojada', e.target.value)}
+                  placeholder="Ej: GPS Tracker, Traccar"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="instalador">Instalador</Label>
+              <Input
+                id="instalador"
+                value={gpsData.instalador}
+                onChange={(e) => handleGpsDataChange('instalador', e.target.value)}
+                placeholder="Nombre del instalador"
+              />
+            </div>
+          </div>
+
+          <Separator />
+
           {/* Números de Serie */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Números de Serie *</Label>
+              <Label>Números de Serie Adicionales</Label>
               <Button type="button" variant="outline" size="sm" onClick={handleAddSerial}>
                 + Agregar
               </Button>
@@ -206,7 +331,7 @@ export function WOSubscriptionConfig({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={createMutation.isPending || !planId || numerosSerietext.every(s => !s.numero.trim())}
+            disabled={createMutation.isPending || !planId}
           >
             {createMutation.isPending ? 'Creando...' : 'Crear Suscripción'}
           </Button>
