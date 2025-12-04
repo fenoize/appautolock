@@ -30,6 +30,17 @@ export interface WOSubscriptionItem {
   };
 }
 
+export interface GPSData {
+  modelo_gps?: string;
+  imei_gps?: string;
+  imei_pcs?: string;
+  numero_pcs?: string;
+  compania?: string;
+  correo_usuario?: string;
+  app_alojada?: string;
+  instalador?: string;
+}
+
 // Obtener items de suscripción de una OT
 export function useWOSubscriptionItems(woId: string | undefined) {
   return useQuery({
@@ -101,13 +112,16 @@ export function useCreateSubscriptionFromWOItem() {
       planId,
       numerosSerietext,
       fechaInicio,
+      gpsData,
     }: {
       woSubscriptionItemId: string;
       planId: string;
       numerosSerietext: any[];
       fechaInicio?: string;
+      gpsData?: GPSData;
     }) => {
-      const { data, error } = await supabase.rpc('create_subscription_from_wo_item', {
+      // Create subscription via RPC
+      const { data: subscriptionId, error } = await supabase.rpc('create_subscription_from_wo_item', {
         p_wo_subscription_item_id: woSubscriptionItemId,
         p_plan_id: planId,
         p_numeros_serie: numerosSerietext,
@@ -115,7 +129,32 @@ export function useCreateSubscriptionFromWOItem() {
       });
 
       if (error) throw error;
-      return data;
+
+      // Update subscription with GPS data if provided
+      if (subscriptionId && gpsData) {
+        const gpsFields: Record<string, string | undefined> = {};
+        if (gpsData.modelo_gps) gpsFields.modelo_gps = gpsData.modelo_gps;
+        if (gpsData.imei_gps) gpsFields.imei_gps = gpsData.imei_gps;
+        if (gpsData.imei_pcs) gpsFields.imei_pcs = gpsData.imei_pcs;
+        if (gpsData.numero_pcs) gpsFields.numero_pcs = gpsData.numero_pcs;
+        if (gpsData.compania) gpsFields.compania = gpsData.compania;
+        if (gpsData.correo_usuario) gpsFields.correo_usuario = gpsData.correo_usuario;
+        if (gpsData.app_alojada) gpsFields.app_alojada = gpsData.app_alojada;
+        if (gpsData.instalador) gpsFields.instalador = gpsData.instalador;
+
+        if (Object.keys(gpsFields).length > 0) {
+          const { error: updateError } = await supabase
+            .from('subscriptions')
+            .update(gpsFields)
+            .eq('id', subscriptionId);
+
+          if (updateError) {
+            console.error('Error updating GPS data:', updateError);
+          }
+        }
+      }
+
+      return subscriptionId;
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['wo-subscription-items'] });

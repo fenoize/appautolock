@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { Separator } from '@/components/ui/separator';
 
 interface FormData {
   client_id: string;
@@ -19,6 +20,15 @@ interface FormData {
   plan_id: string;
   fecha_inicio: string;
   notas?: string;
+  // Campos GPS
+  modelo_gps?: string;
+  imei_gps?: string;
+  imei_pcs?: string;
+  numero_pcs?: string;
+  compania?: string;
+  correo_usuario?: string;
+  app_alojada?: string;
+  instalador?: string;
 }
 
 export default function NewSubscription() {
@@ -54,7 +64,7 @@ export default function NewSubscription() {
   };
 
   return (
-    <PageContainer maxWidth="md">
+    <PageContainer maxWidth="lg">
       <PageHeader
         title="Nueva Suscripción GPS"
         description="Crear una nueva suscripción de rastreo"
@@ -62,57 +72,33 @@ export default function NewSubscription() {
         backTo="/subscriptions"
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Datos de la Suscripción</CardTitle>
-          <CardDescription>Complete la información requerida</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="client_id"
-                rules={{ required: 'Cliente es requerido' }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cliente</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || undefined}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar cliente" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {clients?.map((client) => (
-                          <SelectItem key={client.id} value={client.id}>
-                            {client.razon_social || client.nombre_comercial}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {selectedClientId && (
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Información General */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Información General</CardTitle>
+              <CardDescription>Cliente, vehículo y plan de suscripción</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="vehicle_id"
+                  name="client_id"
+                  rules={{ required: 'Cliente es requerido' }}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Vehículo (Opcional)</FormLabel>
+                      <FormLabel>Cliente *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value || undefined}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar vehículo" />
+                            <SelectValue placeholder="Seleccionar cliente" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {clientVehicles?.map((vehicle) => (
-                            <SelectItem key={vehicle.id} value={vehicle.id}>
-                              {vehicle.patente} - {vehicle.marca} {vehicle.modelo}
+                          {clients?.map((client) => (
+                            <SelectItem key={client.id} value={client.id}>
+                              {client.razon_social || client.nombre_comercial}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -121,75 +107,250 @@ export default function NewSubscription() {
                     </FormItem>
                   )}
                 />
-              )}
 
-              <FormField
-                control={form.control}
-                name="plan_id"
-                rules={{ required: 'Plan es requerido' }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Plan</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || undefined}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar plan" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {plans?.map((plan) => (
-                          <SelectItem key={plan.id} value={plan.id}>
-                            {plan.nombre} - ${plan.precio.toLocaleString('es-CL')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                {selectedClientId && (
+                  <FormField
+                    control={form.control}
+                    name="vehicle_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vehículo (Opcional)</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || undefined}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar vehículo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {clientVehicles?.map((vehicle) => (
+                              <SelectItem key={vehicle.id} value={vehicle.id}>
+                                {vehicle.patente} - {vehicle.marca} {vehicle.modelo}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
-              />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="plan_id"
+                  rules={{ required: 'Plan es requerido' }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Plan *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value || undefined}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar plan" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {plans?.map((plan) => (
+                            <SelectItem key={plan.id} value={plan.id}>
+                              {plan.nombre} - ${plan.precio.toLocaleString('es-CL')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fecha_inicio"
+                  rules={{ required: 'Fecha de inicio es requerida' }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fecha de Inicio *</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Datos del GPS */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Datos del Equipo GPS</CardTitle>
+              <CardDescription>Información técnica del dispositivo GPS</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="modelo_gps"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Modelo del GPS</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: GT06N, TK103B" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="imei_gps"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>IMEI GPS</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: 123456789012345" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <Separator />
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="imei_pcs"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>IMEI PCS</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="IMEI del PCS" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="numero_pcs"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número PCS</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Número del chip" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="compania"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Compañía</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: Entel, Movistar, WOM" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Datos de Acceso y Servicio */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Datos de Acceso y Servicio</CardTitle>
+              <CardDescription>Información de la plataforma y responsable</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="correo_usuario"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Correo Usuario</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="correo@ejemplo.com" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="app_alojada"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>App Alojada</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Ej: GPS Tracker, Traccar" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
-                name="fecha_inicio"
-                rules={{ required: 'Fecha de inicio es requerida' }}
+                name="instalador"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Fecha de Inicio</FormLabel>
+                    <FormLabel>Instalador</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input {...field} placeholder="Nombre del instalador" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </CardContent>
+          </Card>
 
+          {/* Notas */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Notas Adicionales</CardTitle>
+            </CardHeader>
+            <CardContent>
               <FormField
                 control={form.control}
                 name="notas"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Notas</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={3} placeholder="Notas adicionales..." />
+                      <Textarea {...field} rows={3} placeholder="Notas adicionales sobre la suscripción..." />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </CardContent>
+          </Card>
 
-              <div className="flex gap-2">
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? 'Creando...' : 'Crear Suscripción'}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => navigate('/subscriptions')}>
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+          {/* Botones */}
+          <div className="flex gap-2">
+            <Button type="submit" disabled={createMutation.isPending}>
+              {createMutation.isPending ? 'Creando...' : 'Crear Suscripción'}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => navigate('/subscriptions')}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </Form>
     </PageContainer>
   );
 }
