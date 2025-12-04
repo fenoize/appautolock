@@ -16,6 +16,7 @@ import { Plus, AlertCircle, Package, Trash2 } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
 import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useCreateQuote, useCreateQuoteItem } from '@/hooks/useQuotes';
+import { useBranches } from '@/hooks/useBranches';
 import { CreateClientDialog } from '@/components/quotes/CreateClientDialog';
 import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
@@ -95,6 +96,7 @@ export default function NewQuote() {
   // Datos
   const { data: clients } = useClients();
   const { data: vehicles } = useVehiclesByClient(formData.client_id);
+  const { data: branches } = useBranches();
 
   // Mutaciones
   const createQuote = useCreateQuote();
@@ -117,9 +119,7 @@ export default function NewQuote() {
         // Establecer branch_id inmediatamente si no hay uno guardado
         if (profile?.branch_id) {
           setFormData(prev => {
-            // Solo actualizar si branch_id es null o vacío
             if (!prev.branch_id) {
-              console.log('✅ Estableciendo branch_id desde perfil:', profile.branch_id);
               return { ...prev, branch_id: profile.branch_id };
             }
             return prev;
@@ -131,6 +131,13 @@ export default function NewQuote() {
 
     fetchCurrentUser();
   }, []);
+
+  // Set default branch if none is set and branches are loaded
+  useEffect(() => {
+    if (!formData.branch_id && branches && branches.length > 0) {
+      setFormData(prev => ({ ...prev, branch_id: branches[0].id }));
+    }
+  }, [branches, formData.branch_id]);
 
   // Auto-guardar en localStorage
   useEffect(() => {
@@ -319,6 +326,26 @@ export default function NewQuote() {
                   <Plus className="h-4 w-4 mr-2" />
                   Nuevo
                 </Button>
+              </div>
+
+              {/* Select Sucursal */}
+              <div>
+                <Label>Sucursal *</Label>
+                <Select 
+                  value={formData.branch_id || undefined} 
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, branch_id: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una sucursal..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches?.map(branch => (
+                      <SelectItem key={branch.id} value={branch.id}>
+                        {branch.nombre} ({branch.codigo})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Select Vehículo */}
