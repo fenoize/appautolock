@@ -285,14 +285,16 @@ export default function NewQuote() {
               <div className="flex gap-2">
                 <div className="flex-1">
                   <Label>Cliente *</Label>
-                  <Select 
+                <Select 
                     value={formData.client_id || undefined} 
                     onValueChange={(v) => {
-                      setFormData({ ...formData, client_id: v, vehicle_id: '' });
                       const client = clients?.find(c => c.id === v);
-                      if (client?.branch_id) {
-                        setFormData(prev => ({ ...prev, branch_id: client.branch_id }));
-                      }
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        client_id: v, 
+                        vehicle_id: '',
+                        branch_id: client?.branch_id || prev.branch_id
+                      }));
                     }}
                   >
                     <SelectTrigger>
