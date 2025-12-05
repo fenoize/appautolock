@@ -32,6 +32,8 @@ const Login = () => {
       if (error) {
         if (error.message.includes("Invalid login credentials")) {
           toast.error("Email o contraseña incorrectos");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Por favor confirma tu email antes de iniciar sesión");
         } else {
           toast.error(error.message);
         }
@@ -43,6 +45,12 @@ const Login = () => {
         navigate("/dashboard");
       }
     } catch (error: any) {
+      // Handle network errors (Load failed, Failed to fetch, etc.)
+      if (error.message === "Load failed" || error.message === "Failed to fetch" || error.name === "TypeError") {
+        toast.error("Error de conexión. Por favor verifica tu conexión a internet e intenta nuevamente.");
+        return;
+      }
+      
       if (error.errors) {
         error.errors.forEach((err: any) => {
           toast.error(err.message);
@@ -71,6 +79,11 @@ const Login = () => {
       
       toast.success("Revisa tu correo para el enlace de acceso");
     } catch (error: any) {
+      // Handle network errors
+      if (error.message === "Load failed" || error.message === "Failed to fetch" || error.name === "TypeError") {
+        toast.error("Error de conexión. Por favor verifica tu conexión a internet e intenta nuevamente.");
+        return;
+      }
       toast.error(error.message || "Error al enviar enlace");
     } finally {
       setLoading(false);
