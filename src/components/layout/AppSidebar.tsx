@@ -186,13 +186,18 @@ export function AppSidebar() {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
-                            {item.items.map((subItem) => (
+                            {item.items.map((subItem: any) => (
                               <SidebarMenuSubItem key={subItem.path}>
                                 <SidebarMenuSubButton
                                   onClick={() => navigate(subItem.path)}
                                   isActive={isActive(subItem.path)}
                                 >
                                   <span>{subItem.title}</span>
+                                  {subItem.badge !== undefined && subItem.badge > 0 && (
+                                    <Badge variant="destructive" className="ml-auto">
+                                      {subItem.badge}
+                                    </Badge>
+                                  )}
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
                             ))}
