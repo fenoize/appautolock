@@ -16,6 +16,7 @@ import { useDashboardStats, useProximasOTs } from '@/hooks/useDashboardStats';
 import { useExpiringSubscriptions } from '@/hooks/useSubscriptions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
