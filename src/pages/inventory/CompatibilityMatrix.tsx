@@ -46,35 +46,64 @@ type NodeStatus = CompatEstado | 'sin_datos' | 'mixto';
 
 const STATUS_LABEL: Record<NodeStatus, string> = {
   verde: 'Compatible',
-  amarillo: 'Con observaciones',
+  amarillo: 'Compatible con observaciones',
   rojo: 'No compatible',
   sin_datos: 'Sin datos',
   mixto: 'Mixto',
 };
 
-const StatusPill = ({ status }: { status: NodeStatus }) => {
-  const cls =
-    status === 'verde'
-      ? 'bg-green-500/15 text-green-700 border-green-500/30'
-      : status === 'rojo'
-      ? 'bg-red-500/15 text-red-700 border-red-500/30'
-      : status === 'amarillo'
-      ? 'bg-yellow-500/15 text-yellow-700 border-yellow-500/30'
-      : status === 'mixto'
-      ? 'bg-orange-500/15 text-orange-700 border-orange-500/30'
-      : 'bg-muted text-muted-foreground border-border';
-  const Icon =
-    status === 'verde' ? Check : status === 'rojo' ? X : status === 'mixto' ? CircleDot : Minus;
+/** 4-circle traffic light. `status` highlights one circle; 'mixto' dims all equally. */
+const TrafficLight = ({
+  status,
+  onSelect,
+  disabled,
+  size = 'md',
+}: {
+  status: NodeStatus;
+  onSelect?: (s: CompatEstado | 'sin_datos') => void;
+  disabled?: boolean;
+  size?: 'sm' | 'md';
+}) => {
+  const dot = size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5';
+  const circles: { key: CompatEstado | 'sin_datos'; color: string; ring: string; title: string }[] = [
+    { key: 'verde', color: 'bg-green-500', ring: 'ring-green-500', title: 'Compatible' },
+    { key: 'amarillo', color: 'bg-yellow-500', ring: 'ring-yellow-500', title: 'Compatible con observaciones' },
+    { key: 'rojo', color: 'bg-red-500', ring: 'ring-red-500', title: 'No compatible' },
+    { key: 'sin_datos', color: 'bg-muted-foreground/40', ring: 'ring-muted-foreground/40', title: 'Sin datos' },
+  ];
+  const mixto = status === 'mixto';
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
-        cls,
-      )}
+    <div
+      className="inline-flex items-center gap-1 rounded-full border border-border bg-background/60 px-1.5 py-0.5"
+      title={STATUS_LABEL[status]}
     >
-      <Icon className="h-3 w-3" />
-      {STATUS_LABEL[status]}
-    </span>
+      {circles.map((c) => {
+        const active = !mixto && status === c.key;
+        const dim = !mixto && !active;
+        return (
+          <button
+            key={c.key}
+            type="button"
+            disabled={disabled}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect?.(c.key);
+            }}
+            title={c.title}
+            className={cn(
+              'rounded-full transition-all',
+              dot,
+              c.color,
+              mixto && 'opacity-60',
+              active && `ring-2 ring-offset-1 ring-offset-background ${c.ring} scale-110`,
+              dim && 'opacity-25 hover:opacity-70',
+              disabled ? 'cursor-default' : 'cursor-pointer',
+            )}
+            aria-label={c.title}
+          />
+        );
+      })}
+    </div>
   );
 };
 
