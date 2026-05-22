@@ -38,6 +38,11 @@ export default function WOCalendar() {
   const [viewMode, setViewMode] = useState<'calendar' | 'timeline'>('calendar');
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [selectedTechnician, setSelectedTechnician] = useState<string>('all');
+  const [selectedEvent, setSelectedEvent] = useState<{ wo: WorkOrder; anchorEl?: { x: number; y: number } } | null>(null);
+  const [editTecnicoId, setEditTecnicoId] = useState<string>('');
+  const [editFecha, setEditFecha] = useState<string>('');
+  const [editVentanaFin, setEditVentanaFin] = useState<string>('');
+  const [editMotivo, setEditMotivo] = useState<string>('');
 
   const { data: workOrders, isLoading } = useWorkOrders();
   const { data: users } = useUsers();
