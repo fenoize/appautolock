@@ -422,6 +422,117 @@ export default function WOCalendar() {
           border-radius: 4px;
         }
       `}</style>
+
+      <Sheet open={!!selectedEvent} onOpenChange={(open) => !open && closeSheet()}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          {selectedEvent && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  {selectedEvent.wo.folio}
+                  <WOStatusBadge status={selectedEvent.wo.estado} />
+                </SheetTitle>
+                <SheetDescription>Edición rápida de la orden de trabajo</SheetDescription>
+              </SheetHeader>
+
+              <div className="space-y-5 py-4">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Cliente</Label>
+                  {selectedEvent.wo.client ? (
+                    <Link
+                      to={`/clients/${selectedEvent.wo.client_id}`}
+                      className="text-sm font-medium text-primary hover:underline block"
+                      onClick={closeSheet}
+                    >
+                      {selectedEvent.wo.client.razon_social || selectedEvent.wo.client.nombre_comercial}
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin cliente</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Vehículo</Label>
+                  <p className="text-sm">
+                    {selectedEvent.wo.vehicle
+                      ? `${selectedEvent.wo.vehicle.marca} ${selectedEvent.wo.vehicle.modelo} - ${selectedEvent.wo.vehicle.patente}`
+                      : 'Sin vehículo'}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Técnico asignado</Label>
+                  <Select value={editTecnicoId} onValueChange={setEditTecnicoId}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Sin asignar</SelectItem>
+                      {technicians.map((tech) => (
+                        <SelectItem key={tech.id} value={tech.id}>
+                          {tech.nombre} {tech.apellido}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick-fecha">Fecha y hora programada</Label>
+                  <Input
+                    id="quick-fecha"
+                    type="datetime-local"
+                    value={editFecha}
+                    onChange={(e) => setEditFecha(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick-ventana">Ventana fin (opcional)</Label>
+                  <Input
+                    id="quick-ventana"
+                    type="datetime-local"
+                    value={editVentanaFin}
+                    onChange={(e) => setEditVentanaFin(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick-motivo">
+                    Motivo del cambio <span className="text-muted-foreground">(requerido si modificas técnico o fecha)</span>
+                  </Label>
+                  <Textarea
+                    id="quick-motivo"
+                    value={editMotivo}
+                    onChange={(e) => setEditMotivo(e.target.value)}
+                    placeholder="Ej: Reasignado por solicitud del cliente"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 pt-2">
+                  <Button onClick={handleSaveQuickEdit} disabled={updateWorkOrder.isPending}>
+                    Guardar cambios
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      navigate(`/work-orders/${selectedEvent.wo.id}`);
+                      closeSheet();
+                    }}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Ver detalle completo
+                  </Button>
+                  <Button variant="ghost" onClick={closeSheet}>
+                    Cerrar sin guardar
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
