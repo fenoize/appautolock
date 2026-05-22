@@ -16,6 +16,10 @@ import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useQuote, useUpdateQuote, useCreateQuoteItem, useDeleteQuoteItem } from '@/hooks/useQuotes';
 import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
+import { QuoteItemCompatibilityAlerts } from '@/components/quotes/QuoteItemCompatibilityAlerts';
+import { CompatibilityBadge } from '@/components/compatibility/CompatibilityBadge';
+import { useCompatibilityForVehicle } from '@/hooks/useCompatibility';
+import { useProducts } from '@/hooks/useProducts';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -49,6 +53,31 @@ export default function EditQuote() {
   const [items, setItems] = useState<QuoteItemForm[]>([]);
   const [showVehicleDialog, setShowVehicleDialog] = useState(false);
   const [showItemSelector, setShowItemSelector] = useState(false);
+
+  const { data: allProducts } = useProducts();
+  const selectedVehicle = useMemo(
+    () => vehicles?.find((v: any) => v.id === formData.vehicle_id) ?? null,
+    [vehicles, formData.vehicle_id],
+  );
+  const { data: vehicleCompats = [] } = useCompatibilityForVehicle(
+    selectedVehicle
+      ? { marca: selectedVehicle.marca, modelo: selectedVehicle.modelo, anio: selectedVehicle.anio }
+      : undefined,
+  );
+  const compatByProduct = useMemo(() => {
+    const m = new Map<string, (typeof vehicleCompats)[number]>();
+    vehicleCompats.forEach((c) => m.set(c.product_id, c));
+    return m;
+  }, [vehicleCompats]);
+  const gpsProductIds = useMemo(
+    () =>
+      new Set(
+        (allProducts ?? [])
+          .filter((p: any) => (p.tipos_suscripcion_disponibles?.length ?? 0) > 0)
+          .map((p: any) => p.id),
+      ),
+    [allProducts],
+  );
 
   useEffect(() => {
     if (quote) {
