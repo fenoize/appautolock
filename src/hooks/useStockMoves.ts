@@ -61,7 +61,7 @@ export const useKardex = (product_id: string, location_id?: string) => {
       const { data, error } = await query.order('fecha', { ascending: true });
       if (error) throw error;
       
-      const moves = data as StockMove[];
+      const moves = data as unknown as StockMove[];
       let saldo = 0;
       
       const kardex: KardexEntry[] = moves.map(move => {
