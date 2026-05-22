@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
 import { useStockMoves } from '@/hooks/useStockMoves';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,7 @@ import { WOSubscriptionsTab } from '@/components/workOrders/WOSubscriptionsTab';
 import { WODetailHeader } from '@/components/workOrders/WODetailHeader';
 import { WOItemsTable } from '@/components/workOrders/WOItemsTable';
 import { WONotesSection } from '@/components/workOrders/WONotesSection';
+import MobileWODetail from '@/components/workOrders/MobileWODetail';
 import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnicianDialog';
 import {
   AlertDialog,
@@ -52,7 +54,9 @@ export default function WODetail() {
   const navigate = useNavigate();
   const { data: wo, isLoading } = useWorkOrder(id!);
   const updateWO = useUpdateWorkOrder();
-  const { isAdmin } = usePermissions();
+  const { isAdmin, hasRole } = usePermissions();
+  const isMobile = useIsMobile();
+  const isTecnico = hasRole('tecnico');
   const queryClient = useQueryClient();
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('items');
@@ -102,6 +106,12 @@ export default function WODetail() {
       </div>
     );
   }
+
+  if (isMobile && isTecnico) {
+    return <MobileWODetail wo={wo} />;
+  }
+
+
 
   const handleChangeStatus = (newStatus: string) => {
     if (id) {
