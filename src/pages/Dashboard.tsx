@@ -13,6 +13,7 @@ import { TopItemsTable } from '@/components/dashboard/TopItemsTable';
 import { StockAlertsTable } from '@/components/dashboard/StockAlertsTable';
 import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { useDashboardStats, useProximasOTs } from '@/hooks/useDashboardStats';
+import { useExpiringSubscriptions } from '@/hooks/useSubscriptions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
