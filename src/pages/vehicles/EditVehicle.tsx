@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FUEL_TYPES, FuelType } from '@/types/vehicles';
+import { FUEL_TYPES, FuelType, IGNITION_TYPES } from '@/types/vehicles';
 import { toast } from 'sonner';
 
 const vehicleSchema = z.object({
@@ -21,6 +21,7 @@ const vehicleSchema = z.object({
   vin: z.string().optional(),
   anio: z.number().optional(),
   combustible: z.string().optional(),
+  tipo_encendido: z.enum(IGNITION_TYPES).optional(),
   color: z.string().optional(),
   numero_motor: z.string().optional(),
   odometro: z.number().optional(),
@@ -46,6 +47,7 @@ export default function EditVehicle() {
       vin: '',
       anio: undefined,
       combustible: '',
+      tipo_encendido: 'Desconocido',
       color: '',
       numero_motor: '',
       odometro: undefined,

@@ -10,7 +10,7 @@ import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useCreateVehicle } from '@/hooks/useVehicles';
 import { useClients } from '@/hooks/useClients';
-import { FUEL_TYPES } from '@/types/vehicles';
+import { FUEL_TYPES, IGNITION_TYPES } from '@/types/vehicles';
 import { toast } from 'sonner';
 
 export default function NewVehicle() {
@@ -27,6 +27,7 @@ export default function NewVehicle() {
     modelo: '',
     anio: new Date().getFullYear(),
     combustible: '',
+    tipo_encendido: 'Desconocido' as (typeof IGNITION_TYPES)[number],
     odometro: 0,
     color: '',
     numero_motor: '',
@@ -164,7 +165,7 @@ export default function NewVehicle() {
                 </div>
               </div>
 
-              {/* Combustible y Color */}
+              {/* Combustible y Tipo de encendido */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Combustible</Label>
@@ -184,6 +185,29 @@ export default function NewVehicle() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label>Tipo de encendido</Label>
+                  <Select
+                    value={formData.tipo_encendido}
+                    onValueChange={(value) => setFormData({ ...formData, tipo_encendido: value as any })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {IGNITION_TYPES.map((t) => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Este dato es necesario para verificar la compatibilidad de instalación GPS.
+                  </p>
+                </div>
+              </div>
+
+              {/* Color */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Color</Label>
                   <Input

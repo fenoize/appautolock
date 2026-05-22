@@ -34,6 +34,10 @@ export function useVehicles(filters?: VehicleFilters) {
         query = query.eq('combustible', filters.combustible);
       }
 
+      if (filters?.tipo_encendido) {
+        query = query.eq('tipo_encendido', filters.tipo_encendido);
+      }
+
       if (filters?.client_id) {
         query = query.eq('client_id', filters.client_id);
       }
