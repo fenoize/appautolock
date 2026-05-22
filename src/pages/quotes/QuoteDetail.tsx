@@ -23,6 +23,7 @@ import { QuoteEmailDialog } from '@/components/quotes/QuoteEmailDialog';
 import { QuoteCancelDialog } from '@/components/quotes/QuoteCancelDialog';
 import { QuoteDeleteDialog } from '@/components/quotes/QuoteDeleteDialog';
 import { AssignVehicleDialog } from '@/components/quotes/AssignVehicleDialog';
+import { QuoteActivityTimeline } from '@/components/quotes/QuoteActivityTimeline';
 import { InvoiceHeader } from '@/components/quotes/InvoiceHeader';
 import { InvoiceInfo } from '@/components/quotes/InvoiceInfo';
 import { InvoiceItemsTable } from '@/components/quotes/InvoiceItemsTable';
@@ -308,6 +309,8 @@ export default function QuoteDetail() {
           {renderActionButtons()}
         </div>
       </Card>
+
+      <QuoteActivityTimeline events={(quote as any).events} />
 
       {/* Dialogs */}
       <QuoteApprovalDialog

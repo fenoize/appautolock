@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Quote, QuoteFilters, QuoteItem, QuoteStats } from '@/types/quotes';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { logQuoteEvent } from '@/lib/quote-events';
 
 export function useQuotes(filters?: QuoteFilters) {
   return useQuery({
@@ -78,7 +79,8 @@ export function useQuote(id: string) {
           vehicle:vehicles(*),
           vendedor:profiles!vendedor_id(*),
           branch:branches(*),
-          items:quote_items(*)
+          items:quote_items(*),
+          events:quote_events(*, user:profiles(nombre, apellido))
         `)
         .eq('id', id)
         .single();
@@ -124,6 +126,7 @@ export function useCreateQuote() {
         .single();
       
       if (error) throw error;
+      await logQuoteEvent(data.id, 'creada', { notas: `Cotización ${folio} creada` });
       return data;
     },
     onSuccess: () => {
@@ -253,6 +256,7 @@ export function useGenerateQuotePDF() {
       });
       
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'pdf_generado');
       return data;
     },
     onSuccess: () => {
@@ -387,6 +391,7 @@ export function useSendQuoteEmail() {
         .eq('id', id);
       if (updateError) throw updateError;
 
+      await logQuoteEvent(id, 'enviada', { notas: `Cotización enviada a ${recipient}` });
       return { recipient };
     },
     onSuccess: (_data, variables) => {
@@ -418,6 +423,7 @@ export function useCancelQuote() {
         .eq('id', id);
       
       if (error) throw error;
+      await logQuoteEvent(id, 'cancelada', { notas: motivo });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
@@ -464,6 +470,7 @@ export function useConvertQuoteToWO() {
       });
       
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'convertida_a_ot', { metadata: { wo_id: data } });
       return data as string;
     },
     onSuccess: (woId: string, quoteId: string) => {
@@ -497,6 +504,7 @@ export function useApproveQuoteManually() {
         .single();
 
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'aceptada', { notas: 'Aprobada manualmente' });
       return data;
     },
     onSuccess: () => {
@@ -526,6 +534,7 @@ export function useRejectQuote() {
         .single();
 
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'rechazada', { notas: motivo });
       return data;
     },
     onSuccess: () => {
@@ -552,6 +561,7 @@ export function useMarkQuoteInReview() {
         .single();
 
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'en_revision');
       return data;
     },
     onSuccess: () => {
