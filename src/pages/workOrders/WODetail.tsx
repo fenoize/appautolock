@@ -58,6 +58,7 @@ export default function WODetail() {
   const [activeTab, setActiveTab] = useState('items');
   const [pendingGpsDialog, setPendingGpsDialog] = useState<{ open: boolean; items: string[] }>({ open: false, items: [] });
   const [consumingStock, setConsumingStock] = useState(false);
+  const { data: woStockMoves } = useStockMoves({ wo_id: id, tipo: 'consumo' });
 
   const handleConsumirStock = async () => {
     if (!id) return;
