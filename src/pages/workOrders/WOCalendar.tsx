@@ -23,6 +23,8 @@ import { WOStatus, WorkOrder } from '@/types/workOrders';
 import { Calendar, List, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { WOMobileCalendar } from '@/components/workOrders/WOMobileCalendar';
 
 const statusColors: Record<WOStatus, string> = {
   pendiente: '#94a3b8',
