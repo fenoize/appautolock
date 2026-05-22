@@ -51,9 +51,31 @@ export default function WODetail() {
   const navigate = useNavigate();
   const { data: wo, isLoading } = useWorkOrder(id!);
   const updateWO = useUpdateWorkOrder();
+  const { isAdmin } = usePermissions();
+  const queryClient = useQueryClient();
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('items');
   const [pendingGpsDialog, setPendingGpsDialog] = useState<{ open: boolean; items: string[] }>({ open: false, items: [] });
+  const [consumingStock, setConsumingStock] = useState(false);
+
+  const handleConsumirStock = async () => {
+    if (!id) return;
+    setConsumingStock(true);
+    try {
+      const { error } = await supabase.rpc('consumir_inventario_wo', { p_wo_id: id });
+      if (error) throw error;
+      await supabase
+        .from('work_orders')
+        .update({ inventario_consumido: true, inventario_consumido_at: new Date().toISOString() })
+        .eq('id', id);
+      toast.success('Inventario descontado del stock');
+      queryClient.invalidateQueries({ queryKey: ['work-order', id] });
+    } catch (err: any) {
+      toast.error(err.message || 'Error al descontar inventario');
+    } finally {
+      setConsumingStock(false);
+    }
+  };
 
   if (isLoading) {
     return (
