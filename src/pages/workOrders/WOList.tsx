@@ -19,6 +19,7 @@ export default function WOList() {
   const [filters, setFilters] = useState<WOFilters>({});
   const { data: workOrders, isLoading } = useWorkOrders(filters);
   const [pendingGpsWoIds, setPendingGpsWoIds] = useState<Set<string>>(new Set());
+  const [assignTarget, setAssignTarget] = useState<{ id: string; branchId: string } | null>(null);
 
   useEffect(() => {
     if (!workOrders || workOrders.length === 0) return;
