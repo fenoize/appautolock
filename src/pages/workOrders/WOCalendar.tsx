@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,6 +22,7 @@ import { useUsers } from '@/hooks/useUsers';
 import { WOStatus, WorkOrder } from '@/types/workOrders';
 import { Calendar, List, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const statusColors: Record<WOStatus, string> = {
   pendiente: '#94a3b8',
@@ -43,6 +46,18 @@ export default function WOCalendar() {
   const [editFecha, setEditFecha] = useState<string>('');
   const [editVentanaFin, setEditVentanaFin] = useState<string>('');
   const [editMotivo, setEditMotivo] = useState<string>('');
+  const [pendingReschedule, setPendingReschedule] = useState<{
+    wo: WorkOrder;
+    oldDate: Date;
+    newDate: Date;
+    oldEnd?: Date;
+    newEnd?: Date;
+    kind: 'drop' | 'resize';
+  } | null>(null);
+  const [rescheduleMotivo, setRescheduleMotivo] = useState('');
+  const [notifyTecnico, setNotifyTecnico] = useState(true);
+  const [notifyCliente, setNotifyCliente] = useState(false);
+  const [confirmingReschedule, setConfirmingReschedule] = useState(false);
 
   const { data: workOrders, isLoading } = useWorkOrders();
   const { data: users } = useUsers();
@@ -117,42 +132,101 @@ export default function WOCalendar() {
     return Array.from(branchMap.values());
   }, [workOrders]);
 
-  // Manejar drop de evento (reprogramar o reasignar)
-  const handleEventDrop = async (info: any) => {
-    const woId = info.event.id;
-    const newStart = info.event.start;
-    const newResourceId = info.event.getResources()[0]?.id;
-
-    try {
-      await updateWorkOrder.mutateAsync({
-        id: woId,
-        fecha_programada: newStart.toISOString(),
-        tecnico_id: newResourceId === 'unassigned' ? null : newResourceId,
-        estado: newResourceId && newResourceId !== 'unassigned' ? 'asignada' : 'pendiente',
-      });
-      
-      toast.success('Orden de trabajo actualizada');
-    } catch (error) {
-      toast.error('Error al actualizar OT');
-      info.revert();
-    }
+  // Manejar drop de evento → confirmar antes de aplicar
+  const handleEventDrop = (info: any) => {
+    const wo: WorkOrder = info.event.extendedProps.wo;
+    const oldDate = info.oldEvent.start as Date;
+    const newDate = info.event.start as Date;
+    const oldEnd = info.oldEvent.end as Date | undefined;
+    const newEnd = info.event.end as Date | undefined;
+    info.revert();
+    setPendingReschedule({ wo, oldDate, newDate, oldEnd, newEnd, kind: 'drop' });
+    setRescheduleMotivo('');
+    setNotifyTecnico(!!wo.tecnico_id);
+    setNotifyCliente(false);
   };
 
-  // Manejar resize de evento (cambiar duración)
-  const handleEventResize = async (info: any) => {
-    const woId = info.event.id;
-    const newEnd = info.event.end;
+  // Manejar resize de evento (cambiar duración) → confirmar antes de aplicar
+  const handleEventResize = (info: any) => {
+    const wo: WorkOrder = info.event.extendedProps.wo;
+    const oldDate = info.oldEvent.start as Date;
+    const newDate = info.event.start as Date;
+    const oldEnd = info.oldEvent.end as Date | undefined;
+    const newEnd = info.event.end as Date | undefined;
+    info.revert();
+    setPendingReschedule({ wo, oldDate, newDate, oldEnd, newEnd, kind: 'resize' });
+    setRescheduleMotivo('');
+    setNotifyTecnico(!!wo.tecnico_id);
+    setNotifyCliente(false);
+  };
 
+  const formatDateTime = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const confirmReschedule = async () => {
+    if (!pendingReschedule) return;
+    if (rescheduleMotivo.trim().length < 10) {
+      toast.error('El motivo debe tener al menos 10 caracteres');
+      return;
+    }
+    const { wo, newDate, newEnd } = pendingReschedule;
+    setConfirmingReschedule(true);
     try {
+      const motivo = rescheduleMotivo.trim();
+      const notas = `${wo.notas ? wo.notas + '\n' : ''}[${new Date().toLocaleString()}] Reprogramada: ${motivo}`;
       await updateWorkOrder.mutateAsync({
-        id: woId,
-        ventana_fin: newEnd.toISOString(),
-      });
-      
-      toast.success('Duración actualizada');
-    } catch (error) {
-      toast.error('Error al actualizar duración');
-      info.revert();
+        id: wo.id,
+        fecha_programada: newDate.toISOString(),
+        ventana_fin: newEnd ? newEnd.toISOString() : wo.ventana_fin,
+        estado: 'reprogramada',
+        notas,
+      } as any);
+
+      // Buscar email del técnico si corresponde
+      const tecnico = technicians.find(t => t.id === wo.tecnico_id);
+
+      const baseData = {
+        ot: {
+          folio: wo.folio,
+          fecha_programada: formatDateTime(newDate),
+          ventana_inicio: formatDateTime(newDate),
+          ventana_fin: newEnd ? formatDateTime(newEnd) : '',
+          motivo_reprogramacion: motivo,
+        },
+        cliente: wo.client,
+        vehiculo: wo.vehicle,
+        tecnico: tecnico ? { nombre: tecnico.nombre, apellido: tecnico.apellido, email: tecnico.email } : null,
+        sistema: { empresa_nombre: 'Autolock', fecha_actual: new Date().toISOString() },
+      };
+
+      if (notifyTecnico && tecnico?.email) {
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: { evento: 'wo_rescheduled', data: baseData, recipient: tecnico.email },
+          });
+        } catch (e) {
+          console.warn('No se pudo notificar al técnico', e);
+        }
+      }
+
+      if (notifyCliente && wo.client?.email_principal) {
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: { evento: 'wo_client_rescheduled', data: baseData, recipient: wo.client.email_principal },
+          });
+        } catch (e) {
+          console.warn('No se pudo notificar al cliente', e);
+        }
+      }
+
+      toast.success('OT reprogramada');
+      setPendingReschedule(null);
+    } catch (e) {
+      toast.error('Error al reprogramar la OT');
+    } finally {
+      setConfirmingReschedule(false);
     }
   };
 
@@ -533,6 +607,94 @@ export default function WOCalendar() {
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={!!pendingReschedule} onOpenChange={(open) => !open && !confirmingReschedule && setPendingReschedule(null)}>
+        <DialogContent className="sm:max-w-md">
+          {pendingReschedule && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Reprogramar OT {pendingReschedule.wo.folio}</DialogTitle>
+                <DialogDescription>
+                  Confirma el cambio de {pendingReschedule.kind === 'resize' ? 'duración' : 'fecha'} de esta orden de trabajo.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-2">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Fecha anterior</Label>
+                  <p className="text-sm font-medium line-through opacity-70">
+                    {formatDateTime(pendingReschedule.oldDate)}
+                    {pendingReschedule.oldEnd && ` → ${formatDateTime(pendingReschedule.oldEnd)}`}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Fecha nueva</Label>
+                  <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                    {formatDateTime(pendingReschedule.newDate)}
+                    {pendingReschedule.newEnd && ` → ${formatDateTime(pendingReschedule.newEnd)}`}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reschedule-motivo">
+                    Motivo del cambio <span className="text-destructive">*</span>
+                  </Label>
+                  <Textarea
+                    id="reschedule-motivo"
+                    placeholder="Explica el motivo (mínimo 10 caracteres)"
+                    value={rescheduleMotivo}
+                    onChange={(e) => setRescheduleMotivo(e.target.value)}
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {rescheduleMotivo.trim().length}/10 caracteres mínimos
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="notify-tec"
+                      checked={notifyTecnico}
+                      onCheckedChange={(c) => setNotifyTecnico(!!c)}
+                      disabled={!pendingReschedule.wo.tecnico_id}
+                    />
+                    <Label htmlFor="notify-tec" className="text-sm font-normal cursor-pointer">
+                      Notificar al técnico por email
+                      {!pendingReschedule.wo.tecnico_id && (
+                        <span className="text-xs text-muted-foreground ml-1">(sin técnico asignado)</span>
+                      )}
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="notify-cli"
+                      checked={notifyCliente}
+                      onCheckedChange={(c) => setNotifyCliente(!!c)}
+                      disabled={!pendingReschedule.wo.client?.email_principal}
+                    />
+                    <Label htmlFor="notify-cli" className="text-sm font-normal cursor-pointer">
+                      Notificar al cliente por email
+                      {!pendingReschedule.wo.client?.email_principal && (
+                        <span className="text-xs text-muted-foreground ml-1">(sin email)</span>
+                      )}
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setPendingReschedule(null)} disabled={confirmingReschedule}>
+                  Cancelar
+                </Button>
+                <Button onClick={confirmReschedule} disabled={confirmingReschedule || rescheduleMotivo.trim().length < 10}>
+                  {confirmingReschedule ? 'Guardando...' : 'Confirmar reprogramación'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
