@@ -256,6 +256,7 @@ export function useGenerateQuotePDF() {
       });
       
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'pdf_generado');
       return data;
     },
     onSuccess: () => {
