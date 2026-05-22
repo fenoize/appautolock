@@ -20,7 +20,8 @@ export const useStockMoves = (filters?: {
           product:products(id, sku, nombre),
           from_location:stock_locations!stock_moves_from_location_id_fkey(id, nombre),
           to_location:stock_locations!stock_moves_to_location_id_fkey(id, nombre),
-          user:profiles(id, nombre, apellido)
+          user:profiles(id, nombre, apellido),
+          wo:work_orders(id, folio)
         `);
       
       if (filters?.product_id) query = query.eq('product_id', filters.product_id);
