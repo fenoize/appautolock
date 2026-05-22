@@ -88,12 +88,13 @@ export function AppSidebar() {
     {
       title: 'Suscripciones GPS',
       icon: Radio,
-      badge: stats?.subscripciones_vencen,
-      badgeVariant: stats?.subscripciones_vencen && stats.subscripciones_vencen > 0 ? 'destructive' : 'default',
+      badge: expiringCount || stats?.subscripciones_vencen,
+      badgeVariant: expiringCount > 0 ? 'destructive' : 'default',
       show: isAdmin || can('view', 'subscriptions'),
       items: [
         { title: 'Nueva', path: '/subscriptions/new' },
         { title: 'Listado', path: '/subscriptions' },
+        { title: 'Vencimientos', path: '/subscriptions/expiring', badge: expiringCount },
         { title: 'Planes', path: '/subscriptions/plans' },
       ]
     },
