@@ -249,18 +249,24 @@ export function useDeleteQuoteItem() {
 }
 
 export function useGenerateQuotePDF() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (quoteId: string) => {
       const { data, error } = await supabase.functions.invoke('generate-quote-pdf', {
         body: { quote_id: quoteId }
       });
-      
+
       if (error) throw error;
       await logQuoteEvent(quoteId, 'pdf_generado');
-      return data;
+      return data as { success: boolean; pdf_url: string };
     },
-    onSuccess: () => {
+    onSuccess: (data, quoteId) => {
+      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['quote', quoteId] });
       toast.success('PDF generado exitosamente');
+      if (data?.pdf_url) {
+        window.open(data.pdf_url, '_blank');
+      }
     },
     onError: (error: any) => {
       toast.error(error.message || 'Error al generar PDF');
