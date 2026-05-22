@@ -902,6 +902,44 @@ export type Database = {
           },
         ]
       }
+      quote_events: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          notas: string | null
+          quote_id: string
+          tipo: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          notas?: string | null
+          quote_id: string
+          tipo: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          notas?: string | null
+          quote_id?: string
+          tipo?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_items: {
         Row: {
           cantidad: number
