@@ -752,7 +752,7 @@ export default function CompatibilityMatrix() {
               {truncate(shared)}
             </span>
           )}
-          {productId && <StatusControl leafIds={node.leafIds} disabled={!isAdmin} />}
+          {productId && <StatusControl leafIds={node.leafIds} disabled={!isAdmin} nodeLabel={node.label} />}
         </div>
         {isOpen && (
           <div>
