@@ -309,7 +309,11 @@ export function useSendQuoteEmail() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (input: string | { id: string; overrideEmail?: string; saveToClient?: boolean }) => {
+      const id = typeof input === 'string' ? input : input.id;
+      const overrideEmail = typeof input === 'string' ? undefined : input.overrideEmail;
+      const saveToClient = typeof input === 'string' ? false : !!input.saveToClient;
+
       // 1. Obtener cotización completa con relaciones
       const { data: quote, error: fetchError } = await supabase
         .from('quotes')
@@ -324,51 +328,81 @@ export function useSendQuoteEmail() {
         .single();
       
       if (fetchError) throw fetchError;
-      
-      // 2. Actualizar estado a 'enviada'
+
+      const recipient = (overrideEmail || quote.client?.email_principal || '').trim();
+      if (!recipient) {
+        const err = new Error('EMAIL_MISSING');
+        (err as any).code = 'EMAIL_MISSING';
+        throw err;
+      }
+
+      // 2. Si se solicitó, guardar el email nuevo en el cliente
+      if (saveToClient && overrideEmail && overrideEmail !== quote.client?.email_principal) {
+        const { error: clientUpdErr } = await supabase
+          .from('clients')
+          .update({ email_principal: overrideEmail } as any)
+          .eq('id', quote.client_id);
+        if (clientUpdErr) console.error('No se pudo guardar el email en el cliente:', clientUpdErr);
+      }
+
+      // 3. Enviar notificación por email — si falla, NO marcar como enviada
+      const { error: sendError } = await supabase.functions.invoke('send-notification', {
+        body: {
+          evento: 'quote_sent',
+          data: {
+            cotizacion: {
+              folio: quote.folio,
+              total: quote.total,
+              neto: quote.neto,
+              iva: quote.iva,
+              fecha_emision: quote.fecha_emision,
+              validez_dias: quote.validez_dias
+            },
+            cliente: quote.client,
+            vehiculo: quote.vehicle,
+            vendedor: quote.vendedor,
+            sistema: {
+              empresa_nombre: 'Autolock',
+              fecha_actual: new Date().toISOString()
+            }
+          },
+          recipient
+        }
+      });
+
+      if (sendError) {
+        const err = new Error(sendError.message || 'No se pudo enviar el email');
+        (err as any).code = 'SEND_FAILED';
+        throw err;
+      }
+
+      // 4. Actualizar estado + trazabilidad
       const { error: updateError } = await supabase
         .from('quotes')
-        .update({ estado: 'enviada' })
+        .update({
+          estado: 'enviada',
+          email_enviado_at: new Date().toISOString(),
+          email_destinatario: recipient,
+        } as any)
         .eq('id', id);
-      
       if (updateError) throw updateError;
-      
-      // 3. Enviar notificación por email
-      try {
-        await supabase.functions.invoke('send-notification', {
-          body: {
-            evento: 'quote_sent',
-            data: {
-              cotizacion: {
-                folio: quote.folio,
-                total: quote.total,
-                neto: quote.neto,
-                iva: quote.iva,
-                fecha_emision: quote.fecha_emision,
-                validez_dias: quote.validez_dias
-              },
-              cliente: quote.client,
-              vehiculo: quote.vehicle,
-              vendedor: quote.vendedor,
-              sistema: {
-                empresa_nombre: 'Autolock',
-                fecha_actual: new Date().toISOString()
-              }
-            },
-            recipient: quote.client.email_principal
-          }
-        });
-      } catch (emailError) {
-        console.error('Error sending quote email:', emailError);
-        // No bloquear si falla el email
-      }
+
+      return { recipient };
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      const id = typeof variables === 'string' ? variables : variables.id;
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['quote', id] });
       toast.success('Cotización enviada exitosamente');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Error al enviar cotización');
+      if (error?.code === 'EMAIL_MISSING') {
+        toast.error('El cliente no tiene un email registrado. Ingresa uno para enviar la cotización.');
+      } else if (error?.code === 'SEND_FAILED') {
+        toast.error(`No se pudo enviar el email: ${error.message}. La cotización NO fue marcada como enviada.`);
+      } else {
+        toast.error(error?.message || 'Error al enviar cotización');
+      }
     }
   });
 }

@@ -3,6 +3,8 @@ import { QuoteStatusBadge } from './QuoteStatusBadge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { Mail } from 'lucide-react';
 
 interface InvoiceInfoProps {
   quote: Quote;
@@ -74,6 +76,26 @@ export function InvoiceInfo({ quote }: InvoiceInfoProps) {
           </p>
         </div>
       )}
+
+      {/* Email enviado */}
+      <div>
+        <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+          <Mail className="h-3 w-3" /> Email enviado
+        </p>
+        {quote.email_enviado_at ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="bg-accent text-accent-foreground hover:bg-accent">Enviada</Badge>
+            <span className="text-sm text-foreground">
+              {format(new Date(quote.email_enviado_at), "dd/MM/yyyy HH:mm", { locale: es })}
+              {quote.email_destinatario && (
+                <> a <span className="font-medium">{quote.email_destinatario}</span></>
+              )}
+            </span>
+          </div>
+        ) : (
+          <Badge variant="secondary">No enviada</Badge>
+        )}
+      </div>
 
       <Separator />
     </div>
