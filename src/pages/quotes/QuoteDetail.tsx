@@ -309,6 +309,8 @@ export default function QuoteDetail() {
         </div>
       </Card>
 
+      <QuoteActivityTimeline events={(quote as any).events} />
+
       {/* Dialogs */}
       <QuoteApprovalDialog
         open={approvalDialogOpen}
