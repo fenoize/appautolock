@@ -13,8 +13,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Pencil, Search, ChevronRight, ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Search, ChevronRight, ChevronDown, Check, X, Minus, CircleDot } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import {
   CompatEstado,
@@ -28,16 +29,12 @@ import {
 import { CompatibilityBadge } from '@/components/compatibility/CompatibilityBadge';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const COMBUSTIBLES = ['Bencina', 'Diesel', 'GLP', 'Eléctrico', 'Híbrido', 'Cualquiera'];
 const ENCENDIDOS = ['Llave', 'Push-Start', 'Sin llave', 'Cualquiera'];
-
-const versionLabel = (c: VehicleCatalog) => {
-  if (c.anio_desde && c.anio_hasta) return `${c.anio_desde}–${c.anio_hasta}`;
-  if (c.anio_desde) return `${c.anio_desde}+`;
-  if (c.anio_hasta) return `Hasta ${c.anio_hasta}`;
-  return 'Cualquier año';
-};
 
 const encendidoLabel = (v?: string | null) => {
   if (!v) return 'Cualquiera';
@@ -45,8 +42,45 @@ const encendidoLabel = (v?: string | null) => {
   return v;
 };
 
+type NodeStatus = CompatEstado | 'sin_datos' | 'mixto';
+
+const STATUS_LABEL: Record<NodeStatus, string> = {
+  verde: 'Compatible',
+  amarillo: 'Con observaciones',
+  rojo: 'No compatible',
+  sin_datos: 'Sin datos',
+  mixto: 'Mixto',
+};
+
+const StatusPill = ({ status }: { status: NodeStatus }) => {
+  const cls =
+    status === 'verde'
+      ? 'bg-green-500/15 text-green-700 border-green-500/30'
+      : status === 'rojo'
+      ? 'bg-red-500/15 text-red-700 border-red-500/30'
+      : status === 'amarillo'
+      ? 'bg-yellow-500/15 text-yellow-700 border-yellow-500/30'
+      : status === 'mixto'
+      ? 'bg-orange-500/15 text-orange-700 border-orange-500/30'
+      : 'bg-muted text-muted-foreground border-border';
+  const Icon =
+    status === 'verde' ? Check : status === 'rojo' ? X : status === 'mixto' ? CircleDot : Minus;
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
+        cls,
+      )}
+    >
+      <Icon className="h-3 w-3" />
+      {STATUS_LABEL[status]}
+    </span>
+  );
+};
+
 export default function CompatibilityMatrix() {
   const { isAdmin } = usePermissions();
+  const queryClient = useQueryClient();
   const { data: products } = useProducts();
   const allProducts = useMemo(() => products ?? [], [products]);
   const [productId, setProductId] = useState<string>('');
@@ -108,57 +142,149 @@ export default function CompatibilityMatrix() {
     });
   };
 
-  // Build tree: marca -> modelo -> version -> combustible -> encendido (leaf)
+  // Bulk cascade update: assign an estado to a set of catalog ids for the current product
+  const cascadeUpdate = async (catalogIds: string[], nextEstado: CompatEstado) => {
+    if (!productId || catalogIds.length === 0) return;
+    const { data: session } = await supabase.auth.getSession();
+    const userId = session.session?.user?.id;
+    const rows = catalogIds.map((vid) => {
+      const existing = compatByCat.get(vid);
+      return {
+        product_id: productId,
+        vehicle_catalog_id: vid,
+        estado: nextEstado,
+        observaciones: existing?.observaciones ?? null,
+        updated_by: userId,
+        updated_at: new Date().toISOString(),
+      };
+    });
+    const { error } = await (supabase as any)
+      .from('product_compatibility')
+      .upsert(rows, { onConflict: 'product_id,vehicle_catalog_id' });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['product_compatibility'] });
+    queryClient.invalidateQueries({ queryKey: ['compatibility_for_vehicle'] });
+    toast.success(`Actualizados ${catalogIds.length} registro(s)`);
+  };
+
+  // Build tree: marca -> modelo -> año (individual) -> combustible -> encendido (leaf)
   type Leaf = { key: string; label: string; catalog: VehicleCatalog };
-  type Node = { key: string; label: string; children?: Node[]; leaves?: Leaf[] };
+  type Node = {
+    key: string;
+    label: string;
+    leafIds: string[]; // all catalog ids under this node (for cascade + aggregated status)
+    children?: Node[];
+    leaves?: Leaf[];
+  };
 
   const tree = useMemo<Node[]>(() => {
+    // marca -> modelo -> year(string) -> combustible -> VehicleCatalog[]
     const byMarca = new Map<string, Map<string, Map<string, Map<string, VehicleCatalog[]>>>>();
-    for (const c of catalog) {
+    const MAX_YEAR_SPAN = 60; // safety cap
+
+    const addRow = (yearKey: string, c: VehicleCatalog) => {
       const marca = c.marca || '—';
       const modelo = c.modelo || '—';
-      const version = versionLabel(c);
       const comb = c.tipo_combustible || 'Cualquiera';
       if (!byMarca.has(marca)) byMarca.set(marca, new Map());
       const m1 = byMarca.get(marca)!;
       if (!m1.has(modelo)) m1.set(modelo, new Map());
       const m2 = m1.get(modelo)!;
-      if (!m2.has(version)) m2.set(version, new Map());
-      const m3 = m2.get(version)!;
+      if (!m2.has(yearKey)) m2.set(yearKey, new Map());
+      const m3 = m2.get(yearKey)!;
       if (!m3.has(comb)) m3.set(comb, []);
       m3.get(comb)!.push(c);
+    };
+
+    for (const c of catalog) {
+      const desde = c.anio_desde ?? null;
+      const hasta = c.anio_hasta ?? null;
+      if (desde && hasta && hasta >= desde) {
+        const span = Math.min(hasta - desde + 1, MAX_YEAR_SPAN);
+        for (let i = 0; i < span; i++) addRow(String(desde + i), c);
+      } else if (desde && !hasta) {
+        addRow(String(desde), c);
+      } else if (!desde && hasta) {
+        addRow(String(hasta), c);
+      } else {
+        addRow('Cualquier año', c);
+      }
     }
+
     const sortStr = (a: string, b: string) => a.localeCompare(b);
+    const sortYear = (a: string, b: string) => {
+      const na = Number(a);
+      const nb = Number(b);
+      if (Number.isFinite(na) && Number.isFinite(nb)) return nb - na; // newer first
+      return sortStr(a, b);
+    };
+
     return Array.from(byMarca.entries())
       .sort(([a], [b]) => sortStr(a, b))
-      .map(([marca, m1]) => ({
-        key: `marca:${marca}`,
-        label: marca,
-        children: Array.from(m1.entries())
+      .map(([marca, m1]) => {
+        const modelos: Node[] = Array.from(m1.entries())
           .sort(([a], [b]) => sortStr(a, b))
-          .map(([modelo, m2]) => ({
-            key: `marca:${marca}|modelo:${modelo}`,
-            label: modelo,
-            children: Array.from(m2.entries())
-              .sort(([a], [b]) => sortStr(a, b))
-              .map(([version, m3]) => ({
-                key: `marca:${marca}|modelo:${modelo}|version:${version}`,
-                label: version,
-                children: Array.from(m3.entries())
+          .map(([modelo, m2]) => {
+            const years: Node[] = Array.from(m2.entries())
+              .sort(([a], [b]) => sortYear(a, b))
+              .map(([year, m3]) => {
+                const combs: Node[] = Array.from(m3.entries())
                   .sort(([a], [b]) => sortStr(a, b))
-                  .map(([comb, rows]) => ({
-                    key: `marca:${marca}|modelo:${modelo}|version:${version}|comb:${comb}`,
-                    label: comb,
-                    leaves: rows.map((r) => ({
-                      key: r.id,
+                  .map(([comb, rows]) => {
+                    const leaves: Leaf[] = rows.map((r) => ({
+                      key: `${year}|${comb}|${r.id}`,
                       label: encendidoLabel(r.tipo_encendido),
                       catalog: r,
-                    })),
-                  })),
-              })),
-          })),
-      }));
+                    }));
+                    const leafIds = rows.map((r) => r.id);
+                    return {
+                      key: `marca:${marca}|modelo:${modelo}|year:${year}|comb:${comb}`,
+                      label: comb,
+                      leafIds,
+                      leaves,
+                    };
+                  });
+                const leafIds = combs.flatMap((n) => n.leafIds);
+                return {
+                  key: `marca:${marca}|modelo:${modelo}|year:${year}`,
+                  label: year,
+                  leafIds,
+                  children: combs,
+                };
+              });
+            const leafIds = years.flatMap((n) => n.leafIds);
+            return {
+              key: `marca:${marca}|modelo:${modelo}`,
+              label: modelo,
+              leafIds,
+              children: years,
+            };
+          });
+        const leafIds = modelos.flatMap((n) => n.leafIds);
+        return {
+          key: `marca:${marca}`,
+          label: marca,
+          leafIds,
+          children: modelos,
+        };
+      });
   }, [catalog]);
+
+  // Aggregated status for any node from its descendant catalog ids
+  const nodeStatus = (leafIds: string[]): NodeStatus => {
+    if (leafIds.length === 0) return 'sin_datos';
+    const states = new Set<CompatEstado | 'sin_datos'>();
+    for (const id of leafIds) {
+      const c = compatByCat.get(id);
+      states.add(c ? (c.estado as CompatEstado) : 'sin_datos');
+      if (states.size > 1) return 'mixto';
+    }
+    const only = Array.from(states)[0];
+    return only as NodeStatus;
+  };
 
   // Expanded state — marcas open by default
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -203,28 +329,88 @@ export default function CompatibilityMatrix() {
 
   const indentClass = (depth: number) => ({ paddingLeft: `${depth * 20 + 12}px` });
 
+  // Clickable status pill with popover for cascade assignment
+  const StatusControl = ({
+    leafIds,
+    disabled,
+  }: {
+    leafIds: string[];
+    disabled?: boolean;
+  }) => {
+    const status = nodeStatus(leafIds);
+    const [open, setOpen] = useState(false);
+    if (disabled) return <StatusPill status={status} />;
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            onClick={(e) => e.stopPropagation()}
+            className="hover:opacity-80 transition-opacity"
+          >
+            <StatusPill status={status} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent className="w-52 p-1" align="end" onClick={(e) => e.stopPropagation()}>
+          <button
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted"
+            onClick={async () => {
+              setOpen(false);
+              await cascadeUpdate(leafIds, 'verde');
+            }}
+          >
+            <Check className="h-4 w-4 text-green-600" /> Compatible
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted"
+            onClick={async () => {
+              setOpen(false);
+              await cascadeUpdate(leafIds, 'amarillo');
+            }}
+          >
+            <Minus className="h-4 w-4 text-yellow-600" /> Con observaciones
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted"
+            onClick={async () => {
+              setOpen(false);
+              await cascadeUpdate(leafIds, 'rojo');
+            }}
+          >
+            <X className="h-4 w-4 text-red-600" /> No compatible
+          </button>
+        </PopoverContent>
+      </Popover>
+    );
+  };
+
   const renderNode = (node: Node, depth: number) => {
     const isOpen = expanded.has(node.key);
     const hasChildren = (node.children && node.children.length > 0) || (node.leaves && node.leaves.length > 0);
     return (
       <div key={node.key}>
-        <button
-          type="button"
-          onClick={() => hasChildren && toggle(node.key)}
+        <div
           className={cn(
-            'w-full flex items-center gap-2 py-2 pr-3 text-left text-sm hover:bg-muted/60 transition-colors',
+            'w-full flex items-center gap-2 py-2 pr-3 text-sm hover:bg-muted/60 transition-colors',
             depth === 0 && 'font-semibold text-foreground bg-muted/40',
             depth === 1 && 'font-medium',
           )}
           style={indentClass(depth)}
         >
-          {hasChildren ? (
-            isOpen ? <ChevronDown className="h-4 w-4 text-primary shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          ) : (
-            <span className="w-4" />
-          )}
-          <span>{node.label}</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => hasChildren && toggle(node.key)}
+            className="flex items-center gap-2 text-left flex-1 min-w-0"
+          >
+            {hasChildren ? (
+              isOpen ? <ChevronDown className="h-4 w-4 text-primary shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            ) : (
+              <span className="w-4" />
+            )}
+            <span className="truncate">{node.label}</span>
+          </button>
+          {productId && <StatusControl leafIds={node.leafIds} disabled={!isAdmin} />}
+        </div>
         {isOpen && (
           <div>
             {node.children?.map((c) => renderNode(c, depth + 1))}
@@ -244,6 +430,9 @@ export default function CompatibilityMatrix() {
                   <span className="flex-1 text-xs text-muted-foreground truncate">
                     {cmp?.observaciones ?? '—'}
                   </span>
+                  {productId && (
+                    <StatusControl leafIds={[leaf.catalog.id]} disabled={!isAdmin} />
+                  )}
                   {isAdmin && productId && (
                     <Button size="icon" variant="ghost" onClick={() => openEdit(leaf.catalog)}>
                       <Pencil className="h-4 w-4" />
