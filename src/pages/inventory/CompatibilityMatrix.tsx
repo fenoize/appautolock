@@ -26,7 +26,7 @@ import {
   useUpsertCompatibility,
   useVehicleCatalog,
 } from '@/hooks/useCompatibility';
-import { CompatibilityBadge } from '@/components/compatibility/CompatibilityBadge';
+
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
