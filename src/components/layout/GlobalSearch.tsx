@@ -86,9 +86,12 @@ export function GlobalSearch({ trigger = 'both' }: GlobalSearchProps) {
     navigate(path);
   };
 
+  const showInput = trigger === 'input' || trigger === 'both';
+  const showButton = trigger === 'button' || trigger === 'both';
+
   return (
     <>
-      {trigger === 'input' ? (
+      {showInput && (
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -100,12 +103,13 @@ export function GlobalSearch({ trigger = 'both' }: GlobalSearchProps) {
             ⌘K
           </kbd>
         </button>
-      ) : (
+      )}
+      {showButton && (
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setOpen(true)}
-          className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground"
+          className="md:hidden rounded-full h-9 w-9 text-muted-foreground hover:text-foreground"
           aria-label="Buscar (⌘K)"
         >
           <Search className="h-[18px] w-[18px]" />
