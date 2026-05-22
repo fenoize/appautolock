@@ -13,9 +13,12 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { WOFilters } from '@/types/workOrders';
 import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnicianDialog';
+import { WOMobileList } from '@/components/workOrders/WOMobileList';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function WOList() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [filters, setFilters] = useState<WOFilters>({});
   const { data: workOrders, isLoading } = useWorkOrders(filters);
   const [pendingGpsWoIds, setPendingGpsWoIds] = useState<Set<string>>(new Set());
@@ -41,28 +44,31 @@ export default function WOList() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="Órdenes de Trabajo"
-        description="Gestiona las órdenes de trabajo del sistema"
-        action={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/work-orders/calendar')}>
-              <Calendar className="mr-2 h-4 w-4" />
-              Calendario
-            </Button>
-            <Button onClick={() => navigate('/work-orders/new')}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nueva OT
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Órdenes de Trabajo</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            Gestiona las órdenes de trabajo del sistema
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={() => navigate('/work-orders/calendar')} className="w-full sm:w-auto">
+            <Calendar className="mr-2 h-4 w-4" />
+            Calendario
+          </Button>
+          <Button onClick={() => navigate('/work-orders/new')} className="w-full sm:w-auto">
+            <Plus className="mr-2 h-4 w-4" />
+            Nueva OT
+          </Button>
+        </div>
+      </div>
 
       <SearchBar
         value={filters.search || ''}
         onChange={(value) => setFilters({ ...filters, search: value })}
         placeholder="Buscar por folio o notas..."
       />
+
 
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">
