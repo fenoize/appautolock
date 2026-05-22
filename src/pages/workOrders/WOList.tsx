@@ -114,11 +114,38 @@ export default function WOList() {
                       </p>
                     )}
                   </div>
-                  <div className="text-right text-sm text-muted-foreground">
+                  <div className="text-right text-sm text-muted-foreground space-y-2">
                     {wo.tecnico && <p>Técnico: {wo.tecnico.nombre} {wo.tecnico.apellido}</p>}
                     {wo.branch && <p>Sucursal: {wo.branch.nombre}</p>}
+                    {(wo.estado === 'pendiente' || wo.estado === 'asignada') && wo.branch_id && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAssignTarget({ id: wo.id, branchId: wo.branch_id! });
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Asignar
+                      </Button>
+                    )}
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {assignTarget && (
+        <AssignTechnicianDialog
+          open={!!assignTarget}
+          onOpenChange={(open) => !open && setAssignTarget(null)}
+          workOrderId={assignTarget.id}
+          branchId={assignTarget.branchId}
+        />
+      )}
               </CardContent>
             </Card>
           ))}
