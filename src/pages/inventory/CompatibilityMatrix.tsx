@@ -450,9 +450,8 @@ export default function CompatibilityMatrix() {
       if (!groups.has(key)) groups.set(key, { estado, obs, ids: [] });
       groups.get(key)!.ids.push(r.vehicle_catalog_id);
     }
-    const batchId = (crypto as any).randomUUID();
-    const { data: session } = await supabase.auth.getSession();
-    const userId = session.session?.user?.id;
+
+
 
     for (const [, g] of groups) {
       await applyChange(g.ids, g.estado, g.obs, batch.batch_id);
