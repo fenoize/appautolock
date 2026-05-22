@@ -23,6 +23,8 @@ import { WOStatus, WorkOrder } from '@/types/workOrders';
 import { Calendar, List, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { WOMobileCalendar } from '@/components/workOrders/WOMobileCalendar';
 
 const statusColors: Record<WOStatus, string> = {
   pendiente: '#94a3b8',
@@ -38,6 +40,7 @@ const statusColors: Record<WOStatus, string> = {
 
 export default function WOCalendar() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'calendar' | 'timeline'>('calendar');
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [selectedTechnician, setSelectedTechnician] = useState<string>('all');
@@ -295,11 +298,17 @@ export default function WOCalendar() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
       <PageHeader
-        title="Calendario de Órdenes de Trabajo"
+        title="Calendario de OTs"
         description="Programa y asigna técnicos arrastrando las OTs"
       />
+
+      {isMobile ? (
+        <WOMobileCalendar workOrders={filteredWorkOrders} />
+      ) : (
+      <>
+
 
       {/* Filtros y controles */}
       <Card>
@@ -434,6 +443,9 @@ export default function WOCalendar() {
           )}
         </CardContent>
       </Card>
+      </>
+      )}
+
 
       <style>{`
         .calendar-container .fc {
