@@ -412,7 +412,28 @@ export default function CompatibilityMatrix() {
 
   const indentClass = (depth: number) => ({ paddingLeft: `${depth * 20 + 12}px` });
 
-  // Clickable status pill with popover for cascade assignment
+  // Shared observation for a node: if all leafIds have estado=amarillo with the same observation,
+  // return that text. Otherwise (mixed states, single leaf with text, etc.) return that leaf's text
+  // when there's only one leaf — else null.
+  const sharedObservation = (leafIds: string[]): string | null => {
+    if (leafIds.length === 0) return null;
+    const obsSet = new Set<string>();
+    let anyAmarillo = false;
+    for (const id of leafIds) {
+      const c = compatByCat.get(id);
+      if (!c) return null;
+      if (c.estado !== 'amarillo') return null;
+      anyAmarillo = true;
+      obsSet.add((c.observaciones ?? '').trim());
+    }
+    if (!anyAmarillo || obsSet.size !== 1) return null;
+    const only = Array.from(obsSet)[0];
+    return only || null;
+  };
+
+  const truncate = (s: string, n = 60) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+
+  // Clickable traffic light + popover for yellow (with observations textarea)
   const StatusControl = ({
     leafIds,
     disabled,
@@ -421,47 +442,63 @@ export default function CompatibilityMatrix() {
     disabled?: boolean;
   }) => {
     const status = nodeStatus(leafIds);
-    const [open, setOpen] = useState(false);
-    if (disabled) return <StatusPill status={status} />;
+    const [yellowOpen, setYellowOpen] = useState(false);
+    const [obsDraft, setObsDraft] = useState('');
+
+    const openYellow = () => {
+      const existing = sharedObservation(leafIds) ?? '';
+      setObsDraft(existing);
+      setYellowOpen(true);
+    };
+
+    const handleSelect = async (next: CompatEstado | 'sin_datos') => {
+      if (next === 'amarillo') {
+        openYellow();
+        return;
+      }
+      await cascadeUpdate(leafIds, next);
+    };
+
+    const saveYellow = async () => {
+      await cascadeUpdate(leafIds, 'amarillo', obsDraft.trim() || null);
+      setYellowOpen(false);
+    };
+
     return (
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={yellowOpen} onOpenChange={setYellowOpen}>
         <PopoverTrigger asChild>
-          <button
-            type="button"
-            onClick={(e) => e.stopPropagation()}
-            className="hover:opacity-80 transition-opacity"
-          >
-            <StatusPill status={status} />
-          </button>
+          {/* Anchor for the popover — invisible point next to the traffic light */}
+          <span className="relative">
+            <TrafficLight
+              status={status}
+              disabled={disabled}
+              onSelect={disabled ? undefined : handleSelect}
+            />
+          </span>
         </PopoverTrigger>
-        <PopoverContent className="w-52 p-1" align="end" onClick={(e) => e.stopPropagation()}>
-          <button
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted"
-            onClick={async () => {
-              setOpen(false);
-              await cascadeUpdate(leafIds, 'verde');
-            }}
-          >
-            <Check className="h-4 w-4 text-green-600" /> Compatible
-          </button>
-          <button
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted"
-            onClick={async () => {
-              setOpen(false);
-              await cascadeUpdate(leafIds, 'amarillo');
-            }}
-          >
-            <Minus className="h-4 w-4 text-yellow-600" /> Con observaciones
-          </button>
-          <button
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted"
-            onClick={async () => {
-              setOpen(false);
-              await cascadeUpdate(leafIds, 'rojo');
-            }}
-          >
-            <X className="h-4 w-4 text-red-600" /> No compatible
-          </button>
+        <PopoverContent
+          className="w-80 p-3"
+          align="end"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="space-y-2">
+            <p className="text-sm font-semibold">Compatible con observaciones</p>
+            <Textarea
+              autoFocus
+              rows={3}
+              value={obsDraft}
+              onChange={(e) => setObsDraft(e.target.value)}
+              placeholder="Describe la observación o condición de compatibilidad…"
+            />
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="outline" size="sm" onClick={() => setYellowOpen(false)}>
+                Cancelar
+              </Button>
+              <Button size="sm" onClick={saveYellow}>
+                Guardar
+              </Button>
+            </div>
+          </div>
         </PopoverContent>
       </Popover>
     );
@@ -470,6 +507,7 @@ export default function CompatibilityMatrix() {
   const renderNode = (node: Node, depth: number) => {
     const isOpen = expanded.has(node.key);
     const hasChildren = (node.children && node.children.length > 0) || (node.leaves && node.leaves.length > 0);
+    const shared = productId ? sharedObservation(node.leafIds) : null;
     return (
       <div key={node.key}>
         <div
@@ -492,6 +530,14 @@ export default function CompatibilityMatrix() {
             )}
             <span className="truncate">{node.label}</span>
           </button>
+          {shared && (
+            <span
+              className="hidden md:inline text-xs text-muted-foreground italic truncate max-w-[260px]"
+              title={shared}
+            >
+              {truncate(shared)}
+            </span>
+          )}
           {productId && <StatusControl leafIds={node.leafIds} disabled={!isAdmin} />}
         </div>
         {isOpen && (
@@ -499,6 +545,7 @@ export default function CompatibilityMatrix() {
             {node.children?.map((c) => renderNode(c, depth + 1))}
             {node.leaves?.map((leaf) => {
               const cmp = compatByCat.get(leaf.catalog.id);
+              const obs = cmp?.observaciones?.trim() || '';
               return (
                 <div
                   key={leaf.key}
@@ -509,9 +556,11 @@ export default function CompatibilityMatrix() {
                   <div className="flex items-center gap-2 min-w-[140px]">
                     <span className="text-sm text-foreground">Encendido: {leaf.label}</span>
                   </div>
-                  <CompatibilityBadge estado={cmp?.estado} />
-                  <span className="flex-1 text-xs text-muted-foreground truncate">
-                    {cmp?.observaciones ?? '—'}
+                  <span
+                    className="flex-1 text-xs text-muted-foreground truncate italic"
+                    title={obs || undefined}
+                  >
+                    {obs ? truncate(obs) : '—'}
                   </span>
                   {productId && (
                     <StatusControl leafIds={[leaf.catalog.id]} disabled={!isAdmin} />
