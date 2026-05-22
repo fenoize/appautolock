@@ -31,10 +31,6 @@ export function useQuotes(filters?: QuoteFilters) {
         query = query.eq('branch_id', filters.branch_id);
       }
       
-      if (filters?.search) {
-        query = query.or(`folio.ilike.%${filters.search}%`);
-      }
-      
       if (filters?.fecha_desde) {
         query = query.gte('fecha_emision', filters.fecha_desde);
       }
@@ -46,7 +42,26 @@ export function useQuotes(filters?: QuoteFilters) {
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Quote[];
+
+      // Filtro multi-campo en cliente (folio, razon_social, nombre_comercial, rut, patente)
+      let result = data as Quote[];
+      if (filters?.search) {
+        const s = filters.search.toLowerCase().trim();
+        if (s) {
+          result = result.filter((q) => {
+            const fields = [
+              q.folio,
+              q.client?.razon_social,
+              q.client?.nombre_comercial,
+              q.client?.rut,
+              q.client?.dv ? `${q.client?.rut}-${q.client?.dv}` : undefined,
+              q.vehicle?.patente,
+            ];
+            return fields.some((f) => f && String(f).toLowerCase().includes(s));
+          });
+        }
+      }
+      return result;
     }
   });
 }
