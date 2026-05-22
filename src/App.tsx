@@ -30,6 +30,7 @@ import SubscriptionDetail from "./pages/subscriptions/SubscriptionDetail";
 import NewSubscription from "./pages/subscriptions/NewSubscription";
 import SubscriptionPlans from "./pages/subscriptions/SubscriptionPlans";
 import SubscriptionReports from "./pages/subscriptions/SubscriptionReports";
+import SubscriptionExpiring from "./pages/subscriptions/SubscriptionExpiring";
 import NewPlan from "./pages/subscriptions/NewPlan";
 import PlanDetail from "./pages/subscriptions/PlanDetail";
 import ProductsList from "./pages/inventory/ProductsList";
@@ -92,6 +93,7 @@ const App = () => (
           <Route path="/work-orders/:id/edit" element={<ProtectedRoute><AppLayout><EditWO /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions" element={<ProtectedRoute><AppLayout><SubscriptionList /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/new" element={<ProtectedRoute><AppLayout><NewSubscription /></AppLayout></ProtectedRoute>} />
+          <Route path="/subscriptions/expiring" element={<ProtectedRoute><AppLayout><SubscriptionExpiring /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/:id" element={<ProtectedRoute><AppLayout><SubscriptionDetail /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/plans" element={<ProtectedRoute><AppLayout><SubscriptionPlans /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/plans/new" element={<ProtectedRoute><AppLayout><NewPlan /></AppLayout></ProtectedRoute>} />

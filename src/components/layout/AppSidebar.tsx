@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useExpiringSubscriptions } from '@/hooks/useSubscriptions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
@@ -35,6 +36,8 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: stats } = useDashboardStats();
+  const { data: expiring10 } = useExpiringSubscriptions(10);
+  const expiringCount = expiring10?.length ?? 0;
   const { can, isAdmin } = usePermissions();
   const { isTablet } = useResponsiveLayout();
 
@@ -85,12 +88,13 @@ export function AppSidebar() {
     {
       title: 'Suscripciones GPS',
       icon: Radio,
-      badge: stats?.subscripciones_vencen,
-      badgeVariant: stats?.subscripciones_vencen && stats.subscripciones_vencen > 0 ? 'destructive' : 'default',
+      badge: expiringCount || stats?.subscripciones_vencen,
+      badgeVariant: expiringCount > 0 ? 'destructive' : 'default',
       show: isAdmin || can('view', 'subscriptions'),
       items: [
         { title: 'Nueva', path: '/subscriptions/new' },
         { title: 'Listado', path: '/subscriptions' },
+        { title: 'Vencimientos', path: '/subscriptions/expiring', badge: expiringCount },
         { title: 'Planes', path: '/subscriptions/plans' },
       ]
     },
@@ -182,13 +186,18 @@ export function AppSidebar() {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           <SidebarMenuSub>
-                            {item.items.map((subItem) => (
+                            {item.items.map((subItem: any) => (
                               <SidebarMenuSubItem key={subItem.path}>
                                 <SidebarMenuSubButton
                                   onClick={() => navigate(subItem.path)}
                                   isActive={isActive(subItem.path)}
                                 >
                                   <span>{subItem.title}</span>
+                                  {subItem.badge !== undefined && subItem.badge > 0 && (
+                                    <Badge variant="destructive" className="ml-auto">
+                                      {subItem.badge}
+                                    </Badge>
+                                  )}
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
                             ))}

@@ -13,8 +13,10 @@ import { TopItemsTable } from '@/components/dashboard/TopItemsTable';
 import { StockAlertsTable } from '@/components/dashboard/StockAlertsTable';
 import { useDashboardFilters } from '@/hooks/useDashboardFilters';
 import { useDashboardStats, useProximasOTs } from '@/hooks/useDashboardStats';
+import { useExpiringSubscriptions } from '@/hooks/useSubscriptions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -24,6 +26,7 @@ const Dashboard = () => {
   const { filters } = useDashboardFilters();
   const { data: stats } = useDashboardStats();
   const { data: proximasOTs } = useProximasOTs(5);
+  const { data: expiringSubs } = useExpiringSubscriptions(30);
   const { hasRole, hasAnyRole } = usePermissions();
   
   // Role-aware: definir qué componentes mostrar
@@ -146,6 +149,44 @@ const Dashboard = () => {
       {/* Fila 5: Alertas (Subs y Stock) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {canViewInventory && <StockAlertsTable />}
+        {expiringSubs && expiringSubs.length > 0 && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Vencimientos GPS próximos</CardTitle>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/subscriptions/expiring')}>
+                Ver todos →
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {expiringSubs.slice(0, 5).map((s: any) => {
+                  const dias = Math.max(0, Math.ceil((new Date(s.fecha_vencimiento).getTime() - Date.now()) / 86400000));
+                  const color = dias <= 3 ? 'destructive' : dias <= 10 ? 'default' : 'secondary';
+                  return (
+                    <div
+                      key={s.id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                      onClick={() => navigate(`/subscriptions/${s.id}`)}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">
+                          {s.client?.razon_social || s.client?.nombre_comercial || '—'}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {s.vehicle?.patente || '—'} · {s.plan?.nombre || '—'}
+                        </p>
+                      </div>
+                      <div className="text-right ml-2">
+                        <p className="text-sm">{format(new Date(s.fecha_vencimiento), 'dd MMM', { locale: es })}</p>
+                        <Badge variant={color as any} className="text-xs">{dias} días</Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Fila 6: Top Items */}

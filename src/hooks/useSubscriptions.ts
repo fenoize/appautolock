@@ -30,6 +30,31 @@ export function useSubscriptions(filters?: SubscriptionFilters) {
   });
 }
 
+export function useExpiringSubscriptions(days: number = 30) {
+  return useQuery({
+    queryKey: ['subscriptions-expiring', days],
+    queryFn: async () => {
+      const now = new Date();
+      const until = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select(`
+          *,
+          client:clients(id, razon_social, nombre_comercial, email_principal, telefonos),
+          vehicle:vehicles(id, marca, modelo, patente),
+          plan:subscription_plans(id, nombre, precio, periodo_meses)
+        `)
+        .eq('estado', 'activa')
+        .gte('fecha_vencimiento', now.toISOString().slice(0, 10))
+        .lte('fecha_vencimiento', until.toISOString().slice(0, 10))
+        .order('fecha_vencimiento', { ascending: true });
+      if (error) throw error;
+      return (data || []) as any as Subscription[];
+    },
+    refetchInterval: 5 * 60 * 1000,
+  });
+}
+
 export function useSubscription(id: string) {
   return useQuery({
     queryKey: ['subscription', id],
