@@ -20,7 +20,7 @@ export default function VehiclesList() {
   const [search, setSearch] = useState('');
   const [tipoEncendido, setTipoEncendido] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>(() => {
-    return (localStorage.getItem('vehiclesViewMode') as 'grid' | 'table') || 'grid';
+    return (localStorage.getItem('vehiclesViewMode') as 'grid' | 'table') || 'table';
   });
   
   const { data: vehicles, isLoading } = useVehicles({
