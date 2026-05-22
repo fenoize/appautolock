@@ -649,9 +649,11 @@ export default function CompatibilityMatrix() {
   const StatusControl = ({
     leafIds,
     disabled,
+    nodeLabel,
   }: {
     leafIds: string[];
     disabled?: boolean;
+    nodeLabel?: string;
   }) => {
     const status = nodeStatus(leafIds);
     const [yellowOpen, setYellowOpen] = useState(false);
@@ -668,11 +670,11 @@ export default function CompatibilityMatrix() {
         openYellow();
         return;
       }
-      await cascadeUpdate(leafIds, next);
+      await cascadeUpdate(leafIds, next, undefined, nodeLabel);
     };
 
     const saveYellow = async () => {
-      await cascadeUpdate(leafIds, 'amarillo', obsDraft.trim() || null);
+      await cascadeUpdate(leafIds, 'amarillo', obsDraft.trim() || null, nodeLabel);
       setYellowOpen(false);
     };
 
