@@ -29,6 +29,7 @@ export const useStockMoves = (filters?: {
       if (filters?.tipo) query = query.eq('tipo', filters.tipo as any);
       if (filters?.desde) query = query.gte('fecha', filters.desde);
       if (filters?.hasta) query = query.lte('fecha', filters.hasta);
+      if (filters?.wo_id) query = query.eq('wo_id', filters.wo_id);
       
       if (filters?.location_id) {
         query = query.or(`from_location_id.eq.${filters.location_id},to_location_id.eq.${filters.location_id}`);
