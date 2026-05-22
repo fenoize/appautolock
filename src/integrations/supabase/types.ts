@@ -686,6 +686,51 @@ export type Database = {
           },
         ]
       }
+      product_compatibility_history: {
+        Row: {
+          batch_id: string
+          changed_at: string
+          changed_by: string | null
+          estado_anterior: string | null
+          estado_nuevo: string | null
+          id: string
+          observaciones_anteriores: string | null
+          observaciones_nuevas: string | null
+          product_id: string
+          revert_of_batch_id: string | null
+          reverted: boolean
+          vehicle_catalog_id: string
+        }
+        Insert: {
+          batch_id: string
+          changed_at?: string
+          changed_by?: string | null
+          estado_anterior?: string | null
+          estado_nuevo?: string | null
+          id?: string
+          observaciones_anteriores?: string | null
+          observaciones_nuevas?: string | null
+          product_id: string
+          revert_of_batch_id?: string | null
+          reverted?: boolean
+          vehicle_catalog_id: string
+        }
+        Update: {
+          batch_id?: string
+          changed_at?: string
+          changed_by?: string | null
+          estado_anterior?: string | null
+          estado_nuevo?: string | null
+          id?: string
+          observaciones_anteriores?: string | null
+          observaciones_nuevas?: string | null
+          product_id?: string
+          revert_of_batch_id?: string | null
+          reverted?: boolean
+          vehicle_catalog_id?: string
+        }
+        Relationships: []
+      }
       product_serials: {
         Row: {
           created_at: string | null

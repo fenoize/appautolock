@@ -13,9 +13,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Pencil, Search, ChevronRight, ChevronDown } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Plus, Pencil, Search, ChevronRight, ChevronDown, History, Undo2 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { useQuery } from '@tanstack/react-query';
 import { useProducts } from '@/hooks/useProducts';
 import {
   CompatEstado,
@@ -235,18 +249,47 @@ export default function CompatibilityMatrix() {
     });
   };
 
-  // Bulk cascade update: assign an estado to a set of catalog ids for the current product
-  // Bulk cascade update: assign an estado (and optional observations) to a set of catalog ids
-  const cascadeUpdate = async (
+  // Pending bulk action awaiting confirmation
+  type PendingChange = {
+    leafIds: string[];
+    nextEstado: CompatEstado | 'sin_datos';
+    observaciones?: string | null;
+    nodeLabel?: string;
+  };
+  const [pendingChange, setPendingChange] = useState<PendingChange | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const STATUS_PRETTY: Record<CompatEstado | 'sin_datos', string> = {
+    verde: '🟢 Compatible',
+    amarillo: '🟡 Compatible con observaciones',
+    rojo: '🔴 No compatible',
+    sin_datos: '⚪ Sin datos',
+  };
+
+  // Core write — applies change + logs history rows in one batch
+  const applyChange = async (
     catalogIds: string[],
     nextEstado: CompatEstado | 'sin_datos',
-    observacionesOverride?: string | null,
+    observacionesOverride: string | null | undefined,
+    revertOfBatchId?: string,
   ) => {
     if (!productId || catalogIds.length === 0) return;
-    // Dedupe — the same catalog row can appear multiple times in leafIds (years expanded individually)
     catalogIds = Array.from(new Set(catalogIds));
 
-    // 'sin_datos' = delete existing compat rows
+    const { data: session } = await supabase.auth.getSession();
+    const userId = session.session?.user?.id;
+    const batchId = (crypto as any).randomUUID();
+
+    // Snapshot previous state from current cache
+    const snapshots = catalogIds.map((vid) => {
+      const ex = compatByCat.get(vid);
+      return {
+        vehicle_catalog_id: vid,
+        estado_anterior: ex?.estado ?? null,
+        observaciones_anteriores: ex?.observaciones ?? null,
+      };
+    });
+
     if (nextEstado === 'sin_datos') {
       const { error } = await (supabase as any)
         .from('product_compatibility')
@@ -257,39 +300,166 @@ export default function CompatibilityMatrix() {
         toast.error(error.message);
         return;
       }
-      queryClient.invalidateQueries({ queryKey: ['product_compatibility'] });
-      queryClient.invalidateQueries({ queryKey: ['compatibility_for_vehicle'] });
-      toast.success(`Limpiado ${catalogIds.length} registro(s)`);
-      return;
+    } else {
+      const rows = catalogIds.map((vid) => {
+        const existing = compatByCat.get(vid);
+        const obs =
+          observacionesOverride !== undefined ? observacionesOverride : existing?.observaciones ?? null;
+        return {
+          product_id: productId,
+          vehicle_catalog_id: vid,
+          estado: nextEstado,
+          observaciones: obs,
+          updated_by: userId,
+          updated_at: new Date().toISOString(),
+        };
+      });
+      const { error } = await (supabase as any)
+        .from('product_compatibility')
+        .upsert(rows, { onConflict: 'product_id,vehicle_catalog_id' });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
     }
 
-    const { data: session } = await supabase.auth.getSession();
-    const userId = session.session?.user?.id;
-    const rows = catalogIds.map((vid) => {
-      const existing = compatByCat.get(vid);
-      // For yellow: use override (popover value). For others: keep existing observation as-is.
-      const obs =
-        observacionesOverride !== undefined ? observacionesOverride : existing?.observaciones ?? null;
-      return {
-        product_id: productId,
-        vehicle_catalog_id: vid,
-        estado: nextEstado,
-        observaciones: obs,
-        updated_by: userId,
-        updated_at: new Date().toISOString(),
-      };
-    });
-    const { error } = await (supabase as any)
-      .from('product_compatibility')
-      .upsert(rows, { onConflict: 'product_id,vehicle_catalog_id' });
-    if (error) {
-      toast.error(error.message);
-      return;
+    // Log history (one row per affected catalog id)
+    const historyRows = snapshots.map((s) => ({
+      batch_id: batchId,
+      product_id: productId,
+      vehicle_catalog_id: s.vehicle_catalog_id,
+      estado_anterior: s.estado_anterior,
+      observaciones_anteriores: s.observaciones_anteriores,
+      estado_nuevo: nextEstado === 'sin_datos' ? null : nextEstado,
+      observaciones_nuevas:
+        nextEstado === 'sin_datos'
+          ? null
+          : observacionesOverride !== undefined
+            ? observacionesOverride
+            : s.observaciones_anteriores,
+      changed_by: userId,
+      revert_of_batch_id: revertOfBatchId ?? null,
+    }));
+    await (supabase as any).from('product_compatibility_history').insert(historyRows);
+
+    // If this is a revert, mark original batch as reverted
+    if (revertOfBatchId) {
+      await (supabase as any)
+        .from('product_compatibility_history')
+        .update({ reverted: true })
+        .eq('batch_id', revertOfBatchId);
     }
+
     queryClient.invalidateQueries({ queryKey: ['product_compatibility'] });
     queryClient.invalidateQueries({ queryKey: ['compatibility_for_vehicle'] });
-    toast.success(`Actualizados ${catalogIds.length} registro(s)`);
+    queryClient.invalidateQueries({ queryKey: ['compatibility_history', productId] });
+    toast.success(`${catalogIds.length} registro(s) actualizados`);
   };
+
+  // Gate: if action affects >1 record, ask for confirmation first
+  const cascadeUpdate = async (
+    catalogIds: string[],
+    nextEstado: CompatEstado | 'sin_datos',
+    observacionesOverride?: string | null,
+    nodeLabel?: string,
+  ) => {
+    const unique = Array.from(new Set(catalogIds));
+    if (unique.length > 1) {
+      setPendingChange({
+        leafIds: unique,
+        nextEstado,
+        observaciones: observacionesOverride,
+        nodeLabel,
+      });
+      return;
+    }
+    await applyChange(unique, nextEstado, observacionesOverride);
+  };
+
+  const confirmPending = async () => {
+    if (!pendingChange) return;
+    await applyChange(pendingChange.leafIds, pendingChange.nextEstado, pendingChange.observaciones);
+    setPendingChange(null);
+  };
+
+  // ---- History query ----
+  const { data: history = [] } = useQuery({
+    queryKey: ['compatibility_history', productId],
+    enabled: !!productId && historyOpen,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('product_compatibility_history')
+        .select('*')
+        .eq('product_id', productId)
+        .order('changed_at', { ascending: false })
+        .limit(500);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  // Group history by batch_id
+  const historyBatches = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const h of history) {
+      if (!map.has(h.batch_id)) map.set(h.batch_id, []);
+      map.get(h.batch_id)!.push(h);
+    }
+    const batches = Array.from(map.entries()).map(([batch_id, rows]) => ({
+      batch_id,
+      rows,
+      changed_at: rows[0].changed_at,
+      changed_by: rows[0].changed_by,
+      estado_nuevo: rows[0].estado_nuevo,
+      reverted: rows[0].reverted,
+      revert_of_batch_id: rows[0].revert_of_batch_id,
+      count: rows.length,
+    }));
+    return batches.sort((a, b) => (a.changed_at < b.changed_at ? 1 : -1));
+  }, [history]);
+
+  // Fetch user names for history
+  const userIds = useMemo(
+    () => Array.from(new Set(history.map((h) => h.changed_by).filter(Boolean))),
+    [history],
+  );
+  const { data: userMap = {} } = useQuery({
+    queryKey: ['history_user_names', userIds],
+    enabled: userIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id,nombre,apellido,email')
+        .in('id', userIds as string[]);
+      const m: Record<string, string> = {};
+      (data ?? []).forEach((u: any) => {
+        m[u.id] = [u.nombre, u.apellido].filter(Boolean).join(' ') || u.email || u.id.slice(0, 8);
+      });
+      return m;
+    },
+  });
+
+  const revertBatch = async (batch: any) => {
+    if (!productId) return;
+    // Group rows by (estado_anterior, observaciones_anteriores) for efficient applyChange calls
+    const groups = new Map<string, { estado: CompatEstado | 'sin_datos'; obs: string | null; ids: string[] }>();
+    for (const r of batch.rows) {
+      const estado: CompatEstado | 'sin_datos' = r.estado_anterior ?? 'sin_datos';
+      const obs = r.observaciones_anteriores ?? null;
+      const key = `${estado}|${obs ?? ''}`;
+      if (!groups.has(key)) groups.set(key, { estado, obs, ids: [] });
+      groups.get(key)!.ids.push(r.vehicle_catalog_id);
+    }
+
+
+
+    for (const [, g] of groups) {
+      await applyChange(g.ids, g.estado, g.obs, batch.batch_id);
+    }
+    toast.success('Cambios revertidos');
+  };
+
+
 
 
   // Build tree: marca -> modelo -> año (individual) -> combustible -> encendido (leaf)
@@ -476,9 +646,11 @@ export default function CompatibilityMatrix() {
   const StatusControl = ({
     leafIds,
     disabled,
+    nodeLabel,
   }: {
     leafIds: string[];
     disabled?: boolean;
+    nodeLabel?: string;
   }) => {
     const status = nodeStatus(leafIds);
     const [yellowOpen, setYellowOpen] = useState(false);
@@ -495,11 +667,11 @@ export default function CompatibilityMatrix() {
         openYellow();
         return;
       }
-      await cascadeUpdate(leafIds, next);
+      await cascadeUpdate(leafIds, next, undefined, nodeLabel);
     };
 
     const saveYellow = async () => {
-      await cascadeUpdate(leafIds, 'amarillo', obsDraft.trim() || null);
+      await cascadeUpdate(leafIds, 'amarillo', obsDraft.trim() || null, nodeLabel);
       setYellowOpen(false);
     };
 
@@ -577,7 +749,7 @@ export default function CompatibilityMatrix() {
               {truncate(shared)}
             </span>
           )}
-          {productId && <StatusControl leafIds={node.leafIds} disabled={!isAdmin} />}
+          {productId && <StatusControl leafIds={node.leafIds} disabled={!isAdmin} nodeLabel={node.label} />}
         </div>
         {isOpen && (
           <div>
@@ -624,14 +796,21 @@ export default function CompatibilityMatrix() {
         title="Compatibilidad de Productos"
         description="Define qué productos son compatibles con cada modelo de vehículo del catálogo."
         action={
-          isAdmin && (
-            <Dialog open={showNew} onOpenChange={setShowNew}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar modelo
-                </Button>
-              </DialogTrigger>
+          <div className="flex items-center gap-2">
+            {productId && (
+              <Button variant="outline" onClick={() => setHistoryOpen(true)}>
+                <History className="h-4 w-4 mr-2" />
+                Historial
+              </Button>
+            )}
+            {isAdmin && (
+              <Dialog open={showNew} onOpenChange={setShowNew}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar modelo
+                  </Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Nuevo modelo de catálogo</DialogTitle>
@@ -700,9 +879,10 @@ export default function CompatibilityMatrix() {
                   <Button variant="outline" onClick={() => setShowNew(false)}>Cancelar</Button>
                   <Button onClick={handleCreate} disabled={!newRow.marca || !newRow.modelo}>Guardar</Button>
                 </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         }
       />
 
@@ -854,6 +1034,109 @@ export default function CompatibilityMatrix() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button>
             <Button onClick={handleSave} disabled={upsert.isPending}>Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmation for bulk cascade changes */}
+      <AlertDialog open={!!pendingChange} onOpenChange={(o) => !o && setPendingChange(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar cambio masivo</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Estás por cambiar el estado de compatibilidad de{' '}
+                  <strong>{pendingChange?.leafIds.length ?? 0}</strong> vehículo(s)
+                  {pendingChange?.nodeLabel && (
+                    <>
+                      {' '}en <strong>{pendingChange.nodeLabel}</strong>
+                    </>
+                  )}
+                  .
+                </p>
+                <p>
+                  Nuevo estado:{' '}
+                  <strong>{pendingChange ? STATUS_PRETTY[pendingChange.nextEstado] : ''}</strong>
+                </p>
+                {pendingChange?.observaciones && (
+                  <p className="italic text-muted-foreground">
+                    Observación: {pendingChange.observaciones}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground pt-2">
+                  Podrás revertir esta acción desde el Historial.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPending}>Aplicar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* History dialog */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Historial de cambios</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-3">
+            {historyBatches.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                Sin cambios registrados para este producto.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {historyBatches.map((b) => {
+                  const userName = b.changed_by ? userMap[b.changed_by] ?? '—' : 'Sistema';
+                  const when = formatDistanceToNow(new Date(b.changed_at), {
+                    addSuffix: true,
+                    locale: es,
+                  });
+                  const estadoNuevo = (b.estado_nuevo as CompatEstado | null) ?? 'sin_datos';
+                  return (
+                    <div
+                      key={b.batch_id}
+                      className={cn(
+                        'flex items-center justify-between gap-3 border rounded-md p-3 text-sm',
+                        b.reverted && 'opacity-60',
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium">
+                          {STATUS_PRETTY[estadoNuevo]} — {b.count} vehículo(s)
+                          {b.revert_of_batch_id && (
+                            <span className="ml-2 text-xs text-muted-foreground">(reversión)</span>
+                          )}
+                          {b.reverted && (
+                            <span className="ml-2 text-xs text-muted-foreground">(revertido)</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {userName} · {when}
+                        </div>
+                      </div>
+                      {isAdmin && !b.reverted && !b.revert_of_batch_id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => revertBatch(b)}
+                        >
+                          <Undo2 className="h-3.5 w-3.5 mr-1" />
+                          Revertir
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHistoryOpen(false)}>Cerrar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
