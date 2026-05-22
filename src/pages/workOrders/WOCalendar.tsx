@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -10,10 +10,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { useWorkOrders, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
 import { useUsers } from '@/hooks/useUsers';
-import { WOStatus } from '@/types/workOrders';
-import { Calendar, List } from 'lucide-react';
+import { WOStatus, WorkOrder } from '@/types/workOrders';
+import { Calendar, List, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 const statusColors: Record<WOStatus, string> = {
