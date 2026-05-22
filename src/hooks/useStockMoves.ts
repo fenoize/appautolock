@@ -9,6 +9,7 @@ export const useStockMoves = (filters?: {
   tipo?: string;
   desde?: string;
   hasta?: string;
+  wo_id?: string;
 }) => {
   return useQuery({
     queryKey: ['stock-moves', filters],
