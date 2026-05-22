@@ -30,6 +30,7 @@ import SubscriptionDetail from "./pages/subscriptions/SubscriptionDetail";
 import NewSubscription from "./pages/subscriptions/NewSubscription";
 import SubscriptionPlans from "./pages/subscriptions/SubscriptionPlans";
 import SubscriptionReports from "./pages/subscriptions/SubscriptionReports";
+import SubscriptionExpiring from "./pages/subscriptions/SubscriptionExpiring";
 import NewPlan from "./pages/subscriptions/NewPlan";
 import PlanDetail from "./pages/subscriptions/PlanDetail";
 import ProductsList from "./pages/inventory/ProductsList";
