@@ -43,6 +43,14 @@ export function AppSidebar() {
   const expiringCount = expiring10?.length ?? 0;
   const { can, isAdmin } = usePermissions();
   const { isTablet } = useResponsiveLayout();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  const handleNavigate = (path: string) => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+    navigate(path);
+  };
 
   const sections: Array<{
     label: string;
@@ -161,7 +169,7 @@ export function AppSidebar() {
   ];
 
   const isActive = (path: string) => location.pathname === path;
-  const isGroupActive = (items?: { path: string }[]) => 
+  const isGroupActive = (items?: { path: string }[]) =>
     items?.some(item => location.pathname.startsWith(item.path));
 
   return (
@@ -174,7 +182,7 @@ export function AppSidebar() {
       } as any}
     >
       <SidebarContent>
-        {sections.map((section) => {
+        {sections.map((section, sectionIndex) => {
           const visibleItems = section.items.filter((i: any) => i.show);
           if (visibleItems.length === 0) return null;
           return (
@@ -184,10 +192,10 @@ export function AppSidebar() {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {visibleItems.map((item: any) => {
+                  {visibleItems.map((item: any, index: number) => {
                     const itemActive = isActive(item.path || '') || isGroupActive(item.items);
                     const activeCls = 'bg-sidebar-accent text-sidebar-accent-foreground font-medium [&>svg]:text-sidebar-accent-foreground';
-                    return (
+                    return [
                       <Collapsible
                         key={item.title}
                         defaultOpen={isGroupActive(item.items)}
@@ -213,7 +221,7 @@ export function AppSidebar() {
                                   {item.items.map((subItem: any) => (
                                     <SidebarMenuSubItem key={subItem.path}>
                                       <SidebarMenuSubButton
-                                        onClick={() => navigate(subItem.path)}
+                                        onClick={() => handleNavigate(subItem.path)}
                                         isActive={isActive(subItem.path)}
                                         className={isActive(subItem.path) ? 'text-sidebar-accent-foreground bg-sidebar-accent font-medium' : ''}
                                       >
@@ -231,7 +239,7 @@ export function AppSidebar() {
                             </>
                           ) : (
                             <SidebarMenuButton
-                              onClick={() => item.path && navigate(item.path)}
+                              onClick={() => item.path && handleNavigate(item.path)}
                               isActive={isActive(item.path || '')}
                               className={isActive(item.path || '') ? activeCls : ''}
                             >
@@ -245,11 +253,17 @@ export function AppSidebar() {
                             </SidebarMenuButton>
                           )}
                         </SidebarMenuItem>
-                      </Collapsible>
-                    );
+                      </Collapsible>,
+                      index < visibleItems.length - 1 && (
+                        <li key={`sep-${item.title}`} className="list-none">
+                          <SidebarSeparator className="my-1" />
+                        </li>
+                      )
+                    ];
                   })}
                 </SidebarMenu>
               </SidebarGroupContent>
+              {sectionIndex < sections.length - 1 && <SidebarSeparator className="mt-2 mb-1" />}
             </SidebarGroup>
           );
         })}
