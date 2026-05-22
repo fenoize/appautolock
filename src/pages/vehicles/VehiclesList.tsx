@@ -12,15 +12,21 @@ import { VehiclesTable } from '@/components/vehicles/VehiclesTable';
 import { useVehicles } from '@/hooks/useVehicles';
 import { cn } from '@/lib/utils';
 import { getStaggerStyle } from '@/lib/animations';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { IGNITION_TYPES } from '@/types/vehicles';
 
 export default function VehiclesList() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [tipoEncendido, setTipoEncendido] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>(() => {
     return (localStorage.getItem('vehiclesViewMode') as 'grid' | 'table') || 'grid';
   });
   
-  const { data: vehicles, isLoading } = useVehicles({ search });
+  const { data: vehicles, isLoading } = useVehicles({
+    search,
+    tipo_encendido: tipoEncendido !== 'all' ? tipoEncendido : undefined,
+  });
 
   const handleViewChange = (view: 'grid' | 'table') => {
     setViewMode(view);
@@ -43,11 +49,26 @@ export default function VehiclesList() {
         }
       />
 
-      <SearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Buscar por patente, VIN, marca o modelo..."
-      />
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center mb-4">
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Buscar por patente, VIN, marca o modelo..."
+          className="flex-1 max-w-xl"
+        />
+        <Select value={tipoEncendido} onValueChange={setTipoEncendido}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Tipo de encendido" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los encendidos</SelectItem>
+            {IGNITION_TYPES.map((t) => (
+              <SelectItem key={t} value={t}>{t}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

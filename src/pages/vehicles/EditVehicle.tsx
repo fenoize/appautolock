@@ -256,6 +256,28 @@ export default function EditVehicle() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
+                <Label htmlFor="tipo_encendido">Tipo de encendido</Label>
+                <Select
+                  value={form.watch('tipo_encendido') || 'Desconocido'}
+                  onValueChange={(value) => form.setValue('tipo_encendido', value as any)}
+                >
+                  <SelectTrigger id="tipo_encendido">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {IGNITION_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Este dato es necesario para verificar la compatibilidad de instalación GPS.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <Label htmlFor="numero_motor">Número de Motor</Label>
                 <Input
                   id="numero_motor"
