@@ -260,7 +260,7 @@ export function useUpdateServiceProduct() {
     mutationFn: async ({ id, serviceId, ...updates }: Partial<ServiceProduct> & { id: string; serviceId: string }) => {
       const { data, error } = await supabase
         .from('services_products')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();

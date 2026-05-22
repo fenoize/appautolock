@@ -145,7 +145,7 @@ export function useCreateSubscriptionFromWOItem() {
         if (Object.keys(gpsFields).length > 0) {
           const { error: updateError } = await supabase
             .from('subscriptions')
-            .update(gpsFields)
+            .update(gpsFields as any)
             .eq('id', subscriptionId);
 
           if (updateError) {

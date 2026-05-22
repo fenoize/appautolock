@@ -127,7 +127,7 @@ export function useUpdateQuote() {
     mutationFn: async ({ id, ...updates }: Partial<Quote> & { id: string }) => {
       const { data, error } = await supabase
         .from('quotes')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();

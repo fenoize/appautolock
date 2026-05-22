@@ -71,7 +71,7 @@ export const useUpdateProduct = () => {
     mutationFn: async ({ id, ...updates }: Partial<Product> & { id: string }) => {
       const { data, error } = await supabase
         .from('products')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();
