@@ -561,6 +561,7 @@ export function useMarkQuoteInReview() {
         .single();
 
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'en_revision');
       return data;
     },
     onSuccess: () => {
