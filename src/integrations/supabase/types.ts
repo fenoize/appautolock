@@ -613,6 +613,79 @@ export type Database = {
         }
         Relationships: []
       }
+      product_compatibility: {
+        Row: {
+          estado: string
+          id: string
+          observaciones: string | null
+          product_id: string
+          updated_at: string | null
+          updated_by: string | null
+          vehicle_catalog_id: string
+        }
+        Insert: {
+          estado: string
+          id?: string
+          observaciones?: string | null
+          product_id: string
+          updated_at?: string | null
+          updated_by?: string | null
+          vehicle_catalog_id: string
+        }
+        Update: {
+          estado?: string
+          id?: string
+          observaciones?: string | null
+          product_id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          vehicle_catalog_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_compatibility_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_compatibility_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_compatibility_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "stock_by_location"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_compatibility_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_compatibility_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "product_compatibility_vehicle_catalog_id_fkey"
+            columns: ["vehicle_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "vehicle_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_serials: {
         Row: {
           created_at: string | null
@@ -1807,6 +1880,39 @@ export type Database = {
             referencedColumns: ["vendedor_id"]
           },
         ]
+      }
+      vehicle_catalog: {
+        Row: {
+          anio_desde: number | null
+          anio_hasta: number | null
+          created_at: string | null
+          id: string
+          marca: string
+          modelo: string
+          tipo_combustible: string | null
+          tipo_encendido: string | null
+        }
+        Insert: {
+          anio_desde?: number | null
+          anio_hasta?: number | null
+          created_at?: string | null
+          id?: string
+          marca: string
+          modelo: string
+          tipo_combustible?: string | null
+          tipo_encendido?: string | null
+        }
+        Update: {
+          anio_desde?: number | null
+          anio_hasta?: number | null
+          created_at?: string | null
+          id?: string
+          marca?: string
+          modelo?: string
+          tipo_combustible?: string | null
+          tipo_encendido?: string | null
+        }
+        Relationships: []
       }
       vehicles: {
         Row: {
