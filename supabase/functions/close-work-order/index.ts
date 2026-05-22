@@ -48,9 +48,6 @@ Deno.serve(async (req) => {
       .is('subscription_id', null);
 
     const hasPendingGPS = pendingGPS && pendingGPS.length > 0;
-    const force_close = (await req.clone().json().catch(() => ({}))).force_close === true
-      || (typeof (globalThis as any).__force_close !== 'undefined');
-    // Note: body was already consumed above; we rely on a re-parse via clone earlier.
 
     if (hasPendingGPS && !force_close) {
       return new Response(JSON.stringify({
