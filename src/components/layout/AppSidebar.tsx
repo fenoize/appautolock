@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { useExpiringSubscriptions } from '@/hooks/useSubscriptions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
