@@ -90,9 +90,18 @@ Deno.serve(async (req) => {
     }
 
     // Consumir inventario si no se ha consumido
+    let inventarioConsumidoAt: string | null = null;
     if (!wo.inventario_consumido) {
       const { error: consumoError } = await supabase.rpc('consumir_inventario_wo', { p_wo_id: wo_id });
-      if (consumoError) console.error('Error al consumir inventario:', consumoError);
+      if (consumoError) {
+        console.error('Error al consumir inventario:', consumoError);
+      } else {
+        inventarioConsumidoAt = new Date().toISOString();
+        await supabase
+          .from('work_orders')
+          .update({ inventario_consumido_at: inventarioConsumidoAt })
+          .eq('id', wo_id);
+      }
     }
 
     // Actualizar OT

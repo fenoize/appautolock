@@ -2102,6 +2102,7 @@ export type Database = {
           folio: string
           id: string
           inventario_consumido: boolean | null
+          inventario_consumido_at: string | null
           inventario_reservado: boolean | null
           notas: string | null
           observaciones_cierre: string | null
@@ -2138,6 +2139,7 @@ export type Database = {
           folio: string
           id?: string
           inventario_consumido?: boolean | null
+          inventario_consumido_at?: string | null
           inventario_reservado?: boolean | null
           notas?: string | null
           observaciones_cierre?: string | null
@@ -2174,6 +2176,7 @@ export type Database = {
           folio?: string
           id?: string
           inventario_consumido?: boolean | null
+          inventario_consumido_at?: string | null
           inventario_reservado?: boolean | null
           notas?: string | null
           observaciones_cierre?: string | null

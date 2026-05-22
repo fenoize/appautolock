@@ -1,7 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { WOSubscriptionsTab } from '@/components/workOrders/WOSubscriptionsTab';
 import { WODetailHeader } from '@/components/workOrders/WODetailHeader';
@@ -46,9 +51,31 @@ export default function WODetail() {
   const navigate = useNavigate();
   const { data: wo, isLoading } = useWorkOrder(id!);
   const updateWO = useUpdateWorkOrder();
+  const { isAdmin } = usePermissions();
+  const queryClient = useQueryClient();
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('items');
   const [pendingGpsDialog, setPendingGpsDialog] = useState<{ open: boolean; items: string[] }>({ open: false, items: [] });
+  const [consumingStock, setConsumingStock] = useState(false);
+
+  const handleConsumirStock = async () => {
+    if (!id) return;
+    setConsumingStock(true);
+    try {
+      const { error } = await supabase.rpc('consumir_inventario_wo', { p_wo_id: id });
+      if (error) throw error;
+      await supabase
+        .from('work_orders')
+        .update({ inventario_consumido: true, inventario_consumido_at: new Date().toISOString() })
+        .eq('id', id);
+      toast.success('Inventario descontado del stock');
+      queryClient.invalidateQueries({ queryKey: ['work-order', id] });
+    } catch (err: any) {
+      toast.error(err.message || 'Error al descontar inventario');
+    } finally {
+      setConsumingStock(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -280,6 +307,34 @@ export default function WODetail() {
 
           {/* Inventario Tab */}
           <TabsContent value="inventario" className="space-y-4 pt-4">
+            {wo.estado === 'completada' && !wo.inventario_consumido && (
+              <Alert className="border-yellow-500/40 bg-yellow-500/10">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="flex items-center justify-between gap-3">
+                  <span>El inventario de esta OT no ha sido descontado del stock.</span>
+                  {isAdmin && (
+                    <Button size="sm" onClick={handleConsumirStock} disabled={consumingStock}>
+                      {consumingStock ? 'Descontando...' : 'Descontar ahora'}
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {wo.inventario_consumido && (
+              <Alert className="border-green-500/40 bg-green-500/10">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription>
+                  <Badge className="bg-green-600 hover:bg-green-600 mr-2">Stock descontado</Badge>
+                  {wo.inventario_consumido_at && (
+                    <span className="text-sm text-muted-foreground">
+                      el {new Date(wo.inventario_consumido_at).toLocaleString('es-CL')}
+                    </span>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg">
                 <p className="text-sm font-semibold mb-2">Estado de Reserva</p>
