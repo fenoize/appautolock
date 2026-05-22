@@ -85,6 +85,7 @@ export default {
         'sm': 'var(--shadow-sm)',
         'md': 'var(--shadow-md)',
         'lg': 'var(--shadow-lg)',
+        'card': 'var(--shadow-card)',
       },
       transitionProperty: {
         'base': 'var(--transition-base)',
