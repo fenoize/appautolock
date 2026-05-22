@@ -18,6 +18,8 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { data: product, isLoading } = useProduct(id!);
   const updateProduct = useUpdateProduct();
+  const { data: moves } = useStockMoves({ product_id: id });
+
 
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
   const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
