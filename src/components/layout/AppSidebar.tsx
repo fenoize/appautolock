@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
+  SidebarHeader,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
@@ -156,12 +157,26 @@ export function AppSidebar() {
         zIndex: 'var(--z-sidebar)'
       } as any}
     >
+      <SidebarHeader className="border-b border-sidebar-border">
+        <div className="flex items-center gap-2 px-2 py-1.5">
+          <div className="h-8 w-8 bg-primary rounded-md flex items-center justify-center shrink-0">
+            <span className="text-primary-foreground font-bold text-sm">A</span>
+          </div>
+          <span className="text-base font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+            Autolock
+          </span>
+        </div>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Navegación</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50">
+            Navegación
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.filter(item => item.show).map((item) => (
+              {menuItems.filter(item => item.show).map((item) => {
+                const itemActive = isActive(item.path || '') || isGroupActive(item.items);
+                return (
                 <Collapsible
                   key={item.title}
                   defaultOpen={isGroupActive(item.items)}
@@ -171,11 +186,11 @@ export function AppSidebar() {
                     {item.items ? (
                       <>
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton>
+                          <SidebarMenuButton className={itemActive ? '[&>svg]:text-primary' : ''}>
                             <item.icon className="h-4 w-4" />
                             <span>{item.title}</span>
                             {item.badge !== undefined && item.badge > 0 && (
-                              <Badge 
+                              <Badge
                                 variant={item.badgeVariant as any || 'default'}
                                 className="ml-auto"
                               >
@@ -192,6 +207,7 @@ export function AppSidebar() {
                                 <SidebarMenuSubButton
                                   onClick={() => navigate(subItem.path)}
                                   isActive={isActive(subItem.path)}
+                                  className={isActive(subItem.path) ? 'text-primary font-medium' : ''}
                                 >
                                   <span>{subItem.title}</span>
                                   {subItem.badge !== undefined && subItem.badge > 0 && (
@@ -209,11 +225,12 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         onClick={() => item.path && navigate(item.path)}
                         isActive={isActive(item.path || '')}
+                        className={isActive(item.path || '') ? '[&>svg]:text-primary text-primary' : ''}
                       >
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
                         {item.badge !== undefined && item.badge > 0 && (
-                          <Badge 
+                          <Badge
                             variant={item.badgeVariant as any || 'default'}
                             className="ml-auto"
                           >
@@ -224,7 +241,8 @@ export function AppSidebar() {
                     )}
                   </SidebarMenuItem>
                 </Collapsible>
-              ))}
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
