@@ -231,7 +231,7 @@ export const useCreateSubstitution = () => {
     mutationFn: async (sub: Omit<WOSubstitution, 'id' | 'created_at'>) => {
       const { data, error } = await supabase
         .from('wo_substitutions')
-        .insert(sub)
+        .insert(sub as any)
         .select()
         .single();
       if (error) throw error;

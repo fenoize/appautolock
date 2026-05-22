@@ -87,7 +87,7 @@ export function useCreateVehicle() {
     mutationFn: async (vehicle: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('vehicles')
-        .insert([vehicle])
+        .insert([vehicle as any])
         .select()
         .single();
 
@@ -111,7 +111,7 @@ export function useUpdateVehicle() {
     mutationFn: async ({ id, ...updates }: Partial<Vehicle> & { id: string }) => {
       const { data, error } = await supabase
         .from('vehicles')
-        .update(updates)
+        .update(updates as any)
         .eq('id', id)
         .select()
         .single();
