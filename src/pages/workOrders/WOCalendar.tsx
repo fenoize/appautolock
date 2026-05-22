@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -10,10 +10,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { useWorkOrders, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
 import { useUsers } from '@/hooks/useUsers';
-import { WOStatus } from '@/types/workOrders';
-import { Calendar, List } from 'lucide-react';
+import { WOStatus, WorkOrder } from '@/types/workOrders';
+import { Calendar, List, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 const statusColors: Record<WOStatus, string> = {
@@ -33,6 +38,11 @@ export default function WOCalendar() {
   const [viewMode, setViewMode] = useState<'calendar' | 'timeline'>('calendar');
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [selectedTechnician, setSelectedTechnician] = useState<string>('all');
+  const [selectedEvent, setSelectedEvent] = useState<{ wo: WorkOrder; anchorEl?: { x: number; y: number } } | null>(null);
+  const [editTecnicoId, setEditTecnicoId] = useState<string>('');
+  const [editFecha, setEditFecha] = useState<string>('');
+  const [editVentanaFin, setEditVentanaFin] = useState<string>('');
+  const [editMotivo, setEditMotivo] = useState<string>('');
 
   const { data: workOrders, isLoading } = useWorkOrders();
   const { data: users } = useUsers();
@@ -146,10 +156,55 @@ export default function WOCalendar() {
     }
   };
 
-  // Manejar click en evento
+  // Manejar click en evento → abrir panel de edición rápida
   const handleEventClick = (info: any) => {
-    const woId = info.event.id;
-    navigate(`/work-orders/${woId}`);
+    const wo: WorkOrder = info.event.extendedProps.wo;
+    setSelectedEvent({ wo, anchorEl: { x: info.jsEvent.clientX, y: info.jsEvent.clientY } });
+    setEditTecnicoId(wo.tecnico_id || 'unassigned');
+    setEditFecha(wo.fecha_programada ? toLocalDatetime(wo.fecha_programada) : '');
+    setEditVentanaFin(wo.ventana_fin ? toLocalDatetime(wo.ventana_fin) : '');
+    setEditMotivo('');
+  };
+
+  const toLocalDatetime = (iso: string) => {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const closeSheet = () => setSelectedEvent(null);
+
+  const handleSaveQuickEdit = async () => {
+    if (!selectedEvent) return;
+    const { wo } = selectedEvent;
+    const newTecnico = editTecnicoId === 'unassigned' ? null : editTecnicoId;
+    const tecnicoChanged = (wo.tecnico_id || null) !== newTecnico;
+    const fechaChanged = editFecha && (!wo.fecha_programada || toLocalDatetime(wo.fecha_programada) !== editFecha);
+    const ventanaChanged = editVentanaFin !== (wo.ventana_fin ? toLocalDatetime(wo.ventana_fin) : '');
+
+    if ((tecnicoChanged || fechaChanged || ventanaChanged) && !editMotivo.trim()) {
+      toast.error('Indica el motivo del cambio');
+      return;
+    }
+
+    try {
+      const payload: any = { id: wo.id };
+      if (tecnicoChanged) {
+        payload.tecnico_id = newTecnico;
+        if (!newTecnico && wo.estado === 'asignada') payload.estado = 'pendiente';
+        if (newTecnico && wo.estado === 'pendiente') payload.estado = 'asignada';
+      }
+      if (fechaChanged) payload.fecha_programada = new Date(editFecha).toISOString();
+      if (ventanaChanged) payload.ventana_fin = editVentanaFin ? new Date(editVentanaFin).toISOString() : null;
+      if (editMotivo.trim()) {
+        payload.notas = `${wo.notas ? wo.notas + '\n' : ''}[${new Date().toLocaleString()}] ${editMotivo.trim()}`;
+      }
+      await updateWorkOrder.mutateAsync(payload);
+      toast.success('OT actualizada');
+      closeSheet();
+    } catch (e) {
+      toast.error('Error al actualizar la OT');
+    }
   };
 
   // Renderizar contenido del evento
@@ -367,6 +422,117 @@ export default function WOCalendar() {
           border-radius: 4px;
         }
       `}</style>
+
+      <Sheet open={!!selectedEvent} onOpenChange={(open) => !open && closeSheet()}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          {selectedEvent && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  {selectedEvent.wo.folio}
+                  <WOStatusBadge status={selectedEvent.wo.estado} />
+                </SheetTitle>
+                <SheetDescription>Edición rápida de la orden de trabajo</SheetDescription>
+              </SheetHeader>
+
+              <div className="space-y-5 py-4">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Cliente</Label>
+                  {selectedEvent.wo.client ? (
+                    <Link
+                      to={`/clients/${selectedEvent.wo.client_id}`}
+                      className="text-sm font-medium text-primary hover:underline block"
+                      onClick={closeSheet}
+                    >
+                      {selectedEvent.wo.client.razon_social || selectedEvent.wo.client.nombre_comercial}
+                    </Link>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin cliente</p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Vehículo</Label>
+                  <p className="text-sm">
+                    {selectedEvent.wo.vehicle
+                      ? `${selectedEvent.wo.vehicle.marca} ${selectedEvent.wo.vehicle.modelo} - ${selectedEvent.wo.vehicle.patente}`
+                      : 'Sin vehículo'}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Técnico asignado</Label>
+                  <Select value={editTecnicoId} onValueChange={setEditTecnicoId}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Sin asignar</SelectItem>
+                      {technicians.map((tech) => (
+                        <SelectItem key={tech.id} value={tech.id}>
+                          {tech.nombre} {tech.apellido}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick-fecha">Fecha y hora programada</Label>
+                  <Input
+                    id="quick-fecha"
+                    type="datetime-local"
+                    value={editFecha}
+                    onChange={(e) => setEditFecha(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick-ventana">Ventana fin (opcional)</Label>
+                  <Input
+                    id="quick-ventana"
+                    type="datetime-local"
+                    value={editVentanaFin}
+                    onChange={(e) => setEditVentanaFin(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quick-motivo">
+                    Motivo del cambio <span className="text-muted-foreground">(requerido si modificas técnico o fecha)</span>
+                  </Label>
+                  <Textarea
+                    id="quick-motivo"
+                    value={editMotivo}
+                    onChange={(e) => setEditMotivo(e.target.value)}
+                    placeholder="Ej: Reasignado por solicitud del cliente"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 pt-2">
+                  <Button onClick={handleSaveQuickEdit} disabled={updateWorkOrder.isPending}>
+                    Guardar cambios
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      navigate(`/work-orders/${selectedEvent.wo.id}`);
+                      closeSheet();
+                    }}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Ver detalle completo
+                  </Button>
+                  <Button variant="ghost" onClick={closeSheet}>
+                    Cerrar sin guardar
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

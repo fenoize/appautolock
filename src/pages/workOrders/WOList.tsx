@@ -8,16 +8,18 @@ import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Plus, Calendar, AlertTriangle } from 'lucide-react';
+import { Plus, Calendar, AlertTriangle, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { WOFilters } from '@/types/workOrders';
+import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnicianDialog';
 
 export default function WOList() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<WOFilters>({});
   const { data: workOrders, isLoading } = useWorkOrders(filters);
   const [pendingGpsWoIds, setPendingGpsWoIds] = useState<Set<string>>(new Set());
+  const [assignTarget, setAssignTarget] = useState<{ id: string; branchId: string } | null>(null);
 
   useEffect(() => {
     if (!workOrders || workOrders.length === 0) return;
@@ -112,15 +114,37 @@ export default function WOList() {
                       </p>
                     )}
                   </div>
-                  <div className="text-right text-sm text-muted-foreground">
+                  <div className="text-right text-sm text-muted-foreground space-y-2">
                     {wo.tecnico && <p>Técnico: {wo.tecnico.nombre} {wo.tecnico.apellido}</p>}
                     {wo.branch && <p>Sucursal: {wo.branch.nombre}</p>}
+                    {(wo.estado === 'pendiente' || wo.estado === 'asignada') && wo.branch_id && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAssignTarget({ id: wo.id, branchId: wo.branch_id! });
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Asignar
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+      )}
+
+      {assignTarget && (
+        <AssignTechnicianDialog
+          open={!!assignTarget}
+          onOpenChange={(open) => !open && setAssignTarget(null)}
+          workOrderId={assignTarget.id}
+          branchId={assignTarget.branchId}
+        />
       )}
     </PageContainer>
   );
