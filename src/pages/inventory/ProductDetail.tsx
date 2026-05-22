@@ -162,7 +162,47 @@ export default function ProductDetail() {
               <CardTitle>Kardex - Historial de Movimientos</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Kardex completo próximamente</p>
+              {!moves || moves.length === 0 ? (
+                <p className="text-muted-foreground">Sin movimientos registrados.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Cantidad</TableHead>
+                      <TableHead>Origen → Destino</TableHead>
+                      <TableHead>OT</TableHead>
+                      <TableHead>Referencia</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {moves.map((m) => (
+                      <TableRow key={m.id}>
+                        <TableCell className="text-sm">{format(new Date(m.fecha), 'dd/MM/yyyy HH:mm')}</TableCell>
+                        <TableCell><Badge variant="outline">{m.tipo}</Badge></TableCell>
+                        <TableCell>{m.cantidad}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {m.from_location?.nombre || '—'} → {m.to_location?.nombre || '—'}
+                        </TableCell>
+                        <TableCell>
+                          {m.wo_id && m.wo ? (
+                            <Link
+                              to={`/work-orders/${m.wo_id}`}
+                              className="text-primary hover:underline font-medium"
+                            >
+                              {m.wo.folio}
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs">{m.referencia || '—'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
