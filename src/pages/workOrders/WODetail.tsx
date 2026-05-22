@@ -218,21 +218,24 @@ export default function WODetail() {
 
         {/* Tabs con contenido */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-6 w-full">
-            <TabsTrigger value="items">
-              Trabajo a Realizar
-              {wo.items && wo.items.length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5">
-                  {wo.items.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="notas">Instrucciones</TabsTrigger>
-            <TabsTrigger value="checklist">Checklist</TabsTrigger>
-            <TabsTrigger value="evidencias">Evidencias</TabsTrigger>
-            <TabsTrigger value="inventario">Inventario</TabsTrigger>
-            <TabsTrigger value="suscripciones">Suscripciones</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto -mx-2 px-2 scrollbar-none">
+            <TabsList className="inline-flex w-max md:grid md:grid-cols-6 md:w-full">
+              <TabsTrigger value="items" className="whitespace-nowrap">
+                Trabajo a Realizar
+                {wo.items && wo.items.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1.5">
+                    {wo.items.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="notas" className="whitespace-nowrap">Instrucciones</TabsTrigger>
+              <TabsTrigger value="checklist" className="whitespace-nowrap">Checklist</TabsTrigger>
+              <TabsTrigger value="evidencias" className="whitespace-nowrap">Evidencias</TabsTrigger>
+              <TabsTrigger value="inventario" className="whitespace-nowrap">Inventario</TabsTrigger>
+              <TabsTrigger value="suscripciones" className="whitespace-nowrap">Suscripciones</TabsTrigger>
+            </TabsList>
+          </div>
+
 
           <TabsContent value="suscripciones" className="pt-4">
             <WOSubscriptionsTab woId={wo.id} woStatus={wo.estado} />
