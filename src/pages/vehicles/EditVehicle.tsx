@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FUEL_TYPES, FuelType } from '@/types/vehicles';
+import { FUEL_TYPES, FuelType, IGNITION_TYPES } from '@/types/vehicles';
 import { toast } from 'sonner';
 
 const vehicleSchema = z.object({
@@ -21,6 +21,7 @@ const vehicleSchema = z.object({
   vin: z.string().optional(),
   anio: z.number().optional(),
   combustible: z.string().optional(),
+  tipo_encendido: z.enum(IGNITION_TYPES).optional(),
   color: z.string().optional(),
   numero_motor: z.string().optional(),
   odometro: z.number().optional(),
@@ -46,6 +47,7 @@ export default function EditVehicle() {
       vin: '',
       anio: undefined,
       combustible: '',
+      tipo_encendido: 'Desconocido',
       color: '',
       numero_motor: '',
       odometro: undefined,
@@ -71,6 +73,7 @@ export default function EditVehicle() {
             vin: vehicle.vin || '',
             anio: vehicle.anio || undefined,
             combustible: vehicle.combustible || '',
+            tipo_encendido: (vehicle.tipo_encendido as any) || 'Desconocido',
             color: vehicle.color || '',
             numero_motor: vehicle.numero_motor || '',
             odometro: vehicle.odometro || undefined,
@@ -85,6 +88,7 @@ export default function EditVehicle() {
           vin: vehicle.vin || '',
           anio: vehicle.anio || undefined,
           combustible: vehicle.combustible || '',
+          tipo_encendido: (vehicle.tipo_encendido as any) || 'Desconocido',
           color: vehicle.color || '',
           numero_motor: vehicle.numero_motor || '',
           odometro: vehicle.odometro || undefined,
@@ -247,6 +251,28 @@ export default function EditVehicle() {
                   {...form.register('color')}
                   placeholder="Blanco"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="tipo_encendido">Tipo de encendido</Label>
+                <Select
+                  value={form.watch('tipo_encendido') || 'Desconocido'}
+                  onValueChange={(value) => form.setValue('tipo_encendido', value as any)}
+                >
+                  <SelectTrigger id="tipo_encendido">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {IGNITION_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Este dato es necesario para verificar la compatibilidad de instalación GPS.
+                </p>
               </div>
             </div>
 

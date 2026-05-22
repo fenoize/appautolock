@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Vehicle } from '@/types/vehicles';
-import { MoreVertical, Eye, Edit } from 'lucide-react';
+import { MoreVertical, Eye, Edit, KeyRound } from 'lucide-react';
 
 interface VehiclesTableProps {
   vehicles: Vehicle[];
@@ -33,6 +33,7 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
             <TableHead>Marca/Modelo</TableHead>
             <TableHead className="hidden md:table-cell">Año</TableHead>
             <TableHead className="hidden lg:table-cell">Combustible</TableHead>
+            <TableHead className="hidden lg:table-cell">Encendido</TableHead>
             <TableHead className="hidden lg:table-cell">Odómetro</TableHead>
             <TableHead className="hidden xl:table-cell">Propietario</TableHead>
             <TableHead className="w-12"></TableHead>
@@ -52,6 +53,14 @@ export function VehiclesTable({ vehicles }: VehiclesTableProps) {
               </TableCell>
               <TableCell className="hidden lg:table-cell">
                 {vehicle.combustible || '-'}
+              </TableCell>
+              <TableCell className="hidden lg:table-cell">
+                {vehicle.tipo_encendido ? (
+                  <span className="inline-flex items-center gap-1">
+                    <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+                    {vehicle.tipo_encendido}
+                  </span>
+                ) : '-'}
               </TableCell>
               <TableCell className="hidden lg:table-cell">
                 {vehicle.odometro ? `${vehicle.odometro.toLocaleString()} km` : '-'}

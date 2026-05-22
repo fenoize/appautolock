@@ -1,0 +1,1 @@
+ALTER TABLE public.vehicles ADD COLUMN IF NOT EXISTS tipo_encendido TEXT CHECK (tipo_encendido IN ('Llave', 'Push-Start', 'Sin llave', 'Desconocido')) DEFAULT 'Desconocido';

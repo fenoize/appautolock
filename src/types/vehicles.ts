@@ -7,6 +7,7 @@ export interface Vehicle {
   modelo: string;
   anio?: number;
   combustible?: string;
+  tipo_encendido?: IgnitionType;
   odometro?: number;
   color?: string;
   numero_motor?: string;
@@ -25,6 +26,7 @@ export interface VehicleFilters {
   marca?: string;
   anio?: number;
   combustible?: string;
+  tipo_encendido?: string;
   client_id?: string;
 }
 
@@ -37,3 +39,7 @@ export const FUEL_TYPES: FuelType[] = [
   'Eléctrico',
   'Híbrido'
 ];
+
+export const IGNITION_TYPES = ['Llave', 'Push-Start', 'Sin llave', 'Desconocido'] as const;
+export type IgnitionType = typeof IGNITION_TYPES[number];
+
