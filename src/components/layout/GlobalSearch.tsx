@@ -59,10 +59,11 @@ function useSearchData(term: string) {
 }
 
 interface GlobalSearchProps {
-  trigger?: 'button' | 'input';
+  /** 'input' shows the desktop pill, 'button' shows the icon trigger. 'both' shows responsive */
+  trigger?: 'input' | 'button' | 'both';
 }
 
-export function GlobalSearch({ trigger = 'input' }: GlobalSearchProps) {
+export function GlobalSearch({ trigger = 'both' }: GlobalSearchProps) {
   const [open, setOpen] = useState(false);
   const [term, setTerm] = useState('');
   const navigate = useNavigate();
