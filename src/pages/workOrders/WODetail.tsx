@@ -54,7 +54,9 @@ export default function WODetail() {
   const navigate = useNavigate();
   const { data: wo, isLoading } = useWorkOrder(id!);
   const updateWO = useUpdateWorkOrder();
-  const { isAdmin } = usePermissions();
+  const { isAdmin, hasRole } = usePermissions();
+  const isMobile = useIsMobile();
+  const isTecnico = hasRole('tecnico');
   const queryClient = useQueryClient();
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('items');
