@@ -745,6 +745,61 @@ export default function CompatibilityMatrix() {
                 />
               </div>
             </div>
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="space-y-1 min-w-[140px]">
+                <Label className="text-xs text-muted-foreground">Marca</Label>
+                <Select value={filterMarca} onValueChange={setFilterMarca}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {filterOptions.marcas.map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1 min-w-[110px]">
+                <Label className="text-xs text-muted-foreground">Año</Label>
+                <Select value={filterAnio} onValueChange={setFilterAnio}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    <SelectItem value="all">Todos</SelectItem>
+                    {filterOptions.anios.map((y) => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1 min-w-[140px]">
+                <Label className="text-xs text-muted-foreground">Combustible</Label>
+                <Select value={filterCombustible} onValueChange={setFilterCombustible}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {filterOptions.combustibles.map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1 min-w-[140px]">
+                <Label className="text-xs text-muted-foreground">Encendido</Label>
+                <Select value={filterEncendido} onValueChange={setFilterEncendido}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {filterOptions.encendidos.map((e) => (
+                      <SelectItem key={e} value={e}>{e}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={resetFilters} className="h-9">
+                  Limpiar filtros
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg overflow-hidden bg-muted/20 divide-y">
