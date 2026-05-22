@@ -885,6 +885,8 @@ export type Database = {
           client_id: string
           comprobante_pago_url: string | null
           created_at: string | null
+          email_destinatario: string | null
+          email_enviado_at: string | null
           estado: Database["public"]["Enums"]["quote_status"] | null
           fecha_emision: string | null
           folio: string
@@ -905,6 +907,8 @@ export type Database = {
           client_id: string
           comprobante_pago_url?: string | null
           created_at?: string | null
+          email_destinatario?: string | null
+          email_enviado_at?: string | null
           estado?: Database["public"]["Enums"]["quote_status"] | null
           fecha_emision?: string | null
           folio: string
@@ -925,6 +929,8 @@ export type Database = {
           client_id?: string
           comprobante_pago_url?: string | null
           created_at?: string | null
+          email_destinatario?: string | null
+          email_enviado_at?: string | null
           estado?: Database["public"]["Enums"]["quote_status"] | null
           fecha_emision?: string | null
           folio?: string
