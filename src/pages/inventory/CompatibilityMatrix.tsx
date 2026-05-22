@@ -319,7 +319,7 @@ export default function CompatibilityMatrix() {
       m3.get(comb)!.push(c);
     };
 
-    for (const c of catalog) {
+    for (const c of filteredCatalog) {
       const desde = c.anio_desde ?? null;
       const hasta = c.anio_hasta ?? null;
       if (desde && hasta && hasta >= desde) {
