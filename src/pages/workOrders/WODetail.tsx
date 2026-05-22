@@ -1,20 +1,31 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
+import { supabase } from '@/integrations/supabase/client';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { WOSubscriptionsTab } from '@/components/workOrders/WOSubscriptionsTab';
 import { WODetailHeader } from '@/components/workOrders/WODetailHeader';
 import { WOItemsTable } from '@/components/workOrders/WOItemsTable';
 import { WONotesSection } from '@/components/workOrders/WONotesSection';
 import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnicianDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Download, 
   Play, 
   Pause, 
@@ -36,6 +47,8 @@ export default function WODetail() {
   const { data: wo, isLoading } = useWorkOrder(id!);
   const updateWO = useUpdateWorkOrder();
   const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState('items');
+  const [pendingGpsDialog, setPendingGpsDialog] = useState<{ open: boolean; items: string[] }>({ open: false, items: [] });
 
   if (isLoading) {
     return (
@@ -66,6 +79,21 @@ export default function WODetail() {
       updateWO.mutate({ id, estado: newStatus as any });
     }
   };
+
+  const handleFinalizarOT = async () => {
+    if (!id) return;
+    const { data: pending } = await supabase
+      .from('wo_subscription_items')
+      .select('id, nombre')
+      .eq('wo_id', id)
+      .is('subscription_id', null);
+    if (pending && pending.length > 0) {
+      setPendingGpsDialog({ open: true, items: pending.map((p: any) => p.nombre) });
+      return;
+    }
+    handleChangeStatus('completada');
+  };
+
 
 
   const renderStatusButtons = () => {
@@ -105,7 +133,7 @@ export default function WODetail() {
               <Pause className="mr-2 h-4 w-4" />
               Pausar
             </Button>
-            <Button onClick={() => handleChangeStatus('completada')}>
+            <Button onClick={handleFinalizarOT}>
               <CheckCircle2 className="mr-2 h-4 w-4" />
               Finalizar OT
             </Button>
@@ -150,8 +178,8 @@ export default function WODetail() {
         <WODetailHeader workOrder={wo} />
 
         {/* Tabs con contenido */}
-        <Tabs defaultValue="items" className="space-y-4">
-          <TabsList className="grid grid-cols-5 w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="items">
               Trabajo a Realizar
               {wo.items && wo.items.length > 0 && (
@@ -164,7 +192,13 @@ export default function WODetail() {
             <TabsTrigger value="checklist">Checklist</TabsTrigger>
             <TabsTrigger value="evidencias">Evidencias</TabsTrigger>
             <TabsTrigger value="inventario">Inventario</TabsTrigger>
+            <TabsTrigger value="suscripciones">Suscripciones</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="suscripciones" className="pt-4">
+            <WOSubscriptionsTab woId={wo.id} woStatus={wo.estado} />
+          </TabsContent>
+
 
           {/* Items Tab */}
           <TabsContent value="items" className="pt-4">
@@ -309,6 +343,43 @@ export default function WODetail() {
         workOrderId={wo.id}
         branchId={wo.branch_id}
       />
+
+      <AlertDialog open={pendingGpsDialog.open} onOpenChange={(open) => setPendingGpsDialog((s) => ({ ...s, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>⚠️ GPS sin configurar</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>Los siguientes dispositivos aún no tienen suscripción configurada:</p>
+                <ul className="list-disc list-inside text-sm">
+                  {pendingGpsDialog.items.map((n, i) => (
+                    <li key={i}>{n}</li>
+                  ))}
+                </ul>
+                <p className="text-sm">Si cierras la OT sin configurarlos, el cliente no tendrá servicio GPS activo.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingGpsDialog({ open: false, items: [] });
+                handleChangeStatus('completada');
+              }}
+            >
+              Cerrar de todas formas
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setPendingGpsDialog({ open: false, items: [] });
+                setActiveTab('suscripciones');
+              }}
+            >
+              Ir a configurar GPS
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

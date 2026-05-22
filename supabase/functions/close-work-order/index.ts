@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       throw new Error('No autorizado');
     }
 
-    const { wo_id, checklist_data, observaciones_cierre, firma_data, firma_nombre } = await req.json();
+    const { wo_id, checklist_data, observaciones_cierre, firma_data, firma_nombre, force_close } = await req.json();
 
     console.log('Cerrando OT:', wo_id);
 
@@ -38,6 +38,24 @@ Deno.serve(async (req) => {
     if (woError) throw woError;
     if (wo.tecnico_id !== user.id) {
       throw new Error('Solo el técnico asignado puede cerrar esta OT');
+    }
+
+    // Validar GPS pendientes de suscripción
+    const { data: pendingGPS } = await supabase
+      .from('wo_subscription_items')
+      .select('id, nombre')
+      .eq('wo_id', wo_id)
+      .is('subscription_id', null);
+
+    const hasPendingGPS = pendingGPS && pendingGPS.length > 0;
+
+    if (hasPendingGPS && !force_close) {
+      return new Response(JSON.stringify({
+        success: false,
+        requires_subscription_config: true,
+        pending_items: pendingGPS!.map((i: any) => i.nombre),
+        message: 'Hay dispositivos GPS sin suscripción configurada'
+      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Validar checklist completo

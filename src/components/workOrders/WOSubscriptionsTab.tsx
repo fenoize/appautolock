@@ -80,8 +80,20 @@ export function WOSubscriptionsTab({ woId, woStatus }: WOSubscriptionsTabProps) 
     );
   };
 
+  const pendingCount = subscriptionItems.filter(i => !i.subscription_id).length;
+  const showPendingBanner = pendingCount > 0 && (woStatus === 'completada' || woStatus === 'en_proceso');
+
   return (
     <div className="space-y-4">
+      {showPendingBanner && (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardContent className="pt-6">
+            <p className="text-sm text-amber-900 font-medium">
+              ⚠️ Tienes {pendingCount} dispositivo(s) GPS pendientes de configuración. Configúralos antes de cerrar la OT para activar el servicio del cliente.
+            </p>
+          </CardContent>
+        </Card>
+      )}
       {!isCompleted && (
         <Card className="border-amber-200 bg-amber-50/50">
           <CardContent className="pt-6">
