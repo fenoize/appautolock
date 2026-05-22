@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +14,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Pencil, Search } from 'lucide-react';
+import { Plus, Pencil, Search, ChevronRight, ChevronDown } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import {
   CompatEstado,
@@ -28,17 +27,28 @@ import {
 } from '@/hooks/useCompatibility';
 import { CompatibilityBadge } from '@/components/compatibility/CompatibilityBadge';
 import { usePermissions } from '@/hooks/usePermissions';
+import { cn } from '@/lib/utils';
 
 const COMBUSTIBLES = ['Bencina', 'Diesel', 'GLP', 'Eléctrico', 'Híbrido', 'Cualquiera'];
 const ENCENDIDOS = ['Llave', 'Push-Start', 'Sin llave', 'Cualquiera'];
 
+const versionLabel = (c: VehicleCatalog) => {
+  if (c.anio_desde && c.anio_hasta) return `${c.anio_desde}–${c.anio_hasta}`;
+  if (c.anio_desde) return `${c.anio_desde}+`;
+  if (c.anio_hasta) return `Hasta ${c.anio_hasta}`;
+  return 'Cualquier año';
+};
+
+const encendidoLabel = (v?: string | null) => {
+  if (!v) return 'Cualquiera';
+  if (v === 'Push-Start') return 'Botón';
+  return v;
+};
+
 export default function CompatibilityMatrix() {
   const { isAdmin } = usePermissions();
   const { data: products } = useProducts();
-  const gpsProducts = useMemo(
-    () => (products ?? []).filter((p: any) => (p.tipos_suscripcion_disponibles?.length ?? 0) > 0),
-    [products],
-  );
+  const allProducts = useMemo(() => products ?? [], [products]);
   const [productId, setProductId] = useState<string>('');
   const [search, setSearch] = useState('');
   const { data: catalog = [] } = useVehicleCatalog(search);
@@ -52,14 +62,10 @@ export default function CompatibilityMatrix() {
   const upsert = useUpsertCompatibility();
   const createCatalog = useCreateVehicleCatalog();
 
-  // Edit dialog state
-  const [editing, setEditing] = useState<{ catalog: VehicleCatalog; current?: ProductCompatibility } | null>(
-    null,
-  );
+  const [editing, setEditing] = useState<{ catalog: VehicleCatalog; current?: ProductCompatibility } | null>(null);
   const [estado, setEstado] = useState<CompatEstado>('verde');
   const [obs, setObs] = useState('');
 
-  // New catalog dialog state
   const [showNew, setShowNew] = useState(false);
   const [newRow, setNewRow] = useState<Partial<VehicleCatalog>>({
     marca: '',
@@ -102,11 +108,161 @@ export default function CompatibilityMatrix() {
     });
   };
 
+  // Build tree: marca -> modelo -> version -> combustible -> encendido (leaf)
+  type Leaf = { key: string; label: string; catalog: VehicleCatalog };
+  type Node = { key: string; label: string; children?: Node[]; leaves?: Leaf[] };
+
+  const tree = useMemo<Node[]>(() => {
+    const byMarca = new Map<string, Map<string, Map<string, Map<string, VehicleCatalog[]>>>>();
+    for (const c of catalog) {
+      const marca = c.marca || '—';
+      const modelo = c.modelo || '—';
+      const version = versionLabel(c);
+      const comb = c.tipo_combustible || 'Cualquiera';
+      if (!byMarca.has(marca)) byMarca.set(marca, new Map());
+      const m1 = byMarca.get(marca)!;
+      if (!m1.has(modelo)) m1.set(modelo, new Map());
+      const m2 = m1.get(modelo)!;
+      if (!m2.has(version)) m2.set(version, new Map());
+      const m3 = m2.get(version)!;
+      if (!m3.has(comb)) m3.set(comb, []);
+      m3.get(comb)!.push(c);
+    }
+    const sortStr = (a: string, b: string) => a.localeCompare(b);
+    return Array.from(byMarca.entries())
+      .sort(([a], [b]) => sortStr(a, b))
+      .map(([marca, m1]) => ({
+        key: `marca:${marca}`,
+        label: marca,
+        children: Array.from(m1.entries())
+          .sort(([a], [b]) => sortStr(a, b))
+          .map(([modelo, m2]) => ({
+            key: `marca:${marca}|modelo:${modelo}`,
+            label: modelo,
+            children: Array.from(m2.entries())
+              .sort(([a], [b]) => sortStr(a, b))
+              .map(([version, m3]) => ({
+                key: `marca:${marca}|modelo:${modelo}|version:${version}`,
+                label: version,
+                children: Array.from(m3.entries())
+                  .sort(([a], [b]) => sortStr(a, b))
+                  .map(([comb, rows]) => ({
+                    key: `marca:${marca}|modelo:${modelo}|version:${version}|comb:${comb}`,
+                    label: comb,
+                    leaves: rows.map((r) => ({
+                      key: r.id,
+                      label: encendidoLabel(r.tipo_encendido),
+                      catalog: r,
+                    })),
+                  })),
+              })),
+          })),
+      }));
+  }, [catalog]);
+
+  // Expanded state — marcas open by default
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      tree.forEach((n) => next.add(n.key));
+      return next;
+    });
+  }, [tree]);
+
+  // Auto-expand on search match
+  useEffect(() => {
+    if (!search.trim()) return;
+    const s = search.toLowerCase();
+    const next = new Set(expanded);
+    const walk = (nodes: Node[], ancestors: string[]) => {
+      for (const n of nodes) {
+        const path = [...ancestors, n.key];
+        const matchSelf = n.label.toLowerCase().includes(s);
+        let matchLeaf = false;
+        if (n.leaves) {
+          matchLeaf = n.leaves.some((l) => l.label.toLowerCase().includes(s));
+        }
+        if (matchSelf || matchLeaf) path.forEach((k) => next.add(k));
+        if (n.children) walk(n.children, path);
+      }
+    };
+    walk(tree, []);
+    setExpanded(next);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, tree]);
+
+  const toggle = (key: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const indentClass = (depth: number) => ({ paddingLeft: `${depth * 20 + 12}px` });
+
+  const renderNode = (node: Node, depth: number) => {
+    const isOpen = expanded.has(node.key);
+    const hasChildren = (node.children && node.children.length > 0) || (node.leaves && node.leaves.length > 0);
+    return (
+      <div key={node.key}>
+        <button
+          type="button"
+          onClick={() => hasChildren && toggle(node.key)}
+          className={cn(
+            'w-full flex items-center gap-2 py-2 pr-3 text-left text-sm hover:bg-muted/60 transition-colors',
+            depth === 0 && 'font-semibold text-foreground bg-muted/40',
+            depth === 1 && 'font-medium',
+          )}
+          style={indentClass(depth)}
+        >
+          {hasChildren ? (
+            isOpen ? <ChevronDown className="h-4 w-4 text-primary shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          ) : (
+            <span className="w-4" />
+          )}
+          <span>{node.label}</span>
+        </button>
+        {isOpen && (
+          <div>
+            {node.children?.map((c) => renderNode(c, depth + 1))}
+            {node.leaves?.map((leaf) => {
+              const cmp = compatByCat.get(leaf.catalog.id);
+              return (
+                <div
+                  key={leaf.key}
+                  className="flex items-center gap-3 py-2 pr-3 border-l-2 border-primary/20 hover:bg-muted/40"
+                  style={indentClass(depth + 1)}
+                >
+                  <span className="w-4" />
+                  <div className="flex items-center gap-2 min-w-[140px]">
+                    <span className="text-sm text-foreground">Encendido: {leaf.label}</span>
+                  </div>
+                  <CompatibilityBadge estado={cmp?.estado} />
+                  <span className="flex-1 text-xs text-muted-foreground truncate">
+                    {cmp?.observaciones ?? '—'}
+                  </span>
+                  {isAdmin && productId && (
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(leaf.catalog)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <PageHeader
         title="Compatibilidad de Productos"
-        description="Define qué productos GPS son compatibles con cada modelo de vehículo del catálogo."
+        description="Define qué productos son compatibles con cada modelo de vehículo del catálogo."
         action={
           isAdmin && (
             <Dialog open={showNew} onOpenChange={setShowNew}>
@@ -193,7 +349,7 @@ export default function CompatibilityMatrix() {
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Producto GPS</CardTitle>
+            <CardTitle className="text-base">Producto</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Select value={productId} onValueChange={setProductId}>
@@ -201,18 +357,18 @@ export default function CompatibilityMatrix() {
                 <SelectValue placeholder="Selecciona un producto…" />
               </SelectTrigger>
               <SelectContent>
-                {gpsProducts.map((p: any) => (
+                {allProducts.map((p: any) => (
                   <SelectItem key={p.id} value={p.id}>
                     {p.nombre}
                   </SelectItem>
                 ))}
-                {gpsProducts.length === 0 && (
-                  <div className="p-2 text-sm text-muted-foreground">No hay productos con suscripción GPS</div>
+                {allProducts.length === 0 && (
+                  <div className="p-2 text-sm text-muted-foreground">No hay productos en el catálogo</div>
                 )}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              Solo se listan productos con tipos de suscripción GPS configurados.
+              Define compatibilidad para cualquier producto del catálogo.
             </p>
           </CardContent>
         </Card>
@@ -233,57 +389,14 @@ export default function CompatibilityMatrix() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Marca</TableHead>
-                    <TableHead>Modelo</TableHead>
-                    <TableHead>Año</TableHead>
-                    <TableHead>Combustible</TableHead>
-                    <TableHead>Encendido</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Observaciones</TableHead>
-                    <TableHead className="w-16"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {catalog.map((c) => {
-                    const cmp = compatByCat.get(c.id);
-                    return (
-                      <TableRow key={c.id}>
-                        <TableCell className="font-medium">{c.marca}</TableCell>
-                        <TableCell>{c.modelo}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {c.anio_desde ?? '—'}–{c.anio_hasta ?? '—'}
-                        </TableCell>
-                        <TableCell className="text-sm">{c.tipo_combustible ?? '—'}</TableCell>
-                        <TableCell className="text-sm">{c.tipo_encendido ?? '—'}</TableCell>
-                        <TableCell>
-                          <CompatibilityBadge estado={cmp?.estado} />
-                        </TableCell>
-                        <TableCell className="text-xs text-muted-foreground max-w-[240px] truncate">
-                          {cmp?.observaciones ?? '—'}
-                        </TableCell>
-                        <TableCell>
-                          {isAdmin && productId && (
-                            <Button size="icon" variant="ghost" onClick={() => openEdit(c)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {catalog.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                        Sin modelos en el catálogo
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+            <div className="border rounded-lg overflow-hidden bg-muted/20 divide-y">
+              {tree.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8 text-sm">
+                  Sin modelos en el catálogo
+                </div>
+              ) : (
+                tree.map((n) => renderNode(n, 0))
+              )}
             </div>
             {!productId && (
               <p className="text-sm text-muted-foreground mt-3">
