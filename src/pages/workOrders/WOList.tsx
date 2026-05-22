@@ -87,6 +87,16 @@ export default function WOList() {
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold">{wo.folio}</h3>
                       <WOStatusBadge status={wo.estado} />
+                      {pendingGpsWoIds.has(wo.id) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <AlertTriangle className="h-4 w-4 text-orange-500" />
+                            </TooltipTrigger>
+                            <TooltipContent>GPS sin configurar</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Cliente: {wo.client?.razon_social || wo.client?.nombre_comercial}
