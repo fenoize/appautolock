@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Quote, QuoteFilters, QuoteItem, QuoteStats } from '@/types/quotes';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { logQuoteEvent } from '@/lib/quote-events';
 
 export function useQuotes(filters?: QuoteFilters) {
   return useQuery({
