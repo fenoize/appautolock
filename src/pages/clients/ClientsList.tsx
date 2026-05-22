@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageContainer } from '@/components/shared/PageContainer';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { SkeletonTable } from '@/components/shared/SkeletonTable';
@@ -12,9 +11,12 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { ViewToggle } from '@/components/shared/ViewToggle';
 import { PaginationControls } from '@/components/shared/PaginationControls';
+import { MobilePagination } from '@/components/shared/MobilePagination';
 import { ClientStatusBadge } from '@/components/clients/ClientStatusBadge';
 import { ClientsTable } from '@/components/clients/ClientsTable';
+import { ClientsMobileList } from '@/components/clients/ClientsMobileList';
 import { useClients } from '@/hooks/useClients';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ClientFilters } from '@/types/clients';
 import { cn } from '@/lib/utils';
 import { getStaggerStyle } from '@/lib/animations';
@@ -22,19 +24,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export default function ClientsList() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<ClientFilters>({});
   const [view, setView] = useState<'grid' | 'table'>('table');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(30);
-  
+
   const { data: clients, isLoading } = useClients({ ...filters, search });
 
   const paginatedClients = useMemo(() => {
     if (!clients) return [];
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return clients.slice(startIndex, endIndex);
+    const start = (currentPage - 1) * itemsPerPage;
+    return clients.slice(start, start + itemsPerPage);
   }, [clients, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil((clients?.length || 0) / itemsPerPage);
@@ -45,35 +47,33 @@ export default function ClientsList() {
 
   return (
     <PageContainer>
-      {/* Header con título y botones */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Clientes</h1>
           <p className="text-sm md:text-base text-muted-foreground mt-1">
             Gestiona tu cartera de clientes
           </p>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Button onClick={() => navigate('/clients/new')}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Cliente
-          </Button>
-        </div>
+
+        <Button onClick={() => navigate('/clients/new')} className="w-full sm:w-auto">
+          <Plus className="h-4 w-4 mr-2" />
+          Nuevo Cliente
+        </Button>
       </div>
 
-      {/* Barra de búsqueda y controles */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
+      {/* Search + controls */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-6">
         <SearchBar
           value={search}
           onChange={setSearch}
           placeholder="Buscar por nombre, RUT, email o teléfono..."
-          className="flex-1 max-w-md"
+          className="w-full sm:flex-1 sm:max-w-md"
         />
-        
+
         <div className="flex items-center gap-2">
-          <Select 
-            value={itemsPerPage.toString()} 
+          <Select
+            value={itemsPerPage.toString()}
             onValueChange={(v) => {
               setItemsPerPage(parseInt(v));
               setCurrentPage(1);
@@ -89,21 +89,21 @@ export default function ClientsList() {
               <SelectItem value="100">100 por página</SelectItem>
             </SelectContent>
           </Select>
-          
-          <ViewToggle view={view} onViewChange={setView} />
+
+          {!isMobile && <ViewToggle view={view} onViewChange={setView} />}
         </div>
       </div>
 
-      {/* Clients Content */}
+      {/* Content */}
       {isLoading ? (
-        view === 'grid' ? (
+        isMobile || view === 'table' ? (
+          <SkeletonTable rows={8} columns={6} />
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
-        ) : (
-          <SkeletonTable rows={8} columns={6} />
         )
       ) : !clients || clients.length === 0 ? (
         <EmptyState
@@ -117,6 +117,8 @@ export default function ClientsList() {
             </Button>
           }
         />
+      ) : isMobile ? (
+        <ClientsMobileList clients={paginatedClients} />
       ) : view === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {paginatedClients.map((client, index) => (
@@ -124,8 +126,8 @@ export default function ClientsList() {
               key={client.id}
               style={getStaggerStyle(index)}
               className={cn(
-                "cursor-pointer animate-in fade-in-0 slide-in-from-bottom-2",
-                "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                'cursor-pointer animate-in fade-in-0 slide-in-from-bottom-2',
+                'transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0'
               )}
               onClick={() => navigate(`/clients/${client.id}`)}
             >
@@ -139,8 +141,8 @@ export default function ClientsList() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-semibold text-foreground truncate">
-                        {client.tipo === 'empresa' 
-                          ? client.razon_social 
+                        {client.tipo === 'empresa'
+                          ? client.razon_social
                           : client.nombre_comercial}
                       </h3>
                       <ClientStatusBadge status={client.estado} />
@@ -152,17 +154,15 @@ export default function ClientsList() {
                     )}
                   </div>
                 </div>
-                
+
                 {client.email_principal && (
                   <p className="text-sm text-muted-foreground mb-1 truncate">
                     {client.email_principal}
                   </p>
                 )}
-                
+
                 {client.telefonos && client.telefonos.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {client.telefonos[0]}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{client.telefonos[0]}</p>
                 )}
               </CardContent>
             </Card>
@@ -174,18 +174,27 @@ export default function ClientsList() {
 
       {/* Pagination */}
       {clients && clients.length > itemsPerPage && (
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-t pt-6">
-          <p className="text-sm text-muted-foreground">
-            Mostrando {((currentPage - 1) * itemsPerPage) + 1} a{' '}
-            {Math.min(currentPage * itemsPerPage, clients.length)} de{' '}
-            {clients.length} clientes
-          </p>
-          
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+        <div className="mt-8 border-t pt-6">
+          {isMobile ? (
+            <MobilePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          ) : (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className="text-sm text-muted-foreground">
+                Mostrando {(currentPage - 1) * itemsPerPage + 1} a{' '}
+                {Math.min(currentPage * itemsPerPage, clients.length)} de{' '}
+                {clients.length} clientes
+              </p>
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </div>
       )}
     </PageContainer>
