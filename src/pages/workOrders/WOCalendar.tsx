@@ -443,6 +443,9 @@ export default function WOCalendar() {
           )}
         </CardContent>
       </Card>
+      </>
+      )}
+
 
       <style>{`
         .calendar-container .fc {
