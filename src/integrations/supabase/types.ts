@@ -1423,6 +1423,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["stock_move_type"]
           to_location_id: string | null
           user_id: string | null
+          wo_id: string | null
         }
         Insert: {
           cantidad: number
@@ -1436,6 +1437,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["stock_move_type"]
           to_location_id?: string | null
           user_id?: string | null
+          wo_id?: string | null
         }
         Update: {
           cantidad?: number
@@ -1449,6 +1451,7 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["stock_move_type"]
           to_location_id?: string | null
           user_id?: string | null
+          wo_id?: string | null
         }
         Relationships: [
           {
@@ -1513,6 +1516,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "stock_moves_wo_id_fkey"
+            columns: ["wo_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
+            referencedColumns: ["id"]
           },
         ]
       }

@@ -1,13 +1,16 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useProduct, useUpdateProduct } from '@/hooks/useProducts';
+import { useStockMoves } from '@/hooks/useStockMoves';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, Edit, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SubscriptionPlanSelector } from '@/components/shared/SubscriptionPlanSelector';
+import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 
 export default function ProductDetail() {
@@ -15,6 +18,8 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { data: product, isLoading } = useProduct(id!);
   const updateProduct = useUpdateProduct();
+  const { data: moves } = useStockMoves({ product_id: id });
+
 
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
   const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
@@ -157,7 +162,47 @@ export default function ProductDetail() {
               <CardTitle>Kardex - Historial de Movimientos</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Kardex completo próximamente</p>
+              {!moves || moves.length === 0 ? (
+                <p className="text-muted-foreground">Sin movimientos registrados.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Cantidad</TableHead>
+                      <TableHead>Origen → Destino</TableHead>
+                      <TableHead>OT</TableHead>
+                      <TableHead>Referencia</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {moves.map((m) => (
+                      <TableRow key={m.id}>
+                        <TableCell className="text-sm">{format(new Date(m.fecha), 'dd/MM/yyyy HH:mm')}</TableCell>
+                        <TableCell><Badge variant="outline">{m.tipo}</Badge></TableCell>
+                        <TableCell>{m.cantidad}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {m.from_location?.nombre || '—'} → {m.to_location?.nombre || '—'}
+                        </TableCell>
+                        <TableCell>
+                          {m.wo_id && m.wo ? (
+                            <Link
+                              to={`/work-orders/${m.wo_id}`}
+                              className="text-primary hover:underline font-medium"
+                            >
+                              {m.wo.folio}
+                            </Link>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs">{m.referencia || '—'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

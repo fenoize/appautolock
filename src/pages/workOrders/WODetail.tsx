@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
+import { useStockMoves } from '@/hooks/useStockMoves';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -57,6 +58,7 @@ export default function WODetail() {
   const [activeTab, setActiveTab] = useState('items');
   const [pendingGpsDialog, setPendingGpsDialog] = useState<{ open: boolean; items: string[] }>({ open: false, items: [] });
   const [consumingStock, setConsumingStock] = useState(false);
+  const { data: woStockMoves } = useStockMoves({ wo_id: id, tipo: 'consumo' });
 
   const handleConsumirStock = async () => {
     if (!id) return;
@@ -333,6 +335,47 @@ export default function WODetail() {
                   )}
                 </AlertDescription>
               </Alert>
+            )}
+
+            {wo.inventario_consumido && isAdmin && (
+              <div className="border rounded-lg">
+                <div className="px-4 py-2 border-b bg-muted/40 text-sm font-semibold">
+                  Movimientos de stock generados por esta OT
+                </div>
+                {!woStockMoves || woStockMoves.length === 0 ? (
+                  <p className="p-4 text-sm text-muted-foreground">Sin movimientos registrados.</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Producto</TableHead>
+                        <TableHead>Cantidad descontada</TableHead>
+                        <TableHead>Ubicación origen</TableHead>
+                        <TableHead>Fecha</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {woStockMoves.map((m) => (
+                        <TableRow key={m.id}>
+                          <TableCell>
+                            <div className="text-sm font-medium">{m.product?.nombre || '—'}</div>
+                            {m.product?.sku && (
+                              <div className="text-xs text-muted-foreground">{m.product.sku}</div>
+                            )}
+                          </TableCell>
+                          <TableCell>{m.cantidad}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {m.from_location?.nombre || '—'}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {format(new Date(m.fecha), 'dd/MM/yyyy HH:mm')}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

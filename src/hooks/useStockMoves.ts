@@ -9,6 +9,7 @@ export const useStockMoves = (filters?: {
   tipo?: string;
   desde?: string;
   hasta?: string;
+  wo_id?: string;
 }) => {
   return useQuery({
     queryKey: ['stock-moves', filters],
@@ -20,13 +21,15 @@ export const useStockMoves = (filters?: {
           product:products(id, sku, nombre),
           from_location:stock_locations!stock_moves_from_location_id_fkey(id, nombre),
           to_location:stock_locations!stock_moves_to_location_id_fkey(id, nombre),
-          user:profiles(id, nombre, apellido)
+          user:profiles(id, nombre, apellido),
+          wo:work_orders(id, folio)
         `);
       
       if (filters?.product_id) query = query.eq('product_id', filters.product_id);
       if (filters?.tipo) query = query.eq('tipo', filters.tipo as any);
       if (filters?.desde) query = query.gte('fecha', filters.desde);
       if (filters?.hasta) query = query.lte('fecha', filters.hasta);
+      if (filters?.wo_id) query = query.eq('wo_id', filters.wo_id);
       
       if (filters?.location_id) {
         query = query.or(`from_location_id.eq.${filters.location_id},to_location_id.eq.${filters.location_id}`);
@@ -34,7 +37,7 @@ export const useStockMoves = (filters?: {
       
       const { data, error } = await query.order('fecha', { ascending: false });
       if (error) throw error;
-      return data as StockMove[];
+      return data as unknown as StockMove[];
     }
   });
 };
@@ -60,7 +63,7 @@ export const useKardex = (product_id: string, location_id?: string) => {
       const { data, error } = await query.order('fecha', { ascending: true });
       if (error) throw error;
       
-      const moves = data as StockMove[];
+      const moves = data as unknown as StockMove[];
       let saldo = 0;
       
       const kardex: KardexEntry[] = moves.map(move => {

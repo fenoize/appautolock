@@ -1,11 +1,13 @@
+import { useEffect, useState } from 'react';
 import { useStockAlerts, useResolverAlerta } from '@/hooks/useStockAlerts';
+import { supabase } from '@/integrations/supabase/client';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { AlertTriangle, CheckCircle, Package, TrendingDown } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Package, TrendingDown, Wrench } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
@@ -13,12 +15,35 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { animations } from '@/lib/animations';
 import { StockBadge } from '@/components/inventory/StockBadge';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function StockAlerts() {
   const { data: alerts, isLoading } = useStockAlerts(false);
   const resolverAlerta = useResolverAlerta();
   const navigate = useNavigate();
+  const [lastWoByProduct, setLastWoByProduct] = useState<Record<string, { wo_id: string; folio: string; fecha: string }>>({});
+
+  useEffect(() => {
+    if (!alerts || alerts.length === 0) return;
+    const productIds = Array.from(new Set(alerts.map((a: any) => a.product?.id).filter(Boolean)));
+    if (productIds.length === 0) return;
+    supabase
+      .from('stock_moves')
+      .select('product_id, fecha, wo_id, wo:work_orders(id, folio)')
+      .in('product_id', productIds)
+      .eq('tipo', 'consumo')
+      .not('wo_id', 'is', null)
+      .order('fecha', { ascending: false })
+      .then(({ data }) => {
+        const map: Record<string, { wo_id: string; folio: string; fecha: string }> = {};
+        (data || []).forEach((row: any) => {
+          if (!map[row.product_id] && row.wo) {
+            map[row.product_id] = { wo_id: row.wo_id, folio: row.wo.folio, fecha: row.fecha };
+          }
+        });
+        setLastWoByProduct(map);
+      });
+  }, [alerts]);
 
   if (isLoading) {
     return (
@@ -178,11 +203,28 @@ export default function StockAlerts() {
                 </div>
               </div>
               
-              {/* Timestamp */}
-              <div className="mt-4 pt-4 border-t">
+              {/* Timestamp + Última OT */}
+              <div className="mt-4 pt-4 border-t flex items-center justify-between flex-wrap gap-2">
                 <p className="text-xs text-muted-foreground">
                   Alerta creada el {format(new Date(alert.created_at), "PPP 'a las' HH:mm", { locale: es })}
                 </p>
+                {(() => {
+                  const last = alert.product?.id ? lastWoByProduct[alert.product.id] : null;
+                  return last ? (
+                    <div className="flex items-center gap-1 text-xs">
+                      <Wrench className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Última OT:</span>
+                      <Link to={`/work-orders/${last.wo_id}`} className="text-primary hover:underline font-medium">
+                        {last.folio}
+                      </Link>
+                      <span className="text-muted-foreground">
+                        ({format(new Date(last.fecha), 'dd/MM/yyyy')})
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Sin consumo asociado a OT</span>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
