@@ -11,6 +11,8 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarSeparator,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -31,6 +33,7 @@ import { useExpiringSubscriptions } from '@/hooks/useSubscriptions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
+import { cn } from '@/lib/utils';
 
 export function AppSidebar() {
   const navigate = useNavigate();
