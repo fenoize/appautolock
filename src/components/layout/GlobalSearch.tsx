@@ -33,8 +33,8 @@ function useSearchData(term: string) {
           .limit(5),
         supabase
           .from('services')
-          .select('id, nombre, codigo')
-          .or(`nombre.ilike.${like},codigo.ilike.${like}`)
+          .select('id, nombre, descripcion')
+          .ilike('nombre', like)
           .limit(5),
         supabase
           .from('products')
