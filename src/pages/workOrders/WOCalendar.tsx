@@ -46,6 +46,18 @@ export default function WOCalendar() {
   const [editFecha, setEditFecha] = useState<string>('');
   const [editVentanaFin, setEditVentanaFin] = useState<string>('');
   const [editMotivo, setEditMotivo] = useState<string>('');
+  const [pendingReschedule, setPendingReschedule] = useState<{
+    wo: WorkOrder;
+    oldDate: Date;
+    newDate: Date;
+    oldEnd?: Date;
+    newEnd?: Date;
+    kind: 'drop' | 'resize';
+  } | null>(null);
+  const [rescheduleMotivo, setRescheduleMotivo] = useState('');
+  const [notifyTecnico, setNotifyTecnico] = useState(true);
+  const [notifyCliente, setNotifyCliente] = useState(false);
+  const [confirmingReschedule, setConfirmingReschedule] = useState(false);
 
   const { data: workOrders, isLoading } = useWorkOrders();
   const { data: users } = useUsers();
