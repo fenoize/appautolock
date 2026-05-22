@@ -114,6 +114,7 @@ export function AppSidebar() {
       show: isAdmin || can('view', 'inventory'),
       items: [
         { title: 'Productos', path: '/inventory' },
+        { title: 'Compatibilidad', path: '/compatibility' },
         { title: 'Alertas', path: '/inventory/alerts' },
         { title: 'Reportes', path: '/inventory/reports' },
       ]

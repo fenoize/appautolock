@@ -16,6 +16,10 @@ import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useQuote, useUpdateQuote, useCreateQuoteItem, useDeleteQuoteItem } from '@/hooks/useQuotes';
 import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
+import { QuoteItemCompatibilityAlerts } from '@/components/quotes/QuoteItemCompatibilityAlerts';
+import { CompatibilityBadge } from '@/components/compatibility/CompatibilityBadge';
+import { useCompatibilityForVehicle } from '@/hooks/useCompatibility';
+import { useProducts } from '@/hooks/useProducts';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -49,6 +53,31 @@ export default function EditQuote() {
   const [items, setItems] = useState<QuoteItemForm[]>([]);
   const [showVehicleDialog, setShowVehicleDialog] = useState(false);
   const [showItemSelector, setShowItemSelector] = useState(false);
+
+  const { data: allProducts } = useProducts();
+  const selectedVehicle = useMemo(
+    () => vehicles?.find((v: any) => v.id === formData.vehicle_id) ?? null,
+    [vehicles, formData.vehicle_id],
+  );
+  const { data: vehicleCompats = [] } = useCompatibilityForVehicle(
+    selectedVehicle
+      ? { marca: selectedVehicle.marca, modelo: selectedVehicle.modelo, anio: selectedVehicle.anio }
+      : undefined,
+  );
+  const compatByProduct = useMemo(() => {
+    const m = new Map<string, (typeof vehicleCompats)[number]>();
+    vehicleCompats.forEach((c) => m.set(c.product_id, c));
+    return m;
+  }, [vehicleCompats]);
+  const gpsProductIds = useMemo(
+    () =>
+      new Set(
+        (allProducts ?? [])
+          .filter((p: any) => (p.tipos_suscripcion_disponibles?.length ?? 0) > 0)
+          .map((p: any) => p.id),
+      ),
+    [allProducts],
+  );
 
   useEffect(() => {
     if (quote) {
@@ -289,7 +318,15 @@ export default function EditQuote() {
                 Agregar Item
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <QuoteItemCompatibilityAlerts
+                vehicle={
+                  selectedVehicle
+                    ? { marca: selectedVehicle.marca, modelo: selectedVehicle.modelo, anio: selectedVehicle.anio }
+                    : null
+                }
+                items={items.map((it) => ({ item_tipo: it.item_tipo, ref_id: it.ref_id, nombre: it.nombre }))}
+              />
               {items.length === 0 ? (
                 <EmptyState
                   icon={Package}
@@ -317,7 +354,14 @@ export default function EditQuote() {
                             {item.item_tipo === 'producto' ? 'Prod' : 'Serv'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="font-medium">{item.nombre}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span>{item.nombre}</span>
+                            {item.item_tipo === 'producto' && item.ref_id && gpsProductIds.has(item.ref_id) && selectedVehicle && (
+                              <CompatibilityBadge estado={compatByProduct.get(item.ref_id)?.estado} />
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Input
                             type="number"
