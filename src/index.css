@@ -2,153 +2,166 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Design system - Highdmin-inspired. All colors in HSL. */
 
 @layer base {
   :root {
-    --background: 0 0% 96%;
-    --foreground: 0 0% 8%;
+    /* Surfaces */
+    --background: 210 20% 97%;        /* #f4f6f9 page background */
+    --foreground: 215 14% 24%;        /* #313a46 text */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    --card-foreground: 215 14% 24%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover-foreground: 215 14% 24%;
 
-    /* Naranja Mandarina - Color corporativo principal */
+    /* Brand - Naranja Mandarina */
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Negro Ónix */
+    /* Secondary */
     --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 92%;
+    --secondary-foreground: 0 0% 96%;
 
-    --muted: 0 0% 90%;
-    --muted-foreground: 0 0% 40%;
+    /* Muted / table head */
+    --muted: 210 17% 98%;             /* #f8f9fa */
+    --muted-foreground: 210 9% 45%;   /* #6c757d */
 
-    /* Verde para estados positivos */
-    --accent: 142 71% 45%;
+    /* Accent / Success */
+    --accent: 134 61% 41%;            /* #28a745 */
     --accent-foreground: 0 0% 100%;
+    --success: 134 61% 41%;
+    --success-foreground: 0 0% 100%;
 
-    /* Rojo para alertas */
-    --destructive: 0 84% 60%;
+    /* Destructive */
+    --destructive: 354 70% 54%;       /* #dc3545 */
     --destructive-foreground: 0 0% 100%;
 
-    /* Naranja para advertencias */
-    --warning: 35 91% 55%;
-    --warning-foreground: 0 0% 100%;
-    
-    /* Colores para gráficos y variedad */
+    /* Warning */
+    --warning: 45 100% 51%;           /* #ffc107 */
+    --warning-foreground: 35 80% 18%;
+
+    /* Info */
+    --info: 217 91% 55%;              /* #0d6efd */
+    --info-foreground: 0 0% 100%;
+
+    /* Neutral pill */
+    --neutral: 210 9% 45%;
+    --neutral-foreground: 0 0% 100%;
+
+    /* Soft backgrounds for pills/icons */
+    --primary-soft: 25 95% 95%;
+    --success-soft: 134 50% 93%;
+    --warning-soft: 45 100% 93%;
+    --info-soft: 217 91% 95%;
+    --destructive-soft: 354 70% 95%;
+    --neutral-soft: 210 14% 93%;
+    --accent-soft: 134 50% 93%;
+    --blue-soft: 217 91% 95%;
+    --purple-soft: 280 65% 95%;
+
+    /* Chart palette */
     --chart-1: 25 95% 53%;
-    --chart-2: 142 71% 45%;
-    --chart-3: 221 83% 53%;
+    --chart-2: 134 61% 41%;
+    --chart-3: 217 91% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 82% 52%;
     --chart-6: 45 93% 47%;
-    
-    /* Backgrounds suaves para iconos */
-    --primary-soft: 25 95% 95%;
-    --accent-soft: 142 71% 95%;
-    --blue-soft: 221 83% 95%;
-    --purple-soft: 280 65% 95%;
-    --destructive-soft: 0 84% 95%;
 
-    --border: 0 0% 85%;
-    --input: 0 0% 85%;
+    /* Borders / inputs */
+    --border: 210 14% 91%;            /* #e9ecef */
+    --input: 210 14% 91%;
     --ring: 25 95% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;               /* 10px cards */
 
-    /* Sidebar colors */
-    --sidebar-background: 0 0% 12%;
-    --sidebar-foreground: 0 0% 92%;
+    /* Sidebar - dark Highdmin-style */
+    --sidebar-background: 222 22% 14%;  /* #1a1f2e */
+    --sidebar-foreground: 210 14% 83%;
     --sidebar-primary: 25 95% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 18%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 0 0% 18%;
+    --sidebar-accent: 222 20% 19%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 20% 19%;
     --sidebar-ring: 25 95% 53%;
 
-    /* Layout Dimensions */
+    /* Layout */
     --header-h: 64px;
-    --sidebar-w: 280px;
-    --sidebar-w-collapsed: 80px;
+    --sidebar-w: 260px;
+    --sidebar-w-collapsed: 72px;
     --bottom-nav-h: 64px;
     --breadcrumbs-h: 48px;
-    
-    /* Z-Index Layers */
+
     --z-header: 1000;
     --z-sidebar: 900;
     --z-backdrop: 1050;
     --z-drawer: 1100;
     --z-modal: 1200;
 
-    /* Gradientes corporativos */
     --gradient-primary: linear-gradient(135deg, hsl(25 95% 53%), hsl(25 95% 45%));
-    --gradient-accent: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 55%));
-    
-    /* Sombras profesionales */
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 8% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 8% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 8% / 0.1);
-    
-    /* Transiciones suaves */
+    --gradient-accent: linear-gradient(135deg, hsl(134 61% 41%), hsl(134 61% 50%));
+
+    --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.10);
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.07);
+
     --transition-base: all 0.2s ease-in-out;
-    
-    /* Sistema de espaciado */
-    --space-section: 2rem;      /* Entre PageHeader y contenido */
-    --space-cards: 1.5rem;      /* Entre cards en grid */
-    --space-card-padding: 1.5rem; /* Padding interno de cards */
-    --space-elements: 1rem;     /* Entre elementos relacionados */
-    --space-compact: 0.5rem;    /* Espaciado mínimo */
-    
-    /* Container responsive */
+
+    --space-section: 1.5rem;
+    --space-cards: 1.5rem;
+    --space-card-padding: 1.5rem;
+    --space-elements: 1rem;
+    --space-compact: 0.5rem;
+
     --container-padding-mobile: 1rem;
     --container-padding-tablet: 1.5rem;
-    --container-padding-desktop: 2rem;
+    --container-padding-desktop: 1.5rem;
   }
 
   .dark {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 92%;
+    --background: 222 22% 10%;
+    --foreground: 210 14% 90%;
 
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 92%;
+    --card: 222 20% 14%;
+    --card-foreground: 210 14% 90%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 92%;
+    --popover: 222 20% 14%;
+    --popover-foreground: 210 14% 90%;
 
     --primary: 25 95% 58%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 12%;
-    --secondary-foreground: 0 0% 92%;
+    --secondary: 222 20% 18%;
+    --secondary-foreground: 210 14% 90%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 222 20% 18%;
+    --muted-foreground: 210 9% 60%;
 
-    --accent: 142 71% 45%;
+    --accent: 134 61% 45%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 354 70% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --warning: 35 91% 55%;
-    --warning-foreground: 0 0% 100%;
+    --warning: 45 100% 55%;
+    --warning-foreground: 35 80% 18%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 222 20% 22%;
+    --input: 222 20% 22%;
     --ring: 25 95% 58%;
 
-    --sidebar-background: 0 0% 12%;
-    --sidebar-foreground: 0 0% 92%;
+    --sidebar-background: 222 22% 10%;
+    --sidebar-foreground: 210 14% 80%;
     --sidebar-primary: 25 95% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 18%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 0 0% 18%;
+    --sidebar-accent: 222 20% 16%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 20% 16%;
     --sidebar-ring: 25 95% 58%;
   }
 }
@@ -164,41 +177,39 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 @layer utilities {
-  .space-section {
-    margin-bottom: var(--space-section);
-  }
-  
-  .space-cards {
-    gap: var(--space-cards);
-  }
-  
-  /* Custom scrollbar for tables */
-  .scrollbar-thin::-webkit-scrollbar {
-    height: 8px;
-  }
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
-  }
+  .shadow-card { box-shadow: var(--shadow-card); }
+
+  .space-section { margin-bottom: var(--space-section); }
+  .space-cards { gap: var(--space-cards); }
+
+  /* Custom scrollbar */
+  .scrollbar-thin::-webkit-scrollbar { height: 8px; width: 8px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: hsl(var(--muted)); }
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background: hsl(var(--muted-foreground) / 0.3);
     border-radius: 4px;
   }
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
-  }
-  
-  /* Backgrounds suaves para iconos en círculo */
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
+
+  /* Soft backgrounds */
   .bg-primary-soft { background-color: hsl(var(--primary-soft)); }
+  .bg-success-soft { background-color: hsl(var(--success-soft)); }
+  .bg-warning-soft { background-color: hsl(var(--warning-soft)); }
+  .bg-info-soft { background-color: hsl(var(--info-soft)); }
+  .bg-destructive-soft { background-color: hsl(var(--destructive-soft)); }
+  .bg-neutral-soft { background-color: hsl(var(--neutral-soft)); }
   .bg-accent-soft { background-color: hsl(var(--accent-soft)); }
   .bg-blue-soft { background-color: hsl(var(--blue-soft)); }
   .bg-purple-soft { background-color: hsl(var(--purple-soft)); }
-  .bg-destructive-soft { background-color: hsl(var(--destructive-soft)); }
-  
-  /* Bordes izquierdos de color */
+
   .border-l-primary { border-left-color: hsl(var(--primary)); }
   .border-l-accent { border-left-color: hsl(var(--accent)); }
   .border-l-blue { border-left-color: hsl(var(--chart-3)); }
