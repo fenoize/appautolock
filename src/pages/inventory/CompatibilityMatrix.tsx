@@ -172,7 +172,61 @@ export default function CompatibilityMatrix() {
   };
 
   // Bulk cascade update: assign an estado to a set of catalog ids for the current product
-  const cascadeUpdate = async (catalogIds: string[], nextEstado: CompatEstado) => {
+  // Bulk cascade update: assign an estado (and optional observations) to a set of catalog ids
+  const cascadeUpdate = async (
+    catalogIds: string[],
+    nextEstado: CompatEstado | 'sin_datos',
+    observacionesOverride?: string | null,
+  ) => {
+    if (!productId || catalogIds.length === 0) return;
+
+    // 'sin_datos' = delete existing compat rows
+    if (nextEstado === 'sin_datos') {
+      const { error } = await (supabase as any)
+        .from('product_compatibility')
+        .delete()
+        .eq('product_id', productId)
+        .in('vehicle_catalog_id', catalogIds);
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ['product_compatibility'] });
+      queryClient.invalidateQueries({ queryKey: ['compatibility_for_vehicle'] });
+      toast.success(`Limpiado ${catalogIds.length} registro(s)`);
+      return;
+    }
+
+    const { data: session } = await supabase.auth.getSession();
+    const userId = session.session?.user?.id;
+    const rows = catalogIds.map((vid) => {
+      const existing = compatByCat.get(vid);
+      // For yellow: use override (popover value). For others: keep existing observation as-is.
+      const obs =
+        observacionesOverride !== undefined ? observacionesOverride : existing?.observaciones ?? null;
+      return {
+        product_id: productId,
+        vehicle_catalog_id: vid,
+        estado: nextEstado,
+        observaciones: obs,
+        updated_by: userId,
+        updated_at: new Date().toISOString(),
+      };
+    });
+    const { error } = await (supabase as any)
+      .from('product_compatibility')
+      .upsert(rows, { onConflict: 'product_id,vehicle_catalog_id' });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ['product_compatibility'] });
+    queryClient.invalidateQueries({ queryKey: ['compatibility_for_vehicle'] });
+    toast.success(`Actualizados ${catalogIds.length} registro(s)`);
+  };
+
+  // Legacy cascadeUpdate name kept for backward compat (no observations)
+  const _cascadeUpdateLegacy = async (catalogIds: string[], nextEstado: CompatEstado) => {
     if (!productId || catalogIds.length === 0) return;
     const { data: session } = await supabase.auth.getSession();
     const userId = session.session?.user?.id;
