@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 type Theme = 'light' | 'dark';
 
 const STORAGE_KEY = 'app-theme';
+const EVENT = 'app-theme-change';
 
 function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'light';
@@ -17,23 +18,37 @@ function applyTheme(theme: Theme) {
   else root.classList.remove('dark');
 }
 
+// Initialize once on module load so the class is set before any component renders
+if (typeof window !== 'undefined') {
+  applyTheme(getInitialTheme());
+}
+
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const t = getInitialTheme();
-    applyTheme(t);
-    return t;
-  });
+  const [theme, setThemeState] = useState<Theme>(getInitialTheme);
 
   useEffect(() => {
-    applyTheme(theme);
-    localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
+    const handler = (e: Event) => {
+      const next = (e as CustomEvent<Theme>).detail;
+      if (next === 'light' || next === 'dark') setThemeState(next);
+    };
+    window.addEventListener(EVENT, handler);
+    window.addEventListener('storage', (e) => {
+      if (e.key === STORAGE_KEY && (e.newValue === 'light' || e.newValue === 'dark')) {
+        setThemeState(e.newValue);
+      }
+    });
+    return () => window.removeEventListener(EVENT, handler);
+  }, []);
 
-  const setTheme = useCallback((t: Theme) => setThemeState(t), []);
-  const toggleTheme = useCallback(
-    () => setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark')),
-    []
-  );
+  const setTheme = useCallback((t: Theme) => {
+    applyTheme(t);
+    localStorage.setItem(STORAGE_KEY, t);
+    window.dispatchEvent(new CustomEvent<Theme>(EVENT, { detail: t }));
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  }, [theme, setTheme]);
 
   return { theme, setTheme, toggleTheme };
 }
