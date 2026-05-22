@@ -71,32 +71,46 @@ export function ItemSelector({ open, onOpenChange, onSelectItem }: ItemSelectorP
             </TabsList>
 
             <TabsContent value="productos" className="space-y-2 max-h-[400px] overflow-y-auto">
-              {filteredProducts?.map(product => (
-                <div
-                  key={product.id}
-                  className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                  onClick={() => {
-                    onSelectItem({
-                      tipo: 'producto',
-                      ref_id: product.id,
-                      nombre: product.nombre,
-                      precio_unitario: product.precio_venta || 0,
-                    });
-                    onOpenChange(false);
-                    setSearch('');
-                  }}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium">{product.nombre}</p>
-                      <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+              {filteredProducts?.map(product => {
+                const hasGps = (product.tipos_suscripcion_disponibles?.length ?? 0) > 0;
+                return (
+                  <div
+                    key={product.id}
+                    className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                    onClick={() => {
+                      onSelectItem({
+                        tipo: 'producto',
+                        ref_id: product.id,
+                        nombre: product.nombre,
+                        precio_unitario: product.precio_venta || 0,
+                      });
+                      if (hasGps) {
+                        toast.info('Este producto requiere configurar una suscripción GPS al completar la instalación. El plan se asigna luego en la OT.');
+                      }
+                      onOpenChange(false);
+                      setSearch('');
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium">{product.nombre}</p>
+                          {hasGps && (
+                            <Badge variant="outline" className="text-xs gap-1 border-primary/40 text-primary">
+                              <Satellite className="h-3 w-3" />
+                              GPS
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                      </div>
+                      <Badge variant="secondary">
+                        ${product.precio_venta?.toLocaleString()}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary">
-                      ${product.precio_venta?.toLocaleString()}
-                    </Badge>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {filteredProducts?.length === 0 && (
                 <p className="text-center text-sm text-muted-foreground py-8">
                   No se encontraron productos
