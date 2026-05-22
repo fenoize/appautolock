@@ -441,9 +441,7 @@ export default function CompatibilityMatrix() {
 
   const revertBatch = async (batch: any) => {
     if (!productId) return;
-    // For each row in the batch, restore previous state
-    const byPrev = new Map<string, { ids: string[]; obs: string | null }>();
-    // Group rows by (estado_anterior, observaciones_anteriores)
+    // Group rows by (estado_anterior, observaciones_anteriores) for efficient applyChange calls
     const groups = new Map<string, { estado: CompatEstado | 'sin_datos'; obs: string | null; ids: string[] }>();
     for (const r of batch.rows) {
       const estado: CompatEstado | 'sin_datos' = r.estado_anterior ?? 'sin_datos';
