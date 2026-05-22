@@ -8,10 +8,11 @@ import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SearchBar } from '@/components/shared/SearchBar';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Plus, Calendar, AlertTriangle } from 'lucide-react';
+import { Plus, Calendar, AlertTriangle, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { WOFilters } from '@/types/workOrders';
+import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnicianDialog';
 
 export default function WOList() {
   const navigate = useNavigate();
