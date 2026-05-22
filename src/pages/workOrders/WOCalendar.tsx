@@ -40,6 +40,7 @@ const statusColors: Record<WOStatus, string> = {
 
 export default function WOCalendar() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [viewMode, setViewMode] = useState<'calendar' | 'timeline'>('calendar');
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [selectedTechnician, setSelectedTechnician] = useState<string>('all');
