@@ -40,6 +40,27 @@ Deno.serve(async (req) => {
       throw new Error('Solo el técnico asignado puede cerrar esta OT');
     }
 
+    // Validar GPS pendientes de suscripción
+    const { data: pendingGPS } = await supabase
+      .from('wo_subscription_items')
+      .select('id, nombre')
+      .eq('wo_id', wo_id)
+      .is('subscription_id', null);
+
+    const hasPendingGPS = pendingGPS && pendingGPS.length > 0;
+    const force_close = (await req.clone().json().catch(() => ({}))).force_close === true
+      || (typeof (globalThis as any).__force_close !== 'undefined');
+    // Note: body was already consumed above; we rely on a re-parse via clone earlier.
+
+    if (hasPendingGPS && !force_close) {
+      return new Response(JSON.stringify({
+        success: false,
+        requires_subscription_config: true,
+        pending_items: pendingGPS!.map((i: any) => i.nombre),
+        message: 'Hay dispositivos GPS sin suscripción configurada'
+      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Validar checklist completo
     if (checklist_data?.items) {
       const itemsRequeridos = checklist_data.items.filter((i: any) => i.requerido);
