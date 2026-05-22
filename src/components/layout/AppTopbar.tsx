@@ -74,7 +74,9 @@ export function AppTopbar() {
         {/* RIGHT: search + actions + user */}
         <div className="flex items-center gap-1">
           <GlobalSearch trigger="input" />
-          <GlobalSearch trigger="button" />
+          <div className="md:hidden">
+            <GlobalSearch trigger="button" />
+          </div>
           <Button
             variant="ghost"
             size="icon"
