@@ -9,7 +9,10 @@ import {
   useDeleteQuote,
   useDuplicateQuote,
   useAssignVehicle
+  useAssignVehicle,
+  useGenerateQuotePDF
 } from '@/hooks/useQuotes';
+import { Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
