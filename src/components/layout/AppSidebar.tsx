@@ -2,7 +2,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
