@@ -63,6 +63,7 @@ export default function QuoteDetail() {
   const cancelMutation = useCancelQuote();
   const deleteMutation = useDeleteQuote();
   const duplicateMutation = useDuplicateQuote();
+  const generatePdfMutation = useGenerateQuotePDF();
   const assignVehicleMutation = useAssignVehicle();
   const { data: products } = useProducts();
   const { data: plans } = useSubscriptionPlans(true);
