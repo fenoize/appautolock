@@ -25,6 +25,7 @@ const Dashboard = () => {
   const { filters } = useDashboardFilters();
   const { data: stats } = useDashboardStats();
   const { data: proximasOTs } = useProximasOTs(5);
+  const { data: expiringSubs } = useExpiringSubscriptions(30);
   const { hasRole, hasAnyRole } = usePermissions();
   
   // Role-aware: definir qué componentes mostrar
