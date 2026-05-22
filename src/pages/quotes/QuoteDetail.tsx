@@ -27,6 +27,9 @@ import { InvoiceHeader } from '@/components/quotes/InvoiceHeader';
 import { InvoiceInfo } from '@/components/quotes/InvoiceInfo';
 import { InvoiceItemsTable } from '@/components/quotes/InvoiceItemsTable';
 import { InvoiceSummary } from '@/components/quotes/InvoiceSummary';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useProducts } from '@/hooks/useProducts';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 import {
   ArrowLeft,
   FileText,
@@ -42,7 +45,9 @@ import {
   FileDown,
   Car,
   AlertTriangle,
-  Download
+  Download,
+  Satellite,
+  ChevronDown
 } from 'lucide-react';
 
 export default function QuoteDetail() {
