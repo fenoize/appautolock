@@ -436,7 +436,15 @@ export default function NewQuote() {
                 Agregar Item
               </Button>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <QuoteItemCompatibilityAlerts
+                vehicle={
+                  selectedVehicle
+                    ? { marca: selectedVehicle.marca, modelo: selectedVehicle.modelo, anio: selectedVehicle.anio }
+                    : null
+                }
+                items={items.map((it) => ({ item_tipo: it.item_tipo, ref_id: it.ref_id, nombre: it.nombre }))}
+              />
               {items.length === 0 ? (
                 <EmptyState
                   icon={Package}
@@ -465,7 +473,14 @@ export default function NewQuote() {
                               {item.item_tipo === 'producto' ? 'Producto' : 'Servicio'}
                             </Badge>
                           </TableCell>
-                          <TableCell className="font-medium">{item.nombre}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span>{item.nombre}</span>
+                              {item.item_tipo === 'producto' && item.ref_id && gpsProductIds.has(item.ref_id) && selectedVehicle && (
+                                <CompatibilityBadge estado={compatByProduct.get(item.ref_id)?.estado} />
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell>
                             <Input
                               type="number"
