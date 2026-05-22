@@ -156,10 +156,55 @@ export default function WOCalendar() {
     }
   };
 
-  // Manejar click en evento
+  // Manejar click en evento → abrir panel de edición rápida
   const handleEventClick = (info: any) => {
-    const woId = info.event.id;
-    navigate(`/work-orders/${woId}`);
+    const wo: WorkOrder = info.event.extendedProps.wo;
+    setSelectedEvent({ wo, anchorEl: { x: info.jsEvent.clientX, y: info.jsEvent.clientY } });
+    setEditTecnicoId(wo.tecnico_id || 'unassigned');
+    setEditFecha(wo.fecha_programada ? toLocalDatetime(wo.fecha_programada) : '');
+    setEditVentanaFin(wo.ventana_fin ? toLocalDatetime(wo.ventana_fin) : '');
+    setEditMotivo('');
+  };
+
+  const toLocalDatetime = (iso: string) => {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const closeSheet = () => setSelectedEvent(null);
+
+  const handleSaveQuickEdit = async () => {
+    if (!selectedEvent) return;
+    const { wo } = selectedEvent;
+    const newTecnico = editTecnicoId === 'unassigned' ? null : editTecnicoId;
+    const tecnicoChanged = (wo.tecnico_id || null) !== newTecnico;
+    const fechaChanged = editFecha && (!wo.fecha_programada || toLocalDatetime(wo.fecha_programada) !== editFecha);
+    const ventanaChanged = editVentanaFin !== (wo.ventana_fin ? toLocalDatetime(wo.ventana_fin) : '');
+
+    if ((tecnicoChanged || fechaChanged || ventanaChanged) && !editMotivo.trim()) {
+      toast.error('Indica el motivo del cambio');
+      return;
+    }
+
+    try {
+      const payload: any = { id: wo.id };
+      if (tecnicoChanged) {
+        payload.tecnico_id = newTecnico;
+        if (!newTecnico && wo.estado === 'asignada') payload.estado = 'pendiente';
+        if (newTecnico && wo.estado === 'pendiente') payload.estado = 'asignada';
+      }
+      if (fechaChanged) payload.fecha_programada = new Date(editFecha).toISOString();
+      if (ventanaChanged) payload.ventana_fin = editVentanaFin ? new Date(editVentanaFin).toISOString() : null;
+      if (editMotivo.trim()) {
+        payload.notas = `${wo.notas ? wo.notas + '\n' : ''}[${new Date().toLocaleString()}] ${editMotivo.trim()}`;
+      }
+      await updateWorkOrder.mutateAsync(payload);
+      toast.success('OT actualizada');
+      closeSheet();
+    } catch (e) {
+      toast.error('Error al actualizar la OT');
+    }
   };
 
   // Renderizar contenido del evento
