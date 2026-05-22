@@ -42,105 +42,119 @@ export function AppSidebar() {
   const { can, isAdmin } = usePermissions();
   const { isTablet } = useResponsiveLayout();
 
-  const menuItems = [
+  const sections: Array<{
+    label: string;
+    items: Array<any>;
+  }> = [
     {
-      title: 'Escritorio',
-      icon: LayoutDashboard,
-      path: '/dashboard',
-      show: true
-    },
-    {
-      title: 'Clientes',
-      icon: Users,
-      show: isAdmin || can('view', 'clients'),
+      label: 'Navegación',
       items: [
-        { title: 'Listado', path: '/clients' },
-        { title: 'Reportes', path: '/clients/reports' },
-      ]
+        {
+          title: 'Escritorio',
+          icon: LayoutDashboard,
+          path: '/dashboard',
+          show: true,
+        },
+        {
+          title: 'Clientes',
+          icon: Users,
+          show: isAdmin || can('view', 'clients'),
+          items: [
+            { title: 'Listado', path: '/clients' },
+            { title: 'Reportes', path: '/clients/reports' },
+          ],
+        },
+        {
+          title: 'Vehículos',
+          icon: Car,
+          path: '/vehicles',
+          show: isAdmin || can('view', 'vehicles'),
+        },
+      ],
     },
     {
-      title: 'Vehículos',
-      icon: Car,
-      path: '/vehicles',
-      show: isAdmin || can('view', 'vehicles')
-    },
-    {
-      title: 'Cotizaciones',
-      icon: FileText,
-      badge: stats?.cotizaciones_abiertas,
-      show: isAdmin || can('view', 'quotes'),
+      label: 'Operación',
       items: [
-        { title: 'Nueva', path: '/quotes/new' },
-        { title: 'Historial', path: '/quotes' },
-        { title: 'Reportes', path: '/quotes/reports' },
-      ]
+        {
+          title: 'Cotizaciones',
+          icon: FileText,
+          badge: stats?.cotizaciones_abiertas,
+          show: isAdmin || can('view', 'quotes'),
+          items: [
+            { title: 'Nueva', path: '/quotes/new' },
+            { title: 'Historial', path: '/quotes' },
+            { title: 'Reportes', path: '/quotes/reports' },
+          ],
+        },
+        {
+          title: 'Órdenes de Trabajo',
+          icon: Wrench,
+          badge: stats?.ots_hoy,
+          show: isAdmin || can('view', 'work_orders'),
+          items: [
+            { title: 'Nueva', path: '/work-orders/new' },
+            { title: 'Agenda', path: '/work-orders/agenda' },
+            { title: 'Historial', path: '/work-orders' },
+          ],
+        },
+        {
+          title: 'Suscripciones GPS',
+          icon: Radio,
+          badge: expiringCount || stats?.subscripciones_vencen,
+          badgeVariant: expiringCount > 0 ? 'destructive' : 'default',
+          show: isAdmin || can('view', 'subscriptions'),
+          items: [
+            { title: 'Nueva', path: '/subscriptions/new' },
+            { title: 'Listado', path: '/subscriptions' },
+            { title: 'Vencimientos', path: '/subscriptions/expiring', badge: expiringCount },
+            { title: 'Planes', path: '/subscriptions/plans' },
+          ],
+        },
+        {
+          title: 'Servicios',
+          icon: Briefcase,
+          show: isAdmin || can('view', 'services'),
+          items: [{ title: 'Catálogo', path: '/services' }],
+        },
+        {
+          title: 'Inventario',
+          icon: Package,
+          badge: stats?.stock_critico,
+          badgeVariant: stats?.stock_critico && stats.stock_critico > 0 ? 'destructive' : 'default',
+          show: isAdmin || can('view', 'inventory'),
+          items: [
+            { title: 'Productos', path: '/inventory' },
+            { title: 'Compatibilidad', path: '/compatibility' },
+            { title: 'Alertas', path: '/inventory/alerts' },
+            { title: 'Reportes', path: '/inventory/reports' },
+          ],
+        },
+      ],
     },
     {
-      title: 'Órdenes de Trabajo',
-      icon: Wrench,
-      badge: stats?.ots_hoy,
-      show: isAdmin || can('view', 'work_orders'),
+      label: 'Administración',
       items: [
-        { title: 'Nueva', path: '/work-orders/new' },
-        { title: 'Agenda', path: '/work-orders/agenda' },
-        { title: 'Historial', path: '/work-orders' },
-      ]
-    },
-    {
-      title: 'Suscripciones GPS',
-      icon: Radio,
-      badge: expiringCount || stats?.subscripciones_vencen,
-      badgeVariant: expiringCount > 0 ? 'destructive' : 'default',
-      show: isAdmin || can('view', 'subscriptions'),
-      items: [
-        { title: 'Nueva', path: '/subscriptions/new' },
-        { title: 'Listado', path: '/subscriptions' },
-        { title: 'Vencimientos', path: '/subscriptions/expiring', badge: expiringCount },
-        { title: 'Planes', path: '/subscriptions/plans' },
-      ]
-    },
-    {
-      title: 'Servicios',
-      icon: Briefcase,
-      show: isAdmin || can('view', 'services'),
-      items: [
-        { title: 'Catálogo', path: '/services' },
-      ]
-    },
-    {
-      title: 'Inventario',
-      icon: Package,
-      badge: stats?.stock_critico,
-      badgeVariant: stats?.stock_critico && stats.stock_critico > 0 ? 'destructive' : 'default',
-      show: isAdmin || can('view', 'inventory'),
-      items: [
-        { title: 'Productos', path: '/inventory' },
-        { title: 'Compatibilidad', path: '/compatibility' },
-        { title: 'Alertas', path: '/inventory/alerts' },
-        { title: 'Reportes', path: '/inventory/reports' },
-      ]
-    },
-    {
-      title: 'Usuarios',
-      icon: UserCog,
-      show: isAdmin || can('view', 'users'),
-      items: [
-        { title: 'Listado', path: '/admin/users' },
-      ]
-    },
-    {
-      title: 'Configuración',
-      icon: Settings,
-      show: true,
-      items: [
-        { title: 'General', path: '/settings' },
-        { title: 'Empresa', path: '/settings/company' },
-        { title: 'Numeradores', path: '/settings/numeradores' },
-        { title: 'Notificaciones', path: '/settings/notifications' },
-        { title: 'Integraciones', path: '/settings/integrations' },
-        { title: 'Respaldos', path: '/settings/backups' },
-        { title: 'Auditoría', path: '/settings/audit' },
-      ]
+        {
+          title: 'Usuarios',
+          icon: UserCog,
+          show: isAdmin || can('view', 'users'),
+          items: [{ title: 'Listado', path: '/admin/users' }],
+        },
+        {
+          title: 'Configuración',
+          icon: Settings,
+          show: true,
+          items: [
+            { title: 'General', path: '/settings' },
+            { title: 'Empresa', path: '/settings/company' },
+            { title: 'Numeradores', path: '/settings/numeradores' },
+            { title: 'Notificaciones', path: '/settings/notifications' },
+            { title: 'Integraciones', path: '/settings/integrations' },
+            { title: 'Respaldos', path: '/settings/backups' },
+            { title: 'Auditoría', path: '/settings/audit' },
+          ],
+        },
+      ],
     },
   ];
 
