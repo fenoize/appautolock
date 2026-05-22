@@ -41,6 +41,7 @@ export interface WorkOrder {
   quote_id?: string;
   inventario_reservado: boolean;
   inventario_consumido: boolean;
+  inventario_consumido_at?: string;
   ubicacion_lat?: number;
   ubicacion_lng?: number;
   created_at: string;
