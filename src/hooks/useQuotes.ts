@@ -79,7 +79,8 @@ export function useQuote(id: string) {
           vehicle:vehicles(*),
           vendedor:profiles!vendedor_id(*),
           branch:branches(*),
-          items:quote_items(*)
+          items:quote_items(*),
+          events:quote_events(*, user:profiles(nombre, apellido))
         `)
         .eq('id', id)
         .single();
