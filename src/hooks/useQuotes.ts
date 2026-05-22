@@ -423,6 +423,7 @@ export function useCancelQuote() {
         .eq('id', id);
       
       if (error) throw error;
+      await logQuoteEvent(id, 'cancelada', { notas: motivo });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
