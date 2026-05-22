@@ -146,11 +146,6 @@ export default function WOList() {
           branchId={assignTarget.branchId}
         />
       )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
     </PageContainer>
   );
 }
