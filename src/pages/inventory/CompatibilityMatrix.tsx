@@ -880,9 +880,10 @@ export default function CompatibilityMatrix() {
                   <Button variant="outline" onClick={() => setShowNew(false)}>Cancelar</Button>
                   <Button onClick={handleCreate} disabled={!newRow.marca || !newRow.modelo}>Guardar</Button>
                 </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         }
       />
 
