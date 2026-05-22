@@ -607,6 +607,94 @@ export default function WOCalendar() {
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={!!pendingReschedule} onOpenChange={(open) => !open && !confirmingReschedule && setPendingReschedule(null)}>
+        <DialogContent className="sm:max-w-md">
+          {pendingReschedule && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Reprogramar OT {pendingReschedule.wo.folio}</DialogTitle>
+                <DialogDescription>
+                  Confirma el cambio de {pendingReschedule.kind === 'resize' ? 'duración' : 'fecha'} de esta orden de trabajo.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-2">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Fecha anterior</Label>
+                  <p className="text-sm font-medium line-through opacity-70">
+                    {formatDateTime(pendingReschedule.oldDate)}
+                    {pendingReschedule.oldEnd && ` → ${formatDateTime(pendingReschedule.oldEnd)}`}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">Fecha nueva</Label>
+                  <p className="text-sm font-semibold text-green-600 dark:text-green-400">
+                    {formatDateTime(pendingReschedule.newDate)}
+                    {pendingReschedule.newEnd && ` → ${formatDateTime(pendingReschedule.newEnd)}`}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="reschedule-motivo">
+                    Motivo del cambio <span className="text-destructive">*</span>
+                  </Label>
+                  <Textarea
+                    id="reschedule-motivo"
+                    placeholder="Explica el motivo (mínimo 10 caracteres)"
+                    value={rescheduleMotivo}
+                    onChange={(e) => setRescheduleMotivo(e.target.value)}
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {rescheduleMotivo.trim().length}/10 caracteres mínimos
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="notify-tec"
+                      checked={notifyTecnico}
+                      onCheckedChange={(c) => setNotifyTecnico(!!c)}
+                      disabled={!pendingReschedule.wo.tecnico_id}
+                    />
+                    <Label htmlFor="notify-tec" className="text-sm font-normal cursor-pointer">
+                      Notificar al técnico por email
+                      {!pendingReschedule.wo.tecnico_id && (
+                        <span className="text-xs text-muted-foreground ml-1">(sin técnico asignado)</span>
+                      )}
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="notify-cli"
+                      checked={notifyCliente}
+                      onCheckedChange={(c) => setNotifyCliente(!!c)}
+                      disabled={!pendingReschedule.wo.client?.email_principal}
+                    />
+                    <Label htmlFor="notify-cli" className="text-sm font-normal cursor-pointer">
+                      Notificar al cliente por email
+                      {!pendingReschedule.wo.client?.email_principal && (
+                        <span className="text-xs text-muted-foreground ml-1">(sin email)</span>
+                      )}
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setPendingReschedule(null)} disabled={confirmingReschedule}>
+                  Cancelar
+                </Button>
+                <Button onClick={confirmReschedule} disabled={confirmingReschedule || rescheduleMotivo.trim().length < 10}>
+                  {confirmingReschedule ? 'Guardando...' : 'Confirmar reprogramación'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
