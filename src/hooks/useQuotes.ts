@@ -504,6 +504,7 @@ export function useApproveQuoteManually() {
         .single();
 
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'aceptada', { notas: 'Aprobada manualmente' });
       return data;
     },
     onSuccess: () => {
