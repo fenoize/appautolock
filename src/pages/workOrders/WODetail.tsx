@@ -307,6 +307,34 @@ export default function WODetail() {
 
           {/* Inventario Tab */}
           <TabsContent value="inventario" className="space-y-4 pt-4">
+            {wo.estado === 'completada' && !wo.inventario_consumido && (
+              <Alert className="border-yellow-500/40 bg-yellow-500/10">
+                <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="flex items-center justify-between gap-3">
+                  <span>El inventario de esta OT no ha sido descontado del stock.</span>
+                  {isAdmin && (
+                    <Button size="sm" onClick={handleConsumirStock} disabled={consumingStock}>
+                      {consumingStock ? 'Descontando...' : 'Descontar ahora'}
+                    </Button>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {wo.inventario_consumido && (
+              <Alert className="border-green-500/40 bg-green-500/10">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription>
+                  <Badge className="bg-green-600 hover:bg-green-600 mr-2">Stock descontado</Badge>
+                  {wo.inventario_consumido_at && (
+                    <span className="text-sm text-muted-foreground">
+                      el {new Date(wo.inventario_consumido_at).toLocaleString('es-CL')}
+                    </span>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 border rounded-lg">
                 <p className="text-sm font-semibold mb-2">Estado de Reserva</p>
