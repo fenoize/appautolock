@@ -56,15 +56,17 @@ export interface StockMove {
   fecha: string;
   user_id?: string;
   created_at: string;
-  
-  product?: Product;
-  from_location?: StockLocation;
-  to_location?: StockLocation;
+  wo_id?: string | null;
+
+  product?: Partial<Product> & { id: string; sku?: string; nombre?: string };
+  from_location?: Partial<StockLocation> & { id?: string; nombre?: string };
+  to_location?: Partial<StockLocation> & { id?: string; nombre?: string };
   user?: {
     id: string;
     nombre: string;
     apellido?: string;
   };
+  wo?: { id: string; folio: string } | null;
 }
 
 export interface ProductSerial {
