@@ -182,84 +182,85 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50">
-            Navegación
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.filter(item => item.show).map((item) => {
-                const itemActive = isActive(item.path || '') || isGroupActive(item.items);
-                return (
-                <Collapsible
-                  key={item.title}
-                  defaultOpen={isGroupActive(item.items)}
-                  className="group/collapsible"
-                >
-                  <SidebarMenuItem>
-                    {item.items ? (
-                      <>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton className={itemActive ? '[&>svg]:text-primary' : ''}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                            {item.badge !== undefined && item.badge > 0 && (
-                              <Badge
-                                variant={item.badgeVariant as any || 'default'}
-                                className="ml-auto"
-                              >
-                                {item.badge}
-                              </Badge>
-                            )}
-                            <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                          </SidebarMenuButton>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <SidebarMenuSub>
-                            {item.items.map((subItem: any) => (
-                              <SidebarMenuSubItem key={subItem.path}>
-                                <SidebarMenuSubButton
-                                  onClick={() => navigate(subItem.path)}
-                                  isActive={isActive(subItem.path)}
-                                  className={isActive(subItem.path) ? 'text-primary font-medium' : ''}
-                                >
-                                  <span>{subItem.title}</span>
-                                  {subItem.badge !== undefined && subItem.badge > 0 && (
-                                    <Badge variant="destructive" className="ml-auto">
-                                      {subItem.badge}
+        {sections.map((section) => {
+          const visibleItems = section.items.filter((i: any) => i.show);
+          if (visibleItems.length === 0) return null;
+          return (
+            <SidebarGroup key={section.label}>
+              <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.08em] font-semibold text-sidebar-foreground/50 px-3 pt-2">
+                {section.label}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {visibleItems.map((item: any) => {
+                    const itemActive = isActive(item.path || '') || isGroupActive(item.items);
+                    const activeCls = 'bg-sidebar-accent text-sidebar-accent-foreground font-medium [&>svg]:text-sidebar-accent-foreground';
+                    return (
+                      <Collapsible
+                        key={item.title}
+                        defaultOpen={isGroupActive(item.items)}
+                        className="group/collapsible"
+                      >
+                        <SidebarMenuItem>
+                          {item.items ? (
+                            <>
+                              <CollapsibleTrigger asChild>
+                                <SidebarMenuButton className={itemActive ? activeCls : ''}>
+                                  <item.icon className="h-4 w-4" />
+                                  <span>{item.title}</span>
+                                  {item.badge !== undefined && item.badge > 0 && (
+                                    <Badge variant={(item.badgeVariant as any) || 'default'} className="ml-auto">
+                                      {item.badge}
                                     </Badge>
                                   )}
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                          </SidebarMenuSub>
-                        </CollapsibleContent>
-                      </>
-                    ) : (
-                      <SidebarMenuButton
-                        onClick={() => item.path && navigate(item.path)}
-                        isActive={isActive(item.path || '')}
-                        className={isActive(item.path || '') ? '[&>svg]:text-primary text-primary' : ''}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                        {item.badge !== undefined && item.badge > 0 && (
-                          <Badge
-                            variant={item.badgeVariant as any || 'default'}
-                            className="ml-auto"
-                          >
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </SidebarMenuButton>
-                    )}
-                  </SidebarMenuItem>
-                </Collapsible>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                                  <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                                </SidebarMenuButton>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <SidebarMenuSub>
+                                  {item.items.map((subItem: any) => (
+                                    <SidebarMenuSubItem key={subItem.path}>
+                                      <SidebarMenuSubButton
+                                        onClick={() => navigate(subItem.path)}
+                                        isActive={isActive(subItem.path)}
+                                        className={isActive(subItem.path) ? 'text-sidebar-accent-foreground bg-sidebar-accent font-medium' : ''}
+                                      >
+                                        <span>{subItem.title}</span>
+                                        {subItem.badge !== undefined && subItem.badge > 0 && (
+                                          <Badge variant="destructive" className="ml-auto">
+                                            {subItem.badge}
+                                          </Badge>
+                                        )}
+                                      </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                  ))}
+                                </SidebarMenuSub>
+                              </CollapsibleContent>
+                            </>
+                          ) : (
+                            <SidebarMenuButton
+                              onClick={() => item.path && navigate(item.path)}
+                              isActive={isActive(item.path || '')}
+                              className={isActive(item.path || '') ? activeCls : ''}
+                            >
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.title}</span>
+                              {item.badge !== undefined && item.badge > 0 && (
+                                <Badge variant={(item.badgeVariant as any) || 'default'} className="ml-auto">
+                                  {item.badge}
+                                </Badge>
+                              )}
+                            </SidebarMenuButton>
+                          )}
+                        </SidebarMenuItem>
+                      </Collapsible>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
     </Sidebar>
   );
