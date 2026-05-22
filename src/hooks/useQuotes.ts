@@ -126,6 +126,7 @@ export function useCreateQuote() {
         .single();
       
       if (error) throw error;
+      await logQuoteEvent(data.id, 'creada', { notas: `Cotización ${folio} creada` });
       return data;
     },
     onSuccess: () => {
