@@ -797,14 +797,21 @@ export default function CompatibilityMatrix() {
         title="Compatibilidad de Productos"
         description="Define qué productos son compatibles con cada modelo de vehículo del catálogo."
         action={
-          isAdmin && (
-            <Dialog open={showNew} onOpenChange={setShowNew}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar modelo
-                </Button>
-              </DialogTrigger>
+          <div className="flex items-center gap-2">
+            {productId && (
+              <Button variant="outline" onClick={() => setHistoryOpen(true)}>
+                <History className="h-4 w-4 mr-2" />
+                Historial
+              </Button>
+            )}
+            {isAdmin && (
+              <Dialog open={showNew} onOpenChange={setShowNew}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar modelo
+                  </Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Nuevo modelo de catálogo</DialogTitle>
