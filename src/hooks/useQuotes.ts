@@ -470,6 +470,7 @@ export function useConvertQuoteToWO() {
       });
       
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'convertida_a_ot', { metadata: { wo_id: data } });
       return data as string;
     },
     onSuccess: (woId: string, quoteId: string) => {
