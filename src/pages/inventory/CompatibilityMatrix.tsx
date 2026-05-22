@@ -114,6 +114,10 @@ export default function CompatibilityMatrix() {
   const allProducts = useMemo(() => products ?? [], [products]);
   const [productId, setProductId] = useState<string>('');
   const [search, setSearch] = useState('');
+  const [filterMarca, setFilterMarca] = useState<string>('all');
+  const [filterAnio, setFilterAnio] = useState<string>('all');
+  const [filterCombustible, setFilterCombustible] = useState<string>('all');
+  const [filterEncendido, setFilterEncendido] = useState<string>('all');
   const { data: catalog = [] } = useVehicleCatalog(search);
   const { data: compats = [] } = useProductCompatibility(productId);
   const compatByCat = useMemo(() => {
@@ -121,6 +125,66 @@ export default function CompatibilityMatrix() {
     compats.forEach((c) => map.set(c.vehicle_catalog_id, c));
     return map;
   }, [compats]);
+
+  // Derive unique filter options from the catalog
+  const filterOptions = useMemo(() => {
+    const marcas = new Set<string>();
+    const anios = new Set<number>();
+    const combustibles = new Set<string>();
+    const encendidos = new Set<string>();
+    for (const c of catalog) {
+      if (c.marca) marcas.add(c.marca);
+      if (c.tipo_combustible) combustibles.add(c.tipo_combustible);
+      if (c.tipo_encendido) encendidos.add(c.tipo_encendido);
+      const desde = c.anio_desde ?? null;
+      const hasta = c.anio_hasta ?? null;
+      if (desde && hasta && hasta >= desde) {
+        const span = Math.min(hasta - desde + 1, 60);
+        for (let i = 0; i < span; i++) anios.add(desde + i);
+      } else if (desde) anios.add(desde);
+      else if (hasta) anios.add(hasta);
+    }
+    return {
+      marcas: Array.from(marcas).sort((a, b) => a.localeCompare(b)),
+      anios: Array.from(anios).sort((a, b) => b - a),
+      combustibles: Array.from(combustibles).sort((a, b) => a.localeCompare(b)),
+      encendidos: Array.from(encendidos).sort((a, b) => a.localeCompare(b)),
+    };
+  }, [catalog]);
+
+  // Apply filters on top of the search-narrowed catalog
+  const filteredCatalog = useMemo(() => {
+    const anio = filterAnio !== 'all' ? Number(filterAnio) : null;
+    return catalog.filter((c) => {
+      if (filterMarca !== 'all' && c.marca !== filterMarca) return false;
+      if (filterCombustible !== 'all' && (c.tipo_combustible ?? '') !== filterCombustible) return false;
+      if (filterEncendido !== 'all' && (c.tipo_encendido ?? '') !== filterEncendido) return false;
+      if (anio !== null) {
+        const desde = c.anio_desde ?? null;
+        const hasta = c.anio_hasta ?? null;
+        if (desde && hasta) {
+          if (anio < desde || anio > hasta) return false;
+        } else if (desde) {
+          if (desde !== anio) return false;
+        } else if (hasta) {
+          if (hasta !== anio) return false;
+        } else {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [catalog, filterMarca, filterAnio, filterCombustible, filterEncendido]);
+
+  const hasActiveFilters =
+    filterMarca !== 'all' || filterAnio !== 'all' || filterCombustible !== 'all' || filterEncendido !== 'all';
+
+  const resetFilters = () => {
+    setFilterMarca('all');
+    setFilterAnio('all');
+    setFilterCombustible('all');
+    setFilterEncendido('all');
+  };
 
   const upsert = useUpsertCompatibility();
   const createCatalog = useCreateVehicleCatalog();
