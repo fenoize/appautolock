@@ -21,6 +21,8 @@ export interface Quote {
   metodo_aprobacion?: 'email' | 'manual';
   created_at: string;
   updated_at: string;
+  email_enviado_at?: string;
+  email_destinatario?: string;
   
   // Relaciones
   client?: Client;

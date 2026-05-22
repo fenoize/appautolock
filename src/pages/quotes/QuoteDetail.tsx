@@ -284,9 +284,13 @@ export default function QuoteDetail() {
       <QuoteEmailDialog
         open={emailDialogOpen}
         onOpenChange={setEmailDialogOpen}
-        onConfirm={() => sendEmailMutation.mutate(quote.id)}
+        onConfirm={({ overrideEmail, saveToClient }) =>
+          sendEmailMutation.mutate({ id: quote.id, overrideEmail, saveToClient })
+        }
         clientEmail={quote.client?.email_principal}
+        isReenvio={quote.estado === 'enviada'}
       />
+
       
       <QuoteCancelDialog
         open={cancelDialogOpen}
