@@ -391,7 +391,7 @@ export default function CompatibilityMatrix() {
           children: modelos,
         };
       });
-  }, [catalog]);
+  }, [filteredCatalog]);
 
   // Aggregated status for any node from its descendant catalog ids
   const nodeStatus = (leafIds: string[]): NodeStatus => {
