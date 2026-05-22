@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Pencil, Search, ChevronRight, ChevronDown, Check, X, Minus, CircleDot } from 'lucide-react';
+import { Plus, Pencil, Search, ChevronRight, ChevronDown } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import {
   CompatEstado,
