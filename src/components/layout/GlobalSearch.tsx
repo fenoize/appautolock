@@ -164,8 +164,10 @@ export function GlobalSearch({ trigger = 'input' }: GlobalSearchProps) {
                   <CommandItem key={s.id} onSelect={() => go(`/services`)}>
                     <Briefcase className="mr-2 h-4 w-4" />
                     <span>{s.nombre}</span>
-                    {s.codigo && (
-                      <span className="ml-auto text-xs text-muted-foreground">{s.codigo}</span>
+                    {s.descripcion && (
+                      <span className="ml-auto text-xs text-muted-foreground truncate max-w-[200px]">
+                        {s.descripcion}
+                      </span>
                     )}
                   </CommandItem>
                 ))}
