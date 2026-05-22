@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
       throw new Error('No autorizado');
     }
 
-    const { wo_id, checklist_data, observaciones_cierre, firma_data, firma_nombre } = await req.json();
+    const { wo_id, checklist_data, observaciones_cierre, firma_data, firma_nombre, force_close } = await req.json();
 
     console.log('Cerrando OT:', wo_id);
 
