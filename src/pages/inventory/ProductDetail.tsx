@@ -1,13 +1,16 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useProduct, useUpdateProduct } from '@/hooks/useProducts';
+import { useStockMoves } from '@/hooks/useStockMoves';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowLeft, Edit, Package } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SubscriptionPlanSelector } from '@/components/shared/SubscriptionPlanSelector';
+import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
 
 export default function ProductDetail() {
