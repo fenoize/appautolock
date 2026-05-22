@@ -133,7 +133,7 @@ export default function WODetail() {
               <Pause className="mr-2 h-4 w-4" />
               Pausar
             </Button>
-            <Button onClick={() => handleChangeStatus('completada')}>
+            <Button onClick={handleFinalizarOT}>
               <CheckCircle2 className="mr-2 h-4 w-4" />
               Finalizar OT
             </Button>
