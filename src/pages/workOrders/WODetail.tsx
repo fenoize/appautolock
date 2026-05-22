@@ -343,6 +343,43 @@ export default function WODetail() {
         workOrderId={wo.id}
         branchId={wo.branch_id}
       />
+
+      <AlertDialog open={pendingGpsDialog.open} onOpenChange={(open) => setPendingGpsDialog((s) => ({ ...s, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>⚠️ GPS sin configurar</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>Los siguientes dispositivos aún no tienen suscripción configurada:</p>
+                <ul className="list-disc list-inside text-sm">
+                  {pendingGpsDialog.items.map((n, i) => (
+                    <li key={i}>{n}</li>
+                  ))}
+                </ul>
+                <p className="text-sm">Si cierras la OT sin configurarlos, el cliente no tendrá servicio GPS activo.</p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setPendingGpsDialog({ open: false, items: [] });
+                handleChangeStatus('completada');
+              }}
+            >
+              Cerrar de todas formas
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setPendingGpsDialog({ open: false, items: [] });
+                setActiveTab('suscripciones');
+              }}
+            >
+              Ir a configurar GPS
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
