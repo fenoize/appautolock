@@ -1,7 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { WOSubscriptionsTab } from '@/components/workOrders/WOSubscriptionsTab';
 import { WODetailHeader } from '@/components/workOrders/WODetailHeader';
