@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWorkOrders } from '@/hooks/useWorkOrders';
+import { supabase } from '@/integrations/supabase/client';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { SearchBar } from '@/components/shared/SearchBar';
-import { Plus, Calendar } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Plus, Calendar, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { WOFilters } from '@/types/workOrders';
@@ -15,6 +17,25 @@ export default function WOList() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<WOFilters>({});
   const { data: workOrders, isLoading } = useWorkOrders(filters);
+  const [pendingGpsWoIds, setPendingGpsWoIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!workOrders || workOrders.length === 0) return;
+    const completedIds = workOrders.filter(w => w.estado === 'completada').map(w => w.id);
+    if (completedIds.length === 0) {
+      setPendingGpsWoIds(new Set());
+      return;
+    }
+    supabase
+      .from('wo_subscription_items')
+      .select('wo_id')
+      .in('wo_id', completedIds)
+      .is('subscription_id', null)
+      .then(({ data }) => {
+        setPendingGpsWoIds(new Set((data || []).map((r: any) => r.wo_id)));
+      });
+  }, [workOrders]);
+
 
   return (
     <PageContainer>
