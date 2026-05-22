@@ -132,42 +132,101 @@ export default function WOCalendar() {
     return Array.from(branchMap.values());
   }, [workOrders]);
 
-  // Manejar drop de evento (reprogramar o reasignar)
-  const handleEventDrop = async (info: any) => {
-    const woId = info.event.id;
-    const newStart = info.event.start;
-    const newResourceId = info.event.getResources()[0]?.id;
-
-    try {
-      await updateWorkOrder.mutateAsync({
-        id: woId,
-        fecha_programada: newStart.toISOString(),
-        tecnico_id: newResourceId === 'unassigned' ? null : newResourceId,
-        estado: newResourceId && newResourceId !== 'unassigned' ? 'asignada' : 'pendiente',
-      });
-      
-      toast.success('Orden de trabajo actualizada');
-    } catch (error) {
-      toast.error('Error al actualizar OT');
-      info.revert();
-    }
+  // Manejar drop de evento → confirmar antes de aplicar
+  const handleEventDrop = (info: any) => {
+    const wo: WorkOrder = info.event.extendedProps.wo;
+    const oldDate = info.oldEvent.start as Date;
+    const newDate = info.event.start as Date;
+    const oldEnd = info.oldEvent.end as Date | undefined;
+    const newEnd = info.event.end as Date | undefined;
+    info.revert();
+    setPendingReschedule({ wo, oldDate, newDate, oldEnd, newEnd, kind: 'drop' });
+    setRescheduleMotivo('');
+    setNotifyTecnico(!!wo.tecnico_id);
+    setNotifyCliente(false);
   };
 
-  // Manejar resize de evento (cambiar duración)
-  const handleEventResize = async (info: any) => {
-    const woId = info.event.id;
-    const newEnd = info.event.end;
+  // Manejar resize de evento (cambiar duración) → confirmar antes de aplicar
+  const handleEventResize = (info: any) => {
+    const wo: WorkOrder = info.event.extendedProps.wo;
+    const oldDate = info.oldEvent.start as Date;
+    const newDate = info.event.start as Date;
+    const oldEnd = info.oldEvent.end as Date | undefined;
+    const newEnd = info.event.end as Date | undefined;
+    info.revert();
+    setPendingReschedule({ wo, oldDate, newDate, oldEnd, newEnd, kind: 'resize' });
+    setRescheduleMotivo('');
+    setNotifyTecnico(!!wo.tecnico_id);
+    setNotifyCliente(false);
+  };
 
+  const formatDateTime = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const confirmReschedule = async () => {
+    if (!pendingReschedule) return;
+    if (rescheduleMotivo.trim().length < 10) {
+      toast.error('El motivo debe tener al menos 10 caracteres');
+      return;
+    }
+    const { wo, newDate, newEnd } = pendingReschedule;
+    setConfirmingReschedule(true);
     try {
+      const motivo = rescheduleMotivo.trim();
+      const notas = `${wo.notas ? wo.notas + '\n' : ''}[${new Date().toLocaleString()}] Reprogramada: ${motivo}`;
       await updateWorkOrder.mutateAsync({
-        id: woId,
-        ventana_fin: newEnd.toISOString(),
-      });
-      
-      toast.success('Duración actualizada');
-    } catch (error) {
-      toast.error('Error al actualizar duración');
-      info.revert();
+        id: wo.id,
+        fecha_programada: newDate.toISOString(),
+        ventana_fin: newEnd ? newEnd.toISOString() : wo.ventana_fin,
+        estado: 'reprogramada',
+        notas,
+      } as any);
+
+      // Buscar email del técnico si corresponde
+      const tecnico = technicians.find(t => t.id === wo.tecnico_id);
+
+      const baseData = {
+        ot: {
+          folio: wo.folio,
+          fecha_programada: formatDateTime(newDate),
+          ventana_inicio: formatDateTime(newDate),
+          ventana_fin: newEnd ? formatDateTime(newEnd) : '',
+          motivo_reprogramacion: motivo,
+        },
+        cliente: wo.client,
+        vehiculo: wo.vehicle,
+        tecnico: tecnico ? { nombre: tecnico.nombre, apellido: tecnico.apellido, email: tecnico.email } : null,
+        sistema: { empresa_nombre: 'Autolock', fecha_actual: new Date().toISOString() },
+      };
+
+      if (notifyTecnico && tecnico?.email) {
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: { evento: 'wo_rescheduled', data: baseData, recipient: tecnico.email },
+          });
+        } catch (e) {
+          console.warn('No se pudo notificar al técnico', e);
+        }
+      }
+
+      if (notifyCliente && wo.client?.email_principal) {
+        try {
+          await supabase.functions.invoke('send-notification', {
+            body: { evento: 'wo_client_rescheduled', data: baseData, recipient: wo.client.email_principal },
+          });
+        } catch (e) {
+          console.warn('No se pudo notificar al cliente', e);
+        }
+      }
+
+      toast.success('OT reprogramada');
+      setPendingReschedule(null);
+    } catch (e) {
+      toast.error('Error al reprogramar la OT');
+    } finally {
+      setConfirmingReschedule(false);
     }
   };
 
