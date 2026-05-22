@@ -1,20 +1,31 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
+import { supabase } from '@/integrations/supabase/client';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { WOSubscriptionsTab } from '@/components/workOrders/WOSubscriptionsTab';
 import { WODetailHeader } from '@/components/workOrders/WODetailHeader';
 import { WOItemsTable } from '@/components/workOrders/WOItemsTable';
 import { WONotesSection } from '@/components/workOrders/WONotesSection';
 import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnicianDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-  ArrowLeft, 
+import {
+  ArrowLeft,
   Download, 
   Play, 
   Pause, 
