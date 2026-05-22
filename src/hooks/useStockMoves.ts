@@ -35,7 +35,7 @@ export const useStockMoves = (filters?: {
       
       const { data, error } = await query.order('fecha', { ascending: false });
       if (error) throw error;
-      return data as StockMove[];
+      return data as unknown as StockMove[];
     }
   });
 };
