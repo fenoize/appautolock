@@ -391,6 +391,7 @@ export function useSendQuoteEmail() {
         .eq('id', id);
       if (updateError) throw updateError;
 
+      await logQuoteEvent(id, 'enviada', { notas: `Cotización enviada a ${recipient}` });
       return { recipient };
     },
     onSuccess: (_data, variables) => {
