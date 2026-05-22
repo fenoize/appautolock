@@ -1,7 +1,6 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,16 +9,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, Settings, LogOut, Search, Bell, Moon, Sun } from 'lucide-react';
+import { User, Settings, LogOut, Bell, Moon, Sun } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useTheme } from '@/hooks/useTheme';
+import { BrandLogo } from './BrandLogo';
+import { GlobalSearch } from './GlobalSearch';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 export function AppTopbar() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { isMobile } = useResponsiveLayout();
 
   const { data: session } = useQuery({
     queryKey: ['session'],
@@ -58,31 +60,27 @@ export function AppTopbar() {
       style={{ height: 'var(--header-h)', zIndex: 'var(--z-header)' }}
     >
       <div className="flex h-full items-center px-4 gap-3">
+        {/* LEFT: Logo + collapse trigger */}
+        <div
+          className="flex items-center gap-2 shrink-0"
+          style={{ minWidth: isMobile ? 'auto' : 'var(--sidebar-w-collapsed)' }}
+        >
+          <BrandLogo />
+        </div>
         <SidebarTrigger className="-ml-1" />
 
-        {/* Search */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <Input
-            type="search"
-            placeholder="Buscar..."
-            className="pl-9 bg-muted/50 border-transparent focus-visible:bg-card h-9 rounded-full"
-          />
-        </div>
+        <div className="flex-1" />
 
-        <div className="flex-1 md:hidden" />
-
+        {/* RIGHT: search + actions + user */}
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground">
-            <Bell className="h-[18px] w-[18px]" />
-          </Button>
+          <GlobalSearch trigger="both" />
           <Button
             variant="ghost"
             size="icon"
             className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground"
-            onClick={() => navigate('/settings')}
+            aria-label="Notificaciones"
           >
-            <Settings className="h-[18px] w-[18px]" />
+            <Bell className="h-[18px] w-[18px]" />
           </Button>
           <Button
             variant="ghost"
@@ -123,9 +121,9 @@ export function AppTopbar() {
                 <User className="mr-2 h-4 w-4" />
                 <span>Mi Perfil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/settings')}>
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
                 <Settings className="mr-2 h-4 w-4" />
-                <span>Configuración</span>
+                <span>Configuración de usuario</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>

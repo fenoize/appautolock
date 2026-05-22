@@ -2,7 +2,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarGroupContent,
@@ -171,16 +170,6 @@ export function AppSidebar() {
         zIndex: 'var(--z-sidebar)'
       } as any}
     >
-      <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-2 px-2 py-1.5">
-          <div className="h-8 w-8 bg-primary rounded-md flex items-center justify-center shrink-0">
-            <span className="text-primary-foreground font-bold text-sm">A</span>
-          </div>
-          <span className="text-base font-bold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            Autolock
-          </span>
-        </div>
-      </SidebarHeader>
       <SidebarContent>
         {sections.map((section) => {
           const visibleItems = section.items.filter((i: any) => i.show);
