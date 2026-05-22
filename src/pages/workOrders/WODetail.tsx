@@ -107,6 +107,12 @@ export default function WODetail() {
     );
   }
 
+  if (isMobile && isTecnico) {
+    return <MobileWODetail wo={wo} />;
+  }
+
+
+
   const handleChangeStatus = (newStatus: string) => {
     if (id) {
       updateWO.mutate({ id, estado: newStatus as any });
