@@ -225,33 +225,6 @@ export default function CompatibilityMatrix() {
     toast.success(`Actualizados ${catalogIds.length} registro(s)`);
   };
 
-  // Legacy cascadeUpdate name kept for backward compat (no observations)
-  const _cascadeUpdateLegacy = async (catalogIds: string[], nextEstado: CompatEstado) => {
-    if (!productId || catalogIds.length === 0) return;
-    const { data: session } = await supabase.auth.getSession();
-    const userId = session.session?.user?.id;
-    const rows = catalogIds.map((vid) => {
-      const existing = compatByCat.get(vid);
-      return {
-        product_id: productId,
-        vehicle_catalog_id: vid,
-        estado: nextEstado,
-        observaciones: existing?.observaciones ?? null,
-        updated_by: userId,
-        updated_at: new Date().toISOString(),
-      };
-    });
-    const { error } = await (supabase as any)
-      .from('product_compatibility')
-      .upsert(rows, { onConflict: 'product_id,vehicle_catalog_id' });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    queryClient.invalidateQueries({ queryKey: ['product_compatibility'] });
-    queryClient.invalidateQueries({ queryKey: ['compatibility_for_vehicle'] });
-    toast.success(`Actualizados ${catalogIds.length} registro(s)`);
-  };
 
   // Build tree: marca -> modelo -> año (individual) -> combustible -> encendido (leaf)
   type Leaf = { key: string; label: string; catalog: VehicleCatalog };
