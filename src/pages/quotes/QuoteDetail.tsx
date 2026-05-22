@@ -8,7 +8,6 @@ import {
   useCancelQuote, 
   useDeleteQuote,
   useDuplicateQuote,
-  useAssignVehicle
   useAssignVehicle,
   useGenerateQuotePDF
 } from '@/hooks/useQuotes';
