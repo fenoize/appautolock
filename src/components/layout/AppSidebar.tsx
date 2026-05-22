@@ -42,105 +42,119 @@ export function AppSidebar() {
   const { can, isAdmin } = usePermissions();
   const { isTablet } = useResponsiveLayout();
 
-  const menuItems = [
+  const sections: Array<{
+    label: string;
+    items: Array<any>;
+  }> = [
     {
-      title: 'Escritorio',
-      icon: LayoutDashboard,
-      path: '/dashboard',
-      show: true
-    },
-    {
-      title: 'Clientes',
-      icon: Users,
-      show: isAdmin || can('view', 'clients'),
+      label: 'Navegación',
       items: [
-        { title: 'Listado', path: '/clients' },
-        { title: 'Reportes', path: '/clients/reports' },
-      ]
+        {
+          title: 'Escritorio',
+          icon: LayoutDashboard,
+          path: '/dashboard',
+          show: true,
+        },
+        {
+          title: 'Clientes',
+          icon: Users,
+          show: isAdmin || can('view', 'clients'),
+          items: [
+            { title: 'Listado', path: '/clients' },
+            { title: 'Reportes', path: '/clients/reports' },
+          ],
+        },
+        {
+          title: 'Vehículos',
+          icon: Car,
+          path: '/vehicles',
+          show: isAdmin || can('view', 'vehicles'),
+        },
+      ],
     },
     {
-      title: 'Vehículos',
-      icon: Car,
-      path: '/vehicles',
-      show: isAdmin || can('view', 'vehicles')
-    },
-    {
-      title: 'Cotizaciones',
-      icon: FileText,
-      badge: stats?.cotizaciones_abiertas,
-      show: isAdmin || can('view', 'quotes'),
+      label: 'Operación',
       items: [
-        { title: 'Nueva', path: '/quotes/new' },
-        { title: 'Historial', path: '/quotes' },
-        { title: 'Reportes', path: '/quotes/reports' },
-      ]
+        {
+          title: 'Cotizaciones',
+          icon: FileText,
+          badge: stats?.cotizaciones_abiertas,
+          show: isAdmin || can('view', 'quotes'),
+          items: [
+            { title: 'Nueva', path: '/quotes/new' },
+            { title: 'Historial', path: '/quotes' },
+            { title: 'Reportes', path: '/quotes/reports' },
+          ],
+        },
+        {
+          title: 'Órdenes de Trabajo',
+          icon: Wrench,
+          badge: stats?.ots_hoy,
+          show: isAdmin || can('view', 'work_orders'),
+          items: [
+            { title: 'Nueva', path: '/work-orders/new' },
+            { title: 'Agenda', path: '/work-orders/agenda' },
+            { title: 'Historial', path: '/work-orders' },
+          ],
+        },
+        {
+          title: 'Suscripciones GPS',
+          icon: Radio,
+          badge: expiringCount || stats?.subscripciones_vencen,
+          badgeVariant: expiringCount > 0 ? 'destructive' : 'default',
+          show: isAdmin || can('view', 'subscriptions'),
+          items: [
+            { title: 'Nueva', path: '/subscriptions/new' },
+            { title: 'Listado', path: '/subscriptions' },
+            { title: 'Vencimientos', path: '/subscriptions/expiring', badge: expiringCount },
+            { title: 'Planes', path: '/subscriptions/plans' },
+          ],
+        },
+        {
+          title: 'Servicios',
+          icon: Briefcase,
+          show: isAdmin || can('view', 'services'),
+          items: [{ title: 'Catálogo', path: '/services' }],
+        },
+        {
+          title: 'Inventario',
+          icon: Package,
+          badge: stats?.stock_critico,
+          badgeVariant: stats?.stock_critico && stats.stock_critico > 0 ? 'destructive' : 'default',
+          show: isAdmin || can('view', 'inventory'),
+          items: [
+            { title: 'Productos', path: '/inventory' },
+            { title: 'Compatibilidad', path: '/compatibility' },
+            { title: 'Alertas', path: '/inventory/alerts' },
+            { title: 'Reportes', path: '/inventory/reports' },
+          ],
+        },
+      ],
     },
     {
-      title: 'Órdenes de Trabajo',
-      icon: Wrench,
-      badge: stats?.ots_hoy,
-      show: isAdmin || can('view', 'work_orders'),
+      label: 'Administración',
       items: [
-        { title: 'Nueva', path: '/work-orders/new' },
-        { title: 'Agenda', path: '/work-orders/agenda' },
-        { title: 'Historial', path: '/work-orders' },
-      ]
-    },
-    {
-      title: 'Suscripciones GPS',
-      icon: Radio,
-      badge: expiringCount || stats?.subscripciones_vencen,
-      badgeVariant: expiringCount > 0 ? 'destructive' : 'default',
-      show: isAdmin || can('view', 'subscriptions'),
-      items: [
-        { title: 'Nueva', path: '/subscriptions/new' },
-        { title: 'Listado', path: '/subscriptions' },
-        { title: 'Vencimientos', path: '/subscriptions/expiring', badge: expiringCount },
-        { title: 'Planes', path: '/subscriptions/plans' },
-      ]
-    },
-    {
-      title: 'Servicios',
-      icon: Briefcase,
-      show: isAdmin || can('view', 'services'),
-      items: [
-        { title: 'Catálogo', path: '/services' },
-      ]
-    },
-    {
-      title: 'Inventario',
-      icon: Package,
-      badge: stats?.stock_critico,
-      badgeVariant: stats?.stock_critico && stats.stock_critico > 0 ? 'destructive' : 'default',
-      show: isAdmin || can('view', 'inventory'),
-      items: [
-        { title: 'Productos', path: '/inventory' },
-        { title: 'Compatibilidad', path: '/compatibility' },
-        { title: 'Alertas', path: '/inventory/alerts' },
-        { title: 'Reportes', path: '/inventory/reports' },
-      ]
-    },
-    {
-      title: 'Usuarios',
-      icon: UserCog,
-      show: isAdmin || can('view', 'users'),
-      items: [
-        { title: 'Listado', path: '/admin/users' },
-      ]
-    },
-    {
-      title: 'Configuración',
-      icon: Settings,
-      show: true,
-      items: [
-        { title: 'General', path: '/settings' },
-        { title: 'Empresa', path: '/settings/company' },
-        { title: 'Numeradores', path: '/settings/numeradores' },
-        { title: 'Notificaciones', path: '/settings/notifications' },
-        { title: 'Integraciones', path: '/settings/integrations' },
-        { title: 'Respaldos', path: '/settings/backups' },
-        { title: 'Auditoría', path: '/settings/audit' },
-      ]
+        {
+          title: 'Usuarios',
+          icon: UserCog,
+          show: isAdmin || can('view', 'users'),
+          items: [{ title: 'Listado', path: '/admin/users' }],
+        },
+        {
+          title: 'Configuración',
+          icon: Settings,
+          show: true,
+          items: [
+            { title: 'General', path: '/settings' },
+            { title: 'Empresa', path: '/settings/company' },
+            { title: 'Numeradores', path: '/settings/numeradores' },
+            { title: 'Notificaciones', path: '/settings/notifications' },
+            { title: 'Integraciones', path: '/settings/integrations' },
+            { title: 'Respaldos', path: '/settings/backups' },
+            { title: 'Auditoría', path: '/settings/audit' },
+          ],
+        },
+      ],
     },
   ];
 
@@ -168,84 +182,85 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-sidebar-foreground/50">
-            Navegación
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.filter(item => item.show).map((item) => {
-                const itemActive = isActive(item.path || '') || isGroupActive(item.items);
-                return (
-                <Collapsible
-                  key={item.title}
-                  defaultOpen={isGroupActive(item.items)}
-                  className="group/collapsible"
-                >
-                  <SidebarMenuItem>
-                    {item.items ? (
-                      <>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton className={itemActive ? '[&>svg]:text-primary' : ''}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                            {item.badge !== undefined && item.badge > 0 && (
-                              <Badge
-                                variant={item.badgeVariant as any || 'default'}
-                                className="ml-auto"
-                              >
-                                {item.badge}
-                              </Badge>
-                            )}
-                            <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                          </SidebarMenuButton>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <SidebarMenuSub>
-                            {item.items.map((subItem: any) => (
-                              <SidebarMenuSubItem key={subItem.path}>
-                                <SidebarMenuSubButton
-                                  onClick={() => navigate(subItem.path)}
-                                  isActive={isActive(subItem.path)}
-                                  className={isActive(subItem.path) ? 'text-primary font-medium' : ''}
-                                >
-                                  <span>{subItem.title}</span>
-                                  {subItem.badge !== undefined && subItem.badge > 0 && (
-                                    <Badge variant="destructive" className="ml-auto">
-                                      {subItem.badge}
+        {sections.map((section) => {
+          const visibleItems = section.items.filter((i: any) => i.show);
+          if (visibleItems.length === 0) return null;
+          return (
+            <SidebarGroup key={section.label}>
+              <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.08em] font-semibold text-sidebar-foreground/50 px-3 pt-2">
+                {section.label}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {visibleItems.map((item: any) => {
+                    const itemActive = isActive(item.path || '') || isGroupActive(item.items);
+                    const activeCls = 'bg-sidebar-accent text-sidebar-accent-foreground font-medium [&>svg]:text-sidebar-accent-foreground';
+                    return (
+                      <Collapsible
+                        key={item.title}
+                        defaultOpen={isGroupActive(item.items)}
+                        className="group/collapsible"
+                      >
+                        <SidebarMenuItem>
+                          {item.items ? (
+                            <>
+                              <CollapsibleTrigger asChild>
+                                <SidebarMenuButton className={itemActive ? activeCls : ''}>
+                                  <item.icon className="h-4 w-4" />
+                                  <span>{item.title}</span>
+                                  {item.badge !== undefined && item.badge > 0 && (
+                                    <Badge variant={(item.badgeVariant as any) || 'default'} className="ml-auto">
+                                      {item.badge}
                                     </Badge>
                                   )}
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                          </SidebarMenuSub>
-                        </CollapsibleContent>
-                      </>
-                    ) : (
-                      <SidebarMenuButton
-                        onClick={() => item.path && navigate(item.path)}
-                        isActive={isActive(item.path || '')}
-                        className={isActive(item.path || '') ? '[&>svg]:text-primary text-primary' : ''}
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                        {item.badge !== undefined && item.badge > 0 && (
-                          <Badge
-                            variant={item.badgeVariant as any || 'default'}
-                            className="ml-auto"
-                          >
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </SidebarMenuButton>
-                    )}
-                  </SidebarMenuItem>
-                </Collapsible>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                                  <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                                </SidebarMenuButton>
+                              </CollapsibleTrigger>
+                              <CollapsibleContent>
+                                <SidebarMenuSub>
+                                  {item.items.map((subItem: any) => (
+                                    <SidebarMenuSubItem key={subItem.path}>
+                                      <SidebarMenuSubButton
+                                        onClick={() => navigate(subItem.path)}
+                                        isActive={isActive(subItem.path)}
+                                        className={isActive(subItem.path) ? 'text-sidebar-accent-foreground bg-sidebar-accent font-medium' : ''}
+                                      >
+                                        <span>{subItem.title}</span>
+                                        {subItem.badge !== undefined && subItem.badge > 0 && (
+                                          <Badge variant="destructive" className="ml-auto">
+                                            {subItem.badge}
+                                          </Badge>
+                                        )}
+                                      </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                  ))}
+                                </SidebarMenuSub>
+                              </CollapsibleContent>
+                            </>
+                          ) : (
+                            <SidebarMenuButton
+                              onClick={() => item.path && navigate(item.path)}
+                              isActive={isActive(item.path || '')}
+                              className={isActive(item.path || '') ? activeCls : ''}
+                            >
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.title}</span>
+                              {item.badge !== undefined && item.badge > 0 && (
+                                <Badge variant={(item.badgeVariant as any) || 'default'} className="ml-auto">
+                                  {item.badge}
+                                </Badge>
+                              )}
+                            </SidebarMenuButton>
+                          )}
+                        </SidebarMenuItem>
+                      </Collapsible>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
     </Sidebar>
   );
