@@ -243,6 +243,8 @@ export default function CompatibilityMatrix() {
     observacionesOverride?: string | null,
   ) => {
     if (!productId || catalogIds.length === 0) return;
+    // Dedupe — the same catalog row can appear multiple times in leafIds (years expanded individually)
+    catalogIds = Array.from(new Set(catalogIds));
 
     // 'sin_datos' = delete existing compat rows
     if (nextEstado === 'sin_datos') {
