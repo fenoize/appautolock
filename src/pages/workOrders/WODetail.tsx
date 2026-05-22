@@ -178,8 +178,8 @@ export default function WODetail() {
         <WODetailHeader workOrder={wo} />
 
         {/* Tabs con contenido */}
-        <Tabs defaultValue="items" className="space-y-4">
-          <TabsList className="grid grid-cols-5 w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid grid-cols-6 w-full">
             <TabsTrigger value="items">
               Trabajo a Realizar
               {wo.items && wo.items.length > 0 && (
@@ -192,7 +192,13 @@ export default function WODetail() {
             <TabsTrigger value="checklist">Checklist</TabsTrigger>
             <TabsTrigger value="evidencias">Evidencias</TabsTrigger>
             <TabsTrigger value="inventario">Inventario</TabsTrigger>
+            <TabsTrigger value="suscripciones">Suscripciones</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="suscripciones" className="pt-4">
+            <WOSubscriptionsTab woId={wo.id} woStatus={wo.estado} />
+          </TabsContent>
+
 
           {/* Items Tab */}
           <TabsContent value="items" className="pt-4">
