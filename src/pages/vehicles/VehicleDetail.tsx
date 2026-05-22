@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useVehicle } from '@/hooks/useVehicles';
 import { VehicleServiceHistory } from '@/components/vehicles/VehicleServiceHistory';
+import { VehicleProductCompatibility } from '@/components/vehicles/VehicleProductCompatibility';
 
 export default function VehicleDetail() {
   const { id } = useParams<{ id: string }>();
@@ -134,6 +135,11 @@ export default function VehicleDetail() {
 
         {/* Historial de Servicios */}
         <VehicleServiceHistory vehicleId={id!} />
+
+        {/* Compatibilidad con productos GPS */}
+        <VehicleProductCompatibility
+          vehicle={{ marca: vehicle.marca, modelo: vehicle.modelo, anio: vehicle.anio }}
+        />
       </div>
     </div>
   );

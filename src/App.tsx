@@ -39,6 +39,7 @@ import NewProduct from "./pages/inventory/NewProduct";
 import EditProduct from "./pages/inventory/EditProduct";
 import InventoryReports from "./pages/inventory/InventoryReports";
 import StockAlerts from "./pages/inventory/StockAlerts";
+import CompatibilityMatrix from "./pages/inventory/CompatibilityMatrix";
 import AnalyticsDashboard from "./pages/analytics/AnalyticsDashboard";
 import SettingsLayout from "./pages/settings/SettingsLayout";
 import GeneralSettings from "./pages/settings/GeneralSettings";
@@ -113,6 +114,7 @@ const App = () => (
           <Route path="/inventory/products/:id/edit" element={<ProtectedRoute><AppLayout><EditProduct /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/reports" element={<ProtectedRoute><AppLayout><InventoryReports /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/alerts" element={<ProtectedRoute><AppLayout><StockAlerts /></AppLayout></ProtectedRoute>} />
+          <Route path="/compatibility" element={<ProtectedRoute><AppLayout><CompatibilityMatrix /></AppLayout></ProtectedRoute>} />
           
           {/* Analytics */}
           <Route path="/analytics" element={<ProtectedRoute><AppLayout><AnalyticsDashboard /></AppLayout></ProtectedRoute>} />
