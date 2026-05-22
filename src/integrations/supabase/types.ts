@@ -1806,6 +1806,7 @@ export type Database = {
           numero_motor: string | null
           odometro: number | null
           patente: string
+          tipo_encendido: string | null
           updated_at: string | null
           vin: string | null
         }
@@ -1822,6 +1823,7 @@ export type Database = {
           numero_motor?: string | null
           odometro?: number | null
           patente: string
+          tipo_encendido?: string | null
           updated_at?: string | null
           vin?: string | null
         }
@@ -1838,6 +1840,7 @@ export type Database = {
           numero_motor?: string | null
           odometro?: number | null
           patente?: string
+          tipo_encendido?: string | null
           updated_at?: string | null
           vin?: string | null
         }
