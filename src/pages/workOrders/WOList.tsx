@@ -81,11 +81,17 @@ export default function WOList() {
             Crear primera OT
           </Button>
         </div>
+      ) : isMobile ? (
+        <WOMobileList
+          workOrders={workOrders}
+          pendingGpsWoIds={pendingGpsWoIds}
+          onAssign={(id, branchId) => setAssignTarget({ id, branchId })}
+        />
       ) : (
         <div className="grid gap-4">
           {workOrders.map((wo) => (
-            <Card 
-              key={wo.id} 
+            <Card
+              key={wo.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => navigate(`/work-orders/${wo.id}`)}
             >
@@ -143,6 +149,7 @@ export default function WOList() {
           ))}
         </div>
       )}
+
 
       {assignTarget && (
         <AssignTechnicianDialog
