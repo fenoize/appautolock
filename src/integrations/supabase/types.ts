@@ -2241,6 +2241,7 @@ export type Database = {
           branch_id: string
           checklist_data: Json | null
           client_id: string
+          cliente_recordatorio_enviado: boolean | null
           comuna: string | null
           created_at: string | null
           direccion: string | null
@@ -2278,6 +2279,7 @@ export type Database = {
           branch_id: string
           checklist_data?: Json | null
           client_id: string
+          cliente_recordatorio_enviado?: boolean | null
           comuna?: string | null
           created_at?: string | null
           direccion?: string | null
@@ -2315,6 +2317,7 @@ export type Database = {
           branch_id?: string
           checklist_data?: Json | null
           client_id?: string
+          cliente_recordatorio_enviado?: boolean | null
           comuna?: string | null
           created_at?: string | null
           direccion?: string | null
