@@ -135,12 +135,12 @@ export default function MobileWODetail({ wo }: Props) {
               </div>
               <div>
                 <p className="font-medium">{wo.client?.razon_social || '—'}</p>
-                {(wo.client as any)?.telefono && (
+                {(wo.client as any)?.telefonos?.[0] && (
                   <a
-                    href={`tel:${(wo.client as any).telefono}`}
+                    href={`tel:${(wo.client as any).telefonos[0]}`}
                     className="inline-flex items-center gap-1 text-primary text-sm mt-1"
                   >
-                    <Phone className="h-3.5 w-3.5" /> {(wo.client as any).telefono}
+                    <Phone className="h-3.5 w-3.5" /> {(wo.client as any).telefonos[0]}
                   </a>
                 )}
               </div>
