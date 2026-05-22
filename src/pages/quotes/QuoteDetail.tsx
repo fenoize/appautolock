@@ -61,6 +61,8 @@ export default function QuoteDetail() {
   const deleteMutation = useDeleteQuote();
   const duplicateMutation = useDuplicateQuote();
   const assignVehicleMutation = useAssignVehicle();
+  const { data: products } = useProducts();
+  const { data: plans } = useSubscriptionPlans(true);
   
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
