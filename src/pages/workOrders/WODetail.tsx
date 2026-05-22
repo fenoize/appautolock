@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
+import { useStockMoves } from '@/hooks/useStockMoves';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
