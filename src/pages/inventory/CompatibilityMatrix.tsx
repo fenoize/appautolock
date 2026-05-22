@@ -1038,6 +1038,109 @@ export default function CompatibilityMatrix() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirmation for bulk cascade changes */}
+      <AlertDialog open={!!pendingChange} onOpenChange={(o) => !o && setPendingChange(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar cambio masivo</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>
+                  Estás por cambiar el estado de compatibilidad de{' '}
+                  <strong>{pendingChange?.leafIds.length ?? 0}</strong> vehículo(s)
+                  {pendingChange?.nodeLabel && (
+                    <>
+                      {' '}en <strong>{pendingChange.nodeLabel}</strong>
+                    </>
+                  )}
+                  .
+                </p>
+                <p>
+                  Nuevo estado:{' '}
+                  <strong>{pendingChange ? STATUS_PRETTY[pendingChange.nextEstado] : ''}</strong>
+                </p>
+                {pendingChange?.observaciones && (
+                  <p className="italic text-muted-foreground">
+                    Observación: {pendingChange.observaciones}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground pt-2">
+                  Podrás revertir esta acción desde el Historial.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPending}>Aplicar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* History dialog */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Historial de cambios</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-3">
+            {historyBatches.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">
+                Sin cambios registrados para este producto.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {historyBatches.map((b) => {
+                  const userName = b.changed_by ? userMap[b.changed_by] ?? '—' : 'Sistema';
+                  const when = formatDistanceToNow(new Date(b.changed_at), {
+                    addSuffix: true,
+                    locale: es,
+                  });
+                  const estadoNuevo = (b.estado_nuevo as CompatEstado | null) ?? 'sin_datos';
+                  return (
+                    <div
+                      key={b.batch_id}
+                      className={cn(
+                        'flex items-center justify-between gap-3 border rounded-md p-3 text-sm',
+                        b.reverted && 'opacity-60',
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium">
+                          {STATUS_PRETTY[estadoNuevo]} — {b.count} vehículo(s)
+                          {b.revert_of_batch_id && (
+                            <span className="ml-2 text-xs text-muted-foreground">(reversión)</span>
+                          )}
+                          {b.reverted && (
+                            <span className="ml-2 text-xs text-muted-foreground">(revertido)</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {userName} · {when}
+                        </div>
+                      </div>
+                      {isAdmin && !b.reverted && !b.revert_of_batch_id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => revertBatch(b)}
+                        >
+                          <Undo2 className="h-3.5 w-3.5 mr-1" />
+                          Revertir
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHistoryOpen(false)}>Cerrar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
