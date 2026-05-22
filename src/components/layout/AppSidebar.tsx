@@ -36,6 +36,8 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: stats } = useDashboardStats();
+  const { data: expiring10 } = useExpiringSubscriptions(10);
+  const expiringCount = expiring10?.length ?? 0;
   const { can, isAdmin } = usePermissions();
   const { isTablet } = useResponsiveLayout();
 
