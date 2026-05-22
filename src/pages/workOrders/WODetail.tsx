@@ -47,6 +47,8 @@ export default function WODetail() {
   const { data: wo, isLoading } = useWorkOrder(id!);
   const updateWO = useUpdateWorkOrder();
   const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState('items');
+  const [pendingGpsDialog, setPendingGpsDialog] = useState<{ open: boolean; items: string[] }>({ open: false, items: [] });
 
   if (isLoading) {
     return (
@@ -77,6 +79,21 @@ export default function WODetail() {
       updateWO.mutate({ id, estado: newStatus as any });
     }
   };
+
+  const handleFinalizarOT = async () => {
+    if (!id) return;
+    const { data: pending } = await supabase
+      .from('wo_subscription_items')
+      .select('id, nombre')
+      .eq('wo_id', id)
+      .is('subscription_id', null);
+    if (pending && pending.length > 0) {
+      setPendingGpsDialog({ open: true, items: pending.map((p: any) => p.nombre) });
+      return;
+    }
+    handleChangeStatus('completada');
+  };
+
 
 
   const renderStatusButtons = () => {
