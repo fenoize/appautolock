@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,8 +14,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
+const SECTION_TITLES: Record<string, string> = {
+  dashboard: 'Escritorio',
+  clients: 'Clientes',
+  vehicles: 'Vehículos',
+  quotes: 'Cotizaciones',
+  'work-orders': 'Órdenes de Trabajo',
+  subscriptions: 'Suscripciones GPS',
+  inventory: 'Inventario',
+  compatibility: 'Compatibilidad de Productos',
+  services: 'Servicios',
+  admin: 'Administración',
+  users: 'Usuarios',
+  settings: 'Configuración',
+  profile: 'Mi Perfil',
+  analytics: 'Analítica',
+};
+
 export function AppTopbar() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const firstSegment = location.pathname.split('/').filter(Boolean)[0] ?? 'dashboard';
+  const sectionTitle = SECTION_TITLES[firstSegment] ?? 'Autolock';
 
   const { data: session } = useQuery({
     queryKey: ['session'],
