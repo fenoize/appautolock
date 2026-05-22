@@ -27,6 +27,9 @@ import { InvoiceHeader } from '@/components/quotes/InvoiceHeader';
 import { InvoiceInfo } from '@/components/quotes/InvoiceInfo';
 import { InvoiceItemsTable } from '@/components/quotes/InvoiceItemsTable';
 import { InvoiceSummary } from '@/components/quotes/InvoiceSummary';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useProducts } from '@/hooks/useProducts';
+import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 import {
   ArrowLeft,
   FileText,
@@ -42,7 +45,9 @@ import {
   FileDown,
   Car,
   AlertTriangle,
-  Download
+  Download,
+  Satellite,
+  ChevronDown
 } from 'lucide-react';
 
 export default function QuoteDetail() {
@@ -56,6 +61,8 @@ export default function QuoteDetail() {
   const deleteMutation = useDeleteQuote();
   const duplicateMutation = useDuplicateQuote();
   const assignVehicleMutation = useAssignVehicle();
+  const { data: products } = useProducts();
+  const { data: plans } = useSubscriptionPlans(true);
   
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -252,6 +259,47 @@ export default function QuoteDetail() {
 
         {/* Resumen Financiero */}
         <InvoiceSummary quote={quote} />
+
+        {/* Planes GPS disponibles (si la cotización incluye productos GPS) */}
+        {(() => {
+          const gpsProductIds = new Set(
+            (products ?? [])
+              .filter((p) => (p.tipos_suscripcion_disponibles?.length ?? 0) > 0)
+              .map((p) => p.id)
+          );
+          const hasGps = (quote.items ?? []).some(
+            (i) => i.item_tipo === 'producto' && i.ref_id && gpsProductIds.has(i.ref_id)
+          );
+          if (!hasGps || !plans || plans.length === 0) return null;
+          const formatCLP = (v: number) =>
+            new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(v);
+          return (
+            <Collapsible className="mt-6 rounded-md border bg-muted/30">
+              <CollapsibleTrigger className="flex w-full items-center justify-between p-4 text-left">
+                <span className="flex items-center gap-2 font-medium">
+                  <Satellite className="h-4 w-4 text-primary" />
+                  Planes GPS disponibles
+                </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 pb-4">
+                <p className="text-xs text-muted-foreground mb-3">
+                  Comparte estas opciones con el cliente. El plan se asigna al completar la OT.
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {plans.map((plan) => (
+                    <div key={plan.id} className="rounded-md border bg-background p-3">
+                      <div className="font-medium">{plan.nombre}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatCLP(plan.precio)} · {plan.periodo_meses} {plan.periodo_meses === 1 ? 'mes' : 'meses'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          );
+        })()}
 
         <Separator className="my-6" />
 
