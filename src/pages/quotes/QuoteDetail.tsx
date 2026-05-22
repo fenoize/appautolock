@@ -8,8 +8,10 @@ import {
   useCancelQuote, 
   useDeleteQuote,
   useDuplicateQuote,
-  useAssignVehicle
+  useAssignVehicle,
+  useGenerateQuotePDF
 } from '@/hooks/useQuotes';
+import { Loader2 } from 'lucide-react';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -61,6 +63,7 @@ export default function QuoteDetail() {
   const cancelMutation = useCancelQuote();
   const deleteMutation = useDeleteQuote();
   const duplicateMutation = useDuplicateQuote();
+  const generatePdfMutation = useGenerateQuotePDF();
   const assignVehicleMutation = useAssignVehicle();
   const { data: products } = useProducts();
   const { data: plans } = useSubscriptionPlans(true);
@@ -186,9 +189,30 @@ export default function QuoteDetail() {
               <Eye className="mr-2 h-4 w-4" />
               Ver OT
             </Button>
-            <Button variant="outline" size="sm">
-              <Download className="mr-2 h-4 w-4" />
-              Descargar PDF
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={generatePdfMutation.isPending}
+              onClick={() => {
+                if (quote.pdf_url && !generatePdfMutation.isPending) {
+                  window.open(quote.pdf_url, '_blank');
+                } else {
+                  generatePdfMutation.mutate(quote.id);
+                }
+              }}
+            >
+              {generatePdfMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : quote.pdf_url ? (
+                <Eye className="mr-2 h-4 w-4" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              {generatePdfMutation.isPending
+                ? 'Generando...'
+                : quote.pdf_url
+                ? 'Ver PDF'
+                : 'Generar PDF'}
             </Button>
           </>
         );
