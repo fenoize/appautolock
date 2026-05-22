@@ -15,8 +15,8 @@ export function PageHeader({ title, description, action, backButton, backTo }: P
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col gap-4 mb-8 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-      <div className="flex items-center gap-4 flex-1 min-w-0">
+    <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
         {backButton && (
           <Button
             variant="ghost"
@@ -27,9 +27,9 @@ export function PageHeader({ title, description, action, backButton, backTo }: P
           </Button>
         )}
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{title}</h1>
+          <h1 className="text-[22px] md:text-[24px] font-bold text-foreground tracking-tight leading-tight">{title}</h1>
           {description && (
-            <p className="text-sm md:text-base text-muted-foreground mt-1">{description}</p>
+            <p className="text-sm text-muted-foreground mt-1">{description}</p>
           )}
         </div>
       </div>

@@ -22,8 +22,8 @@ export function PageContainer({
 
   return (
     <div className={cn(
-      'mx-auto space-y-8',
-      'p-4 md:p-6 lg:p-8',
+      'mx-auto space-y-6',
+      'p-6',
       'animate-in fade-in-0 duration-300',
       'overflow-x-hidden',
       maxWidthClasses[maxWidth],

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,8 +14,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
+const SECTION_TITLES: Record<string, string> = {
+  dashboard: 'Escritorio',
+  clients: 'Clientes',
+  vehicles: 'Vehículos',
+  quotes: 'Cotizaciones',
+  'work-orders': 'Órdenes de Trabajo',
+  subscriptions: 'Suscripciones GPS',
+  inventory: 'Inventario',
+  compatibility: 'Compatibilidad de Productos',
+  services: 'Servicios',
+  admin: 'Administración',
+  users: 'Usuarios',
+  settings: 'Configuración',
+  profile: 'Mi Perfil',
+  analytics: 'Analítica',
+};
+
 export function AppTopbar() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const firstSegment = location.pathname.split('/').filter(Boolean)[0] ?? 'dashboard';
+  const sectionTitle = SECTION_TITLES[firstSegment] ?? 'Autolock';
 
   const { data: session } = useQuery({
     queryKey: ['session'],
@@ -49,33 +69,31 @@ export function AppTopbar() {
     : session?.user?.email?.[0]?.toUpperCase() || 'U';
 
   return (
-    <header 
-      className="fixed top-0 left-0 right-0 w-full border-b bg-card shadow-sm"
-      style={{ 
-        height: 'var(--header-h)', 
-        zIndex: 'var(--z-header)' 
+    <header
+      className="fixed top-0 left-0 right-0 w-full border-b border-border bg-card shadow-sm"
+      style={{
+        height: 'var(--header-h)',
+        zIndex: 'var(--z-header)'
       }}
     >
       <div className="flex h-full items-center px-4 gap-4">
         <SidebarTrigger className="-ml-1" />
-        
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 bg-primary rounded flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">A</span>
-          </div>
-          <h1 className="text-xl font-bold text-foreground">Autolock</h1>
-        </div>
+
+        <h1 className="text-lg font-semibold text-foreground truncate">{sectionTitle}</h1>
 
         <div className="flex-1" />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar>
-                <AvatarFallback className="bg-secondary text-secondary-foreground">
+            <Button variant="ghost" className="relative h-10 gap-2 px-2 rounded-full hover:bg-muted">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-primary-soft text-primary text-xs font-semibold">
                   {userInitials}
                 </AvatarFallback>
               </Avatar>
+              <span className="hidden sm:inline text-sm font-medium text-foreground max-w-[140px] truncate">
+                {profile ? `${profile.nombre ?? ''} ${profile.apellido ?? ''}`.trim() || (session?.user?.email ?? '') : (session?.user?.email ?? 'Usuario')}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="w-56" align="end" forceMount>
