@@ -203,11 +203,28 @@ export default function StockAlerts() {
                 </div>
               </div>
               
-              {/* Timestamp */}
-              <div className="mt-4 pt-4 border-t">
+              {/* Timestamp + Última OT */}
+              <div className="mt-4 pt-4 border-t flex items-center justify-between flex-wrap gap-2">
                 <p className="text-xs text-muted-foreground">
                   Alerta creada el {format(new Date(alert.created_at), "PPP 'a las' HH:mm", { locale: es })}
                 </p>
+                {(() => {
+                  const last = alert.product?.id ? lastWoByProduct[alert.product.id] : null;
+                  return last ? (
+                    <div className="flex items-center gap-1 text-xs">
+                      <Wrench className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Última OT:</span>
+                      <Link to={`/work-orders/${last.wo_id}`} className="text-primary hover:underline font-medium">
+                        {last.folio}
+                      </Link>
+                      <span className="text-muted-foreground">
+                        ({format(new Date(last.fecha), 'dd/MM/yyyy')})
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Sin consumo asociado a OT</span>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
