@@ -534,6 +534,7 @@ export function useRejectQuote() {
         .single();
 
       if (error) throw error;
+      await logQuoteEvent(quoteId, 'rechazada', { notas: motivo });
       return data;
     },
     onSuccess: () => {
