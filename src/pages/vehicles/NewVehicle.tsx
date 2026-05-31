@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { useCreateVehicle } from '@/hooks/useVehicles';
 import { useClients } from '@/hooks/useClients';
 import { FUEL_TYPES, IGNITION_TYPES } from '@/types/vehicles';
+import { CatalogVehiclePicker } from '@/components/vehicles/CatalogVehiclePicker';
 import { toast } from 'sonner';
 
 export default function NewVehicle() {
