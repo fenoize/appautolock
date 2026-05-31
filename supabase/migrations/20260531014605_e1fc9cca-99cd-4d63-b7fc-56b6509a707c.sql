@@ -1,0 +1,1 @@
+ALTER TABLE public.quote_events ADD CONSTRAINT quote_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE SET NULL;
