@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FUEL_TYPES, FuelType, IGNITION_TYPES } from '@/types/vehicles';
+import { CatalogVehiclePicker } from '@/components/vehicles/CatalogVehiclePicker';
 import { toast } from 'sonner';
 
 const vehicleSchema = z.object({
@@ -181,50 +182,31 @@ export default function EditVehicle() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="marca">Marca *</Label>
-                <Input
-                  id="marca"
-                  {...form.register('marca')}
-                  placeholder="Toyota"
-                />
-                {form.formState.errors.marca && (
-                  <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.marca.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="modelo">Modelo *</Label>
-                <Input
-                  id="modelo"
-                  {...form.register('modelo')}
-                  placeholder="Corolla"
-                />
-                {form.formState.errors.modelo && (
-                  <p className="text-sm text-destructive mt-1">
-                    {form.formState.errors.modelo.message}
-                  </p>
-                )}
-              </div>
-            </div>
+            {/* Marca, Modelo y Año desde catálogo */}
+            <CatalogVehiclePicker
+              value={{
+                marca: form.watch('marca') || '',
+                modelo: form.watch('modelo') || '',
+                anio: form.watch('anio'),
+                combustible: form.watch('combustible') || undefined,
+                tipo_encendido: form.watch('tipo_encendido') || undefined,
+              }}
+              onChange={(v) => {
+                form.setValue('marca', v.marca, { shouldDirty: true });
+                form.setValue('modelo', v.modelo, { shouldDirty: true });
+                if (v.anio !== undefined) form.setValue('anio', v.anio, { shouldDirty: true });
+                if (v.combustible) form.setValue('combustible', v.combustible, { shouldDirty: true });
+                if (v.tipo_encendido && (IGNITION_TYPES as readonly string[]).includes(v.tipo_encendido)) {
+                  form.setValue('tipo_encendido', v.tipo_encendido as any, { shouldDirty: true });
+                }
+              }}
+            />
+            {(form.formState.errors.marca || form.formState.errors.modelo) && (
+              <p className="text-sm text-destructive">Marca y modelo son obligatorios</p>
+            )}
 
             {/* Detalles del Vehículo */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="anio">Año</Label>
-                <Input
-                  id="anio"
-                  type="number"
-                  {...form.register('anio', { valueAsNumber: true })}
-                  placeholder="2024"
-                  min="1900"
-                  max={new Date().getFullYear() + 1}
-                />
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="combustible">Combustible</Label>
                 <Select
@@ -253,6 +235,7 @@ export default function EditVehicle() {
                 />
               </div>
             </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
