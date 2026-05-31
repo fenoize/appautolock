@@ -123,48 +123,30 @@ export default function NewVehicle() {
                 </div>
               </div>
 
-              {/* Marca, Modelo y Año */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Marca *</Label>
-                  <Input
-                    required
-                    value={formData.marca}
-                    onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                    placeholder="Toyota"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Modelo *</Label>
-                  <Input
-                    required
-                    value={formData.modelo}
-                    onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
-                    placeholder="Corolla"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Año</Label>
-                  <Select
-                    value={formData.anio.toString()}
-                    onValueChange={(value) => setFormData({ 
-                      ...formData, 
-                      anio: parseInt(value) 
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={year.toString()}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              {/* Marca, Modelo y Año desde catálogo */}
+              <CatalogVehiclePicker
+                value={{
+                  marca: formData.marca,
+                  modelo: formData.modelo,
+                  anio: formData.anio,
+                  combustible: formData.combustible,
+                  tipo_encendido: formData.tipo_encendido,
+                }}
+                onChange={(v) =>
+                  setFormData({
+                    ...formData,
+                    marca: v.marca,
+                    modelo: v.modelo,
+                    anio: v.anio ?? formData.anio,
+                    combustible: v.combustible ?? formData.combustible,
+                    tipo_encendido:
+                      (IGNITION_TYPES as readonly string[]).includes(v.tipo_encendido ?? '')
+                        ? (v.tipo_encendido as (typeof IGNITION_TYPES)[number])
+                        : formData.tipo_encendido,
+                  })
+                }
+              />
+
 
               {/* Combustible y Tipo de encendido */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
