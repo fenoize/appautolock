@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FUEL_TYPES, FuelType, IGNITION_TYPES } from '@/types/vehicles';
+import { CatalogVehiclePicker } from '@/components/vehicles/CatalogVehiclePicker';
 import { toast } from 'sonner';
 
 const vehicleSchema = z.object({
