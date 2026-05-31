@@ -35,8 +35,6 @@ export default function NewVehicle() {
     notas: ''
   });
 
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 1989 }, (_, i) => currentYear + 1 - i);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
