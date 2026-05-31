@@ -51,6 +51,12 @@ export default function NewVehicle() {
       return;
     }
 
+    if (!formData.marca || !formData.modelo) {
+      toast.error('Selecciona marca y modelo desde el catálogo');
+      return;
+    }
+
+
     try {
       const result = await createVehicle.mutateAsync({
         ...formData,
