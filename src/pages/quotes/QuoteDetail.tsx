@@ -136,6 +136,14 @@ export default function QuoteDetail() {
               <Mail className="mr-2 h-4 w-4" />
               Reenviar
             </Button>
+            <Button size="sm" onClick={() => setApprovalDialogOpen(true)}>
+              <Check className="mr-2 h-4 w-4" />
+              Aprobar
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setRejectDialogOpen(true)}>
+              <X className="mr-2 h-4 w-4" />
+              Rechazar
+            </Button>
             <Button variant="destructive" size="sm" onClick={() => setCancelDialogOpen(true)}>
               <X className="mr-2 h-4 w-4" />
               Cancelar
