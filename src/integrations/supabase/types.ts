@@ -149,6 +149,68 @@ export type Database = {
         }
         Relationships: []
       }
+      checklist_template_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          obligatorio: boolean | null
+          orden: number
+          template_id: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          obligatorio?: boolean | null
+          orden?: number
+          template_id: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          obligatorio?: boolean | null
+          orden?: number
+          template_id?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_templates: {
+        Row: {
+          activa: boolean | null
+          created_at: string | null
+          descripcion: string | null
+          id: string
+          nombre: string
+          updated_at: string | null
+        }
+        Insert: {
+          activa?: boolean | null
+          created_at?: string | null
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          updated_at?: string | null
+        }
+        Update: {
+          activa?: boolean | null
+          created_at?: string | null
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       client_addresses: {
         Row: {
           alias: string | null
