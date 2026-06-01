@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, Plus, GripVertical } from "lucide-react";
+import { Trash2, Plus, GripVertical, FileStack } from "lucide-react";
 import { ServiceChecklistItem } from "@/types/services";
 import { useCreateChecklistItem, useUpdateChecklistItem, useDeleteChecklistItem } from "@/hooks/useServices";
+import { ApplyChecklistTemplateDialog } from "./ApplyChecklistTemplateDialog";
 
 interface ServiceChecklistEditorProps {
   serviceId: string;
@@ -15,6 +16,7 @@ interface ServiceChecklistEditorProps {
 
 export function ServiceChecklistEditor({ serviceId, items }: ServiceChecklistEditorProps) {
   const [isAdding, setIsAdding] = useState(false);
+  const [applyOpen, setApplyOpen] = useState(false);
   const [newItem, setNewItem] = useState({
     titulo: "",
     obligatorio: true,
@@ -75,11 +77,18 @@ export function ServiceChecklistEditor({ serviceId, items }: ServiceChecklistEdi
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Items del Checklist</CardTitle>
-        <Button onClick={() => setIsAdding(true)} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Agregar Ítem
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setApplyOpen(true)} size="sm">
+            <FileStack className="h-4 w-4 mr-2" />
+            Aplicar plantilla
+          </Button>
+          <Button onClick={() => setIsAdding(true)} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar Ítem
+          </Button>
+        </div>
       </CardHeader>
+      <ApplyChecklistTemplateDialog open={applyOpen} onOpenChange={setApplyOpen} serviceId={serviceId} />
       <CardContent className="space-y-3">
         {isAdding && (
           <div className="border rounded-lg p-4 space-y-3 bg-muted/50">
