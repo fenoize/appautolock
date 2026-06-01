@@ -398,6 +398,17 @@ export default function NewQuote() {
                       </SelectContent>
                     </Select>
                   </div>
+                  {formData.vehicle_id && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setFormData(prev => ({ ...prev, vehicle_id: '' }))}
+                      className="mt-8"
+                      title="Quitar vehículo"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button 
                     type="button"
                     variant="outline"
