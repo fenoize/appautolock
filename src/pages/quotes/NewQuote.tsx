@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { Plus, AlertCircle, Package, Trash2 } from 'lucide-react';
+import { Plus, AlertCircle, Package, Trash2, X } from 'lucide-react';
 import { useClients } from '@/hooks/useClients';
 import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useCreateQuote, useCreateQuoteItem } from '@/hooks/useQuotes';
