@@ -116,7 +116,7 @@ export function GlobalSearch({ trigger = 'both' }: GlobalSearchProps) {
         </Button>
       )}
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
         <CommandInput
           placeholder="Buscar clientes, vehículos, servicios, productos, técnicos..."
           value={term}
