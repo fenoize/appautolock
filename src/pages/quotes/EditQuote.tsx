@@ -11,7 +11,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { Plus, Package, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Package, Trash2, Loader2, X } from 'lucide-react';
 import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useQuote, useUpdateQuote, useCreateQuoteItem, useDeleteQuoteItem } from '@/hooks/useQuotes';
 import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
@@ -298,6 +298,17 @@ export default function EditQuote() {
                     </SelectContent>
                   </Select>
                 </div>
+                {formData.vehicle_id && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setFormData({ ...formData, vehicle_id: '' })}
+                    className="mt-8"
+                    title="Quitar vehículo"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button 
                   variant="outline"
                   onClick={() => setShowVehicleDialog(true)}
