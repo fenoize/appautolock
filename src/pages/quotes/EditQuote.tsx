@@ -298,6 +298,17 @@ export default function EditQuote() {
                     </SelectContent>
                   </Select>
                 </div>
+                {formData.vehicle_id && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setFormData({ ...formData, vehicle_id: '' })}
+                    className="mt-8"
+                    title="Quitar vehículo"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button 
                   variant="outline"
                   onClick={() => setShowVehicleDialog(true)}
