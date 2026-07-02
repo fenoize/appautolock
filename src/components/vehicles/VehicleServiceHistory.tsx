@@ -14,7 +14,8 @@ interface VehicleServiceHistoryProps {
 
 export function VehicleServiceHistory({ vehicleId }: VehicleServiceHistoryProps) {
   const navigate = useNavigate();
-  const { data: workOrders, isLoading } = useWorkOrders();
+  const { data, isLoading } = useWorkOrders({ pageSize: 200 });
+  const workOrders = data?.data;
 
   // Filtrar órdenes de trabajo por vehículo
   const vehicleWorkOrders = workOrders?.filter(wo => wo.vehicle_id === vehicleId) || [];
