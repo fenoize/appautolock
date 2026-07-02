@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { useWorkOrder, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
+import { useState, useRef } from 'react';
+import { useWorkOrder, useUpdateWorkOrder, useUploadEvidence } from '@/hooks/useWorkOrders';
 import { useStockMoves } from '@/hooks/useStockMoves';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -44,7 +44,9 @@ import {
   Calendar,
   FileText,
   Bell,
-  Edit
+  Edit,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -62,7 +64,35 @@ export default function WODetail() {
   const [activeTab, setActiveTab] = useState('items');
   const [pendingGpsDialog, setPendingGpsDialog] = useState<{ open: boolean; items: string[] }>({ open: false, items: [] });
   const [consumingStock, setConsumingStock] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadEvidence = useUploadEvidence();
+  const canEditEvidence = !isTecnico || isAdmin;
   const { data: woStockMoves } = useStockMoves({ wo_id: id, tipo: 'consumo' });
+
+  const handleEvidenceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !id) return;
+    setUploading(true);
+    try {
+      const urls = await Promise.all(
+        Array.from(files).map((file) => uploadEvidence.mutateAsync({ woId: id, file }))
+      );
+      const existing = wo?.evidencias_urls ?? [];
+      const { error } = await supabase
+        .from('work_orders')
+        .update({ evidencias_urls: [...existing, ...urls] })
+        .eq('id', id);
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ['work-order', id] });
+      toast.success(`${urls.length} evidencia(s) subida(s)`);
+    } catch (err: any) {
+      toast.error(`Error al subir evidencias: ${err.message ?? err}`);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   const handleConsumirStock = async () => {
     if (!id) return;
@@ -293,7 +323,31 @@ export default function WODetail() {
           </TabsContent>
 
           {/* Evidencias Tab */}
-          <TabsContent value="evidencias" className="pt-4">
+          <TabsContent value="evidencias" className="pt-4 space-y-4">
+            {canEditEvidence && (
+              <div className="flex justify-end">
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  ref={fileInputRef}
+                  onChange={handleEvidenceUpload}
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  size="sm"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
+                  {uploading ? 'Subiendo...' : 'Agregar fotos'}
+                </Button>
+              </div>
+            )}
             {wo.evidencias_urls && wo.evidencias_urls.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {wo.evidencias_urls.map((url, idx) => (
