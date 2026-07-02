@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { FileText, Wrench, Users, AlertTriangle, Package } from 'lucide-react';
+import { FileText, Wrench, Users, AlertTriangle, Package, DollarSign, Radio } from 'lucide-react';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { KPICard } from '@/components/dashboard/KPICard';
@@ -94,6 +94,26 @@ const Dashboard = () => {
           />
         )}
         {canViewQuotes && <IngresoEstimadoCard />}
+        {canViewInventory && (
+          <KPICard
+            title="Ingresos del Mes"
+            value={new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(stats?.ingresos_mes ?? 0)}
+            icon={DollarSign}
+            color="green"
+            description="OTs completadas este mes"
+            onClick={() => navigate('/work-orders')}
+          />
+        )}
+        {canViewInventory && (
+          <KPICard
+            title="MRR GPS"
+            value={new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(stats?.mrr_gps ?? 0)}
+            icon={Radio}
+            color="blue"
+            description="Recurrente mensual"
+            onClick={() => navigate('/subscriptions')}
+          />
+        )}
       </div>
 
       {/* Fila 2: Próximas OTs */}
