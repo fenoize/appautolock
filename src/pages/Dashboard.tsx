@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { FileText, Wrench, Users, AlertTriangle, Package } from 'lucide-react';
+import { FileText, Wrench, Users, AlertTriangle, Package, DollarSign, Radio } from 'lucide-react';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { KPICard } from '@/components/dashboard/KPICard';

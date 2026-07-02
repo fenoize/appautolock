@@ -9,6 +9,7 @@ interface KPICardProps {
   color?: 'blue' | 'orange' | 'red' | 'yellow' | 'green' | 'purple';
   trend?: number;
   trendLabel?: string;
+  description?: string;
   onClick?: () => void;
   urgent?: boolean;
 }
@@ -29,6 +30,7 @@ export function KPICard({
   color = 'blue',
   trend,
   trendLabel,
+  description,
   onClick,
   urgent = false,
 }: KPICardProps) {
@@ -63,6 +65,11 @@ export function KPICard({
                 </span>
                 {trendLabel && <span className="text-muted-foreground">{trendLabel}</span>}
               </div>
+            )}
+            {description && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {description}
+              </p>
             )}
           </div>
           <div
