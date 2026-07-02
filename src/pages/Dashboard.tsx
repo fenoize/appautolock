@@ -67,7 +67,7 @@ const Dashboard = () => {
         {canViewQuotes && (
           <KPICard
             title="Nuevos Clientes"
-            value={0}
+            value={stats?.nuevos_clientes_mes ?? 0}
             icon={Users}
             color="green"
             onClick={() => navigate('/clients')}

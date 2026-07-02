@@ -11,8 +11,10 @@ export function useDashboardStats(branchId?: string) {
       const endToday = endOfDay(today);
       const in7Days = addDays(today, 7);
 
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
+
       // Parallel queries for performance
-      const [cotizaciones, ots, subs, stock] = await Promise.all([
+      const [cotizaciones, ots, subs, stock, nuevosClientes] = await Promise.all([
         // Cotizaciones abiertas
         supabase
           .from('quotes')
@@ -38,14 +40,21 @@ export function useDashboardStats(branchId?: string) {
         supabase
           .from('stock_alerts')
           .select('*', { count: 'exact', head: true })
-          .eq('resuelta', false)
+          .eq('resuelta', false),
+
+        // Nuevos clientes del mes
+        supabase
+          .from('clients')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', startOfMonth)
       ]);
 
       return {
         cotizaciones_abiertas: cotizaciones.count || 0,
         ots_hoy: ots.count || 0,
         subscripciones_vencen: subs.count || 0,
-        stock_critico: stock.count || 0
+        stock_critico: stock.count || 0,
+        nuevos_clientes_mes: nuevosClientes.count || 0
       };
     },
     refetchInterval: 30000 // Refresh every 30 seconds
