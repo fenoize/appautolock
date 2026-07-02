@@ -103,7 +103,7 @@ export function AppSidebar() {
           show: isAdmin || can('view', 'work_orders'),
           items: [
             { title: 'Nueva', path: '/work-orders/new' },
-            { title: 'Agenda', path: '/work-orders/agenda' },
+            { title: 'Agenda', path: '/work-orders/calendar' },
             { title: 'Historial', path: '/work-orders' },
           ],
         },
