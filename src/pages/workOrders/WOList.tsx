@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useWorkOrders } from '@/hooks/useWorkOrders';
 import { supabase } from '@/integrations/supabase/client';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PageContainer } from '@/components/shared/PageContainer';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { SearchBar } from '@/components/shared/SearchBar';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Plus, Calendar, AlertTriangle, UserPlus } from 'lucide-react';
+import { Plus, Calendar, AlertTriangle, UserPlus, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { WOFilters } from '@/types/workOrders';
@@ -16,16 +16,57 @@ import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnician
 import { WOMobileList } from '@/components/workOrders/WOMobileList';
 import { useIsMobile } from '@/hooks/use-mobile';
 
+const PAGE_SIZE = 25;
+const ESTADOS = [
+  { value: 'pendiente', label: 'Pendiente' },
+  { value: 'asignada', label: 'Asignada' },
+  { value: 'en_proceso', label: 'En Proceso' },
+  { value: 'completada', label: 'Completada' },
+  { value: 'cancelada', label: 'Cancelada' },
+];
+
 export default function WOList() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [filters, setFilters] = useState<WOFilters>({});
-  const { data: workOrders, isLoading } = useWorkOrders(filters);
+
+  const [searchInput, setSearchInput] = useState('');
+  const [estado, setEstado] = useState<string>('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [page, setPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchInput), 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, estado, dateFrom, dateTo]);
+
+  const filters: WOFilters = useMemo(() => ({
+    search: debouncedSearch || undefined,
+    estado: (estado as any) || undefined,
+    fecha_desde: dateFrom || undefined,
+    fecha_hasta: dateTo || undefined,
+    page,
+    pageSize: PAGE_SIZE,
+  }), [debouncedSearch, estado, dateFrom, dateTo, page]);
+
+  const { data: result, isLoading, isFetching } = useWorkOrders(filters);
+  const workOrders = result?.data ?? [];
+  const totalPages = result?.totalPages ?? 1;
+  const count = result?.count ?? 0;
+
   const [pendingGpsWoIds, setPendingGpsWoIds] = useState<Set<string>>(new Set());
   const [assignTarget, setAssignTarget] = useState<{ id: string; branchId: string } | null>(null);
 
   useEffect(() => {
-    if (!workOrders || workOrders.length === 0) return;
+    if (!workOrders || workOrders.length === 0) {
+      setPendingGpsWoIds(new Set());
+      return;
+    }
     const completedIds = workOrders.filter(w => w.estado === 'completada').map(w => w.id);
     if (completedIds.length === 0) {
       setPendingGpsWoIds(new Set());
@@ -41,6 +82,13 @@ export default function WOList() {
       });
   }, [workOrders]);
 
+  const clearFilters = () => {
+    setSearchInput('');
+    setEstado('');
+    setDateFrom('');
+    setDateTo('');
+  };
+  const hasFilters = !!(searchInput || estado || dateFrom || dateTo);
 
   return (
     <PageContainer>
@@ -63,23 +111,64 @@ export default function WOList() {
         </div>
       </div>
 
-      <SearchBar
-        value={filters.search || ''}
-        onChange={(value) => setFilters({ ...filters, search: value })}
-        placeholder="Buscar por folio o notas..."
-      />
-
+      <Card className="mb-4">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="lg:col-span-2">
+              <Input
+                placeholder="Buscar folio, cliente, patente…"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+              />
+            </div>
+            <Select value={estado || 'all'} onValueChange={(v) => setEstado(v === 'all' ? '' : v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                {ESTADOS.map(e => (
+                  <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              placeholder="Desde"
+            />
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              placeholder="Hasta"
+            />
+          </div>
+          {hasFilters && (
+            <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
+              <span>{count} resultado{count === 1 ? '' : 's'}</span>
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-1" />
+                Limpiar filtros
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {isLoading ? (
         <div className="text-center py-12 text-muted-foreground">
           Cargando órdenes de trabajo...
         </div>
-      ) : !workOrders || workOrders.length === 0 ? (
+      ) : workOrders.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No se encontraron órdenes de trabajo</p>
-          <Button onClick={() => navigate('/work-orders/new')}>
-            Crear primera OT
-          </Button>
+          {!hasFilters && (
+            <Button onClick={() => navigate('/work-orders/new')}>
+              Crear primera OT
+            </Button>
+          )}
         </div>
       ) : isMobile ? (
         <WOMobileList
@@ -88,7 +177,7 @@ export default function WOList() {
           onAssign={(id, branchId) => setAssignTarget({ id, branchId })}
         />
       ) : (
-        <div className="grid gap-4">
+        <div className={`grid gap-4 ${isFetching ? 'opacity-70' : ''}`}>
           {workOrders.map((wo) => (
             <Card
               key={wo.id}
@@ -150,6 +239,33 @@ export default function WOList() {
         </div>
       )}
 
+      {workOrders.length > 0 && totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <span className="text-sm text-muted-foreground">
+            Página {page} de {totalPages} · {count} total
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= totalPages}
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {assignTarget && (
         <AssignTechnicianDialog

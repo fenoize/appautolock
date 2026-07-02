@@ -17,7 +17,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
-import { useWorkOrders, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
+import { useWorkOrders as useWorkOrdersRaw, useUpdateWorkOrder } from '@/hooks/useWorkOrders';
+const useWorkOrders = () => {
+  const q = useWorkOrdersRaw({ pageSize: 500 });
+  return { ...q, data: q.data?.data ?? [] };
+};
 import { useUsers } from '@/hooks/useUsers';
 import { WOStatus, WorkOrder } from '@/types/workOrders';
 import { Calendar, List, ExternalLink } from 'lucide-react';
