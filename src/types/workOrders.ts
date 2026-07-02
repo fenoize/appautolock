@@ -115,12 +115,15 @@ export interface WOSubstitution {
 
 export interface WOFilters {
   search?: string;
-  estado?: WOStatus;
+  estado?: WOStatus | '';
   tecnico_id?: string;
   branch_id?: string;
   fecha_desde?: string;
   fecha_hasta?: string;
+  page?: number;
+  pageSize?: number;
 }
+
 
 export interface WOStats {
   total_ots: number;

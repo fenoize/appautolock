@@ -7,6 +7,11 @@ export const useWorkOrders = (filters?: WOFilters) => {
   return useQuery({
     queryKey: ['work-orders', filters],
     queryFn: async () => {
+      const page = filters?.page ?? 1;
+      const pageSize = filters?.pageSize ?? 25;
+      const from = (page - 1) * pageSize;
+      const to = page * pageSize - 1;
+
       let query = supabase
         .from('work_orders')
         .select(`
@@ -21,23 +26,32 @@ export const useWorkOrders = (filters?: WOFilters) => {
             producto_original:products!wo_substitutions_producto_original_id_fkey(*),
             producto_sustituto:products!wo_substitutions_producto_sustituto_id_fkey(*)
           )
-        `);
-      
+        `, { count: 'exact' });
+
       if (filters?.estado) query = query.eq('estado', filters.estado);
       if (filters?.tecnico_id) query = query.eq('tecnico_id', filters.tecnico_id);
       if (filters?.branch_id) query = query.eq('branch_id', filters.branch_id);
-      if (filters?.fecha_desde) query = query.gte('fecha_programada', filters.fecha_desde);
-      if (filters?.fecha_hasta) query = query.lte('fecha_programada', filters.fecha_hasta);
+      if (filters?.fecha_desde) query = query.gte('created_at', filters.fecha_desde);
+      if (filters?.fecha_hasta) query = query.lte('created_at', `${filters.fecha_hasta}T23:59:59`);
       if (filters?.search) {
-        query = query.or(`folio.ilike.%${filters.search}%,notas.ilike.%${filters.search}%`);
+        const s = filters.search.replace(/[%,]/g, '');
+        query = query.or(`folio.ilike.%${s}%,notas.ilike.%${s}%`);
       }
-      
-      const { data, error } = await query.order('fecha_programada', { ascending: true });
+
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to);
       if (error) throw error;
-      return data as unknown as WorkOrder[];
+      const total = count ?? 0;
+      return {
+        data: (data ?? []) as unknown as WorkOrder[],
+        count: total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      };
     }
   });
 };
+
 
 export const useWorkOrder = (id: string) => {
   return useQuery({
