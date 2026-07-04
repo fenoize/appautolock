@@ -137,7 +137,7 @@ export default function WODetail() {
     );
   }
 
-  if (isMobile && isTecnico) {
+  if (isMobile) {
     return <MobileWODetail wo={wo} />;
   }
 

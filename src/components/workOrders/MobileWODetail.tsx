@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WorkOrder } from '@/types/workOrders';
 import { useCloseWorkOrder } from '@/hooks/useWorkOrders';
+import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import { Progress } from '@/components/ui/progress';
 import { WOStatusBadge } from './WOStatusBadge';
 import { WOEvidenceUploader } from './WOEvidenceUploader';
 import { WOSignaturePad } from './WOSignaturePad';
+import { AssignTechnicianDialog } from './AssignTechnicianDialog';
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,6 +25,8 @@ import {
   User as UserIcon,
   AlertTriangle,
   CheckCircle2,
+  Pencil,
+  UserPlus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -43,6 +47,10 @@ interface Props {
 export default function MobileWODetail({ wo }: Props) {
   const navigate = useNavigate();
   const closeWO = useCloseWorkOrder();
+  const { isAdmin, hasRole } = usePermissions();
+  const isSupervisor = hasRole('operador');
+  const isTecnico = hasRole('tecnico');
+  const canManage = isAdmin || isSupervisor;
   const [step, setStep] = useState<Step>('info');
   const [checklistItems, setChecklistItems] = useState(wo.checklist_data?.items || []);
   const [evidencias, setEvidencias] = useState<string[]>(wo.evidencias_urls || []);
@@ -50,6 +58,7 @@ export default function MobileWODetail({ wo }: Props) {
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
   const [pendingGps, setPendingGps] = useState<string[]>([]);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   useEffect(() => {
     if (step === 'cierre') {
@@ -185,8 +194,38 @@ export default function MobileWODetail({ wo }: Props) {
               </Card>
             )}
 
+            {canManage && (
+              <Card className="p-3 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Acciones {isAdmin ? 'de administrador' : 'de supervisor'}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    className="h-12"
+                    onClick={() => navigate(`/work-orders/${wo.id}/edit`)}
+                  >
+                    <Pencil className="h-4 w-4 mr-1" /> Editar OT
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-12"
+                    onClick={() => setAssignOpen(true)}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    {wo.tecnico_id ? 'Reasignar' : 'Asignar técnico'}
+                  </Button>
+                </div>
+                {wo.tecnico && (
+                  <p className="text-xs text-muted-foreground">
+                    Técnico actual: {wo.tecnico.nombre} {wo.tecnico.apellido || ''}
+                  </p>
+                )}
+              </Card>
+            )}
+
             <Button onClick={goNext} className="w-full h-14 text-base">
-              Iniciar trabajo <ArrowRight className="ml-2 h-5 w-5" />
+              {isTecnico ? 'Iniciar trabajo' : 'Continuar'} <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </>
         )}
@@ -309,6 +348,15 @@ export default function MobileWODetail({ wo }: Props) {
           </Button>
         )}
       </div>
+
+      {canManage && (
+        <AssignTechnicianDialog
+          open={assignOpen}
+          onOpenChange={setAssignOpen}
+          workOrderId={wo.id}
+          branchId={wo.branch_id}
+        />
+      )}
     </div>
   );
 }
