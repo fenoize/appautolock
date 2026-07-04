@@ -645,6 +645,7 @@ export type Database = {
           created_at: string | null
           destinatario: string
           enviado_at: string | null
+          error_message: string | null
           estado: Database["public"]["Enums"]["notification_status"] | null
           evento: string
           id: string
@@ -656,6 +657,7 @@ export type Database = {
           created_at?: string | null
           destinatario: string
           enviado_at?: string | null
+          error_message?: string | null
           estado?: Database["public"]["Enums"]["notification_status"] | null
           evento: string
           id?: string
@@ -667,6 +669,7 @@ export type Database = {
           created_at?: string | null
           destinatario?: string
           enviado_at?: string | null
+          error_message?: string | null
           estado?: Database["public"]["Enums"]["notification_status"] | null
           evento?: string
           id?: string
