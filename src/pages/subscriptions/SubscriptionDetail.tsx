@@ -24,6 +24,7 @@ export default function SubscriptionDetail() {
   const isExpired = new Date(subscription.fecha_vencimiento) < new Date();
   const handleReactivateClick = () => {
     if (isExpired) {
+      setRenewalModalMode('reactivar');
       setShowRenewalModal(true);
     } else {
       reactivateMutation.mutate(subscription.id);
