@@ -244,6 +244,7 @@ export default function SubscriptionDetail() {
       <RenewalActionModal
         open={showRenewalModal}
         onOpenChange={setShowRenewalModal}
+        mode={renewalModalMode}
         subscription={subscription as any}
       />
     </div>
