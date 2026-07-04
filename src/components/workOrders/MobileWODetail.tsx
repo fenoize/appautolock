@@ -354,7 +354,6 @@ export default function MobileWODetail({ wo }: Props) {
           open={assignOpen}
           onOpenChange={setAssignOpen}
           workOrderId={wo.id}
-          currentTechnicianId={wo.tecnico_id}
           branchId={wo.branch_id}
         />
       )}
