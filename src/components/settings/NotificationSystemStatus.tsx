@@ -19,8 +19,8 @@ export const NotificationSystemStatus = () => {
       const [pending, sentToday, failed] = await Promise.all([
         supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('estado', 'pendiente'),
         supabase.from('notifications').select('id', { count: 'exact', head: true })
-          .eq('estado', 'enviada').gte('created_at', today.toISOString()),
-        supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('estado', 'fallida'),
+          .eq('estado', 'enviado').gte('created_at', today.toISOString()),
+        supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('estado', 'fallido'),
       ]);
 
       return {

@@ -36,9 +36,9 @@ export const NotificationHistory = () => {
 
   const getStatusBadge = (estado: string) => {
     switch (estado) {
-      case 'enviada':
+      case 'enviado':
         return <Badge variant="default" className="gap-1"><CheckCircle2 className="h-3 w-3" />Enviada</Badge>;
-      case 'fallida':
+      case 'fallido':
         return <Badge variant="destructive" className="gap-1"><XCircle className="h-3 w-3" />Fallida</Badge>;
       case 'pendiente':
         return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" />Pendiente</Badge>;
@@ -96,10 +96,10 @@ export const NotificationHistory = () => {
                   </TableCell>
                   <TableCell>{getStatusBadge(notif.estado)}</TableCell>
                   <TableCell className="max-w-[240px] truncate text-xs text-red-600" title={notif.error_message || ''}>
-                    {notif.estado === 'fallida' ? notif.error_message || 'Error desconocido' : ''}
+                    {notif.estado === 'fallido' ? notif.error_message || 'Error desconocido' : ''}
                   </TableCell>
                   <TableCell className="text-right">
-                    {notif.estado === 'fallida' && (
+                    {notif.estado === 'fallido' && (
                       <Button size="sm" variant="outline" onClick={() => retry(notif.id)}>
                         <RotateCw className="h-3 w-3 mr-1" />Reintentar
                       </Button>

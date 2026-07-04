@@ -47,7 +47,7 @@ serve(async (req) => {
         await supabase
           .from('notifications')
           .update({
-            estado: 'enviada',
+            estado: 'enviado',
             enviado_at: new Date().toISOString(),
             error_message: null,
           })
@@ -59,7 +59,7 @@ serve(async (req) => {
         await supabase
           .from('notifications')
           .update({
-            estado: 'fallida',
+            estado: 'fallido',
             error_message: (error?.message || String(error)).slice(0, 500),
           })
           .eq('id', notification.id);
