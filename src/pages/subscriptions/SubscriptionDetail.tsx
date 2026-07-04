@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSubscription, useRenewSubscription, usePauseSubscription, useReactivateSubscription, useCancelSubscription } from '@/hooks/useSubscriptions';
 import { SubscriptionStatusBadge } from '@/components/subscriptions/SubscriptionStatusBadge';
+import { RenewalActionModal } from '@/components/subscriptions/RenewalActionModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,9 +17,19 @@ export default function SubscriptionDetail() {
   const pauseMutation = usePauseSubscription();
   const reactivateMutation = useReactivateSubscription();
   const cancelMutation = useCancelSubscription();
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
 
   if (isLoading) return <div>Cargando...</div>;
   if (!subscription) return <div>Suscripción no encontrada</div>;
+
+  const isExpired = new Date(subscription.fecha_vencimiento) < new Date();
+  const handleReactivateClick = () => {
+    if (isExpired) {
+      setShowRenewalModal(true);
+    } else {
+      reactivateMutation.mutate(subscription.id);
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
@@ -62,7 +74,7 @@ export default function SubscriptionDetail() {
           )}
 
           {subscription.estado === 'suspendida' && (
-            <Button onClick={() => reactivateMutation.mutate(subscription.id)}>
+            <Button onClick={handleReactivateClick}>
               <Play className="h-4 w-4 mr-2" />
               Reactivar
             </Button>
@@ -246,6 +258,12 @@ export default function SubscriptionDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <RenewalActionModal
+        open={showRenewalModal}
+        onOpenChange={setShowRenewalModal}
+        subscription={subscription as any}
+      />
     </div>
   );
 }
