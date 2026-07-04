@@ -17,9 +17,19 @@ export default function SubscriptionDetail() {
   const pauseMutation = usePauseSubscription();
   const reactivateMutation = useReactivateSubscription();
   const cancelMutation = useCancelSubscription();
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
 
   if (isLoading) return <div>Cargando...</div>;
   if (!subscription) return <div>Suscripción no encontrada</div>;
+
+  const isExpired = new Date(subscription.fecha_vencimiento) < new Date();
+  const handleReactivateClick = () => {
+    if (isExpired) {
+      setShowRenewalModal(true);
+    } else {
+      reactivateMutation.mutate(subscription.id);
+    }
+  };
 
   return (
     <div className="container mx-auto p-6">
