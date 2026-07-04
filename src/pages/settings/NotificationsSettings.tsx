@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EventAccordion } from "@/components/settings/EventAccordion";
 import { ReminderManager } from "@/components/settings/ReminderManager";
 import { NotificationHistory } from "@/components/settings/NotificationHistory";
+import { NotificationSystemStatus } from "@/components/settings/NotificationSystemStatus";
 import { Mail, Bell, History } from "lucide-react";
 
 export default function NotificationsSettings() {
@@ -59,6 +60,7 @@ export default function NotificationsSettings() {
         </TabsContent>
         
         <TabsContent value="history" className="space-y-4">
+          <NotificationSystemStatus />
           <NotificationHistory />
         </TabsContent>
       </Tabs>
