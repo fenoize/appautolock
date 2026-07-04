@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Copy, Mail, ExternalLink, Loader2, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Copy, Mail, ExternalLink, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 interface RenewalActionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode?: 'reactivar' | 'renovar';
   subscription: {
     id: string;
     folio: string;
@@ -23,7 +24,7 @@ interface RenewalActionModalProps {
   };
 }
 
-export function RenewalActionModal({ open, onOpenChange, subscription }: RenewalActionModalProps) {
+export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'reactivar' }: RenewalActionModalProps) {
   const [sending, setSending] = useState(false);
   const email = subscription.client?.email_principal;
   const clientName = subscription.client?.razon_social || subscription.client?.nombre_comercial || '-';
@@ -94,13 +95,24 @@ export function RenewalActionModal({ open, onOpenChange, subscription }: Renewal
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-950">
-              <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            <div className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-full",
+              mode === 'renovar' ? "bg-primary/10" : "bg-orange-100 dark:bg-orange-950"
+            )}>
+              {mode === 'renovar' ? (
+                <RefreshCw className="h-5 w-5 text-primary" />
+              ) : (
+                <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+              )}
             </div>
             <div>
-              <DialogTitle>Suscripción vencida</DialogTitle>
+              <DialogTitle>
+                {mode === 'renovar' ? 'Renovar suscripción' : 'Suscripción vencida'}
+              </DialogTitle>
               <DialogDescription>
-                Para reactivar, el cliente debe renovar su plan de GPS.
+                {mode === 'renovar'
+                  ? 'Selecciona el plan y envía el link de pago al cliente.'
+                  : 'Para reactivar, el cliente debe renovar su plan de GPS.'}
               </DialogDescription>
             </div>
           </div>

@@ -1,23 +1,22 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { useSubscription, useRenewSubscription, usePauseSubscription, useReactivateSubscription, useCancelSubscription } from '@/hooks/useSubscriptions';
+import { useSubscription, usePauseSubscription, useReactivateSubscription, useCancelSubscription } from '@/hooks/useSubscriptions';
 import { SubscriptionStatusBadge } from '@/components/subscriptions/SubscriptionStatusBadge';
 import { RenewalActionModal } from '@/components/subscriptions/RenewalActionModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { RefreshCw, Pause, Play, X, Cpu, Smartphone, User, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function SubscriptionDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: subscription, isLoading } = useSubscription(id!);
-  const renewMutation = useRenewSubscription();
   const pauseMutation = usePauseSubscription();
   const reactivateMutation = useReactivateSubscription();
   const cancelMutation = useCancelSubscription();
   const [showRenewalModal, setShowRenewalModal] = useState(false);
+  const [renewalModalMode, setRenewalModalMode] = useState<'reactivar' | 'renovar'>('reactivar');
 
   if (isLoading) return <div>Cargando...</div>;
   if (!subscription) return <div>Suscripción no encontrada</div>;
@@ -25,6 +24,7 @@ export default function SubscriptionDetail() {
   const isExpired = new Date(subscription.fecha_vencimiento) < new Date();
   const handleReactivateClick = () => {
     if (isExpired) {
+      setRenewalModalMode('reactivar');
       setShowRenewalModal(true);
     } else {
       reactivateMutation.mutate(subscription.id);
@@ -43,28 +43,10 @@ export default function SubscriptionDetail() {
         <div className="flex gap-2">
           {(subscription.estado === 'activa' || subscription.estado === 'mora') && (
             <>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Renovar
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirmar Renovación</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      ¿Deseas renovar esta suscripción? Se extenderá por {subscription.plan?.periodo_meses} mes(es).
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => renewMutation.mutate(subscription.id)}>
-                      Confirmar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button onClick={() => { setRenewalModalMode('renovar'); setShowRenewalModal(true); }}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Renovar
+              </Button>
 
               <Button variant="outline" onClick={() => pauseMutation.mutate({ id: subscription.id })}>
                 <Pause className="h-4 w-4 mr-2" />
@@ -262,6 +244,7 @@ export default function SubscriptionDetail() {
       <RenewalActionModal
         open={showRenewalModal}
         onOpenChange={setShowRenewalModal}
+        mode={renewalModalMode}
         subscription={subscription as any}
       />
     </div>
