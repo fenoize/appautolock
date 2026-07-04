@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 interface RenewalActionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  mode?: 'reactivar' | 'renovar';
   subscription: {
     id: string;
     folio: string;
@@ -23,7 +24,7 @@ interface RenewalActionModalProps {
   };
 }
 
-export function RenewalActionModal({ open, onOpenChange, subscription }: RenewalActionModalProps) {
+export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'reactivar' }: RenewalActionModalProps) {
   const [sending, setSending] = useState(false);
   const email = subscription.client?.email_principal;
   const clientName = subscription.client?.razon_social || subscription.client?.nombre_comercial || '-';
