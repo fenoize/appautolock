@@ -348,6 +348,16 @@ export default function MobileWODetail({ wo }: Props) {
           </Button>
         )}
       </div>
+
+      {canManage && (
+        <AssignTechnicianDialog
+          open={assignOpen}
+          onOpenChange={setAssignOpen}
+          workOrderId={wo.id}
+          currentTechnicianId={wo.tecnico_id}
+          branchId={wo.branch_id}
+        />
+      )}
     </div>
   );
 }
