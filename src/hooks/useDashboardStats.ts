@@ -79,52 +79,6 @@ export function useDashboardStats(branchId?: string) {
           0
         ),
       }));
-        // Cotizaciones abiertas
-        supabase
-          .from('quotes')
-          .select('*', { count: 'exact', head: true })
-          .in('estado', ['borrador', 'enviada']),
-        
-        // OTs hoy
-        supabase
-          .from('work_orders')
-          .select('*', { count: 'exact', head: true })
-          .gte('fecha_programada', startToday.toISOString())
-          .lte('fecha_programada', endToday.toISOString()),
-        
-        // Suscripciones que vencen en 7 días
-        supabase
-          .from('subscriptions')
-          .select('*', { count: 'exact', head: true })
-          .eq('estado', 'activa')
-          .lte('fecha_vencimiento', in7Days.toISOString())
-          .gte('fecha_vencimiento', today.toISOString()),
-        
-        // Stock crítico
-        supabase
-          .from('stock_alerts')
-          .select('*', { count: 'exact', head: true })
-          .eq('resuelta', false),
-
-        // Nuevos clientes del mes
-        supabase
-          .from('clients')
-          .select('id', { count: 'exact', head: true })
-          .gte('created_at', startOfMonth),
-
-        // Ingresos del mes (OTs completadas)
-        supabase
-          .from('wo_items')
-          .select('precio_unitario, cantidad, work_order:work_orders!inner(estado, updated_at)')
-          .eq('work_order.estado', 'completada')
-          .gte('work_order.updated_at', startOfMonth),
-
-        // MRR GPS (suscripciones activas)
-        supabase
-          .from('subscriptions')
-          .select('plan:subscription_plans(precio)')
-          .eq('estado', 'activa')
-      ]);
 
       const ingresos_mes = ingresosRes.data?.reduce(
         (sum: number, i: any) => sum + (Number(i.precio_unitario) * Number(i.cantidad)),
@@ -143,7 +97,8 @@ export function useDashboardStats(branchId?: string) {
         stock_critico: stock.count || 0,
         nuevos_clientes_mes: nuevosClientes.count || 0,
         ingresos_mes,
-        mrr_gps
+        mrr_gps,
+        ingresos_por_mes,
       };
     },
     refetchInterval: 30000 // Refresh every 30 seconds
