@@ -48,7 +48,7 @@ export default function MobileWODetail({ wo }: Props) {
   const navigate = useNavigate();
   const closeWO = useCloseWorkOrder();
   const { isAdmin, hasRole } = usePermissions();
-  const isSupervisor = hasRole('supervisor');
+  const isSupervisor = hasRole('operador');
   const isTecnico = hasRole('tecnico');
   const canManage = isAdmin || isSupervisor;
   const [step, setStep] = useState<Step>('info');
