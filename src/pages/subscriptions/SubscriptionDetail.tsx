@@ -74,7 +74,7 @@ export default function SubscriptionDetail() {
           )}
 
           {subscription.estado === 'suspendida' && (
-            <Button onClick={() => reactivateMutation.mutate(subscription.id)}>
+            <Button onClick={handleReactivateClick}>
               <Play className="h-4 w-4 mr-2" />
               Reactivar
             </Button>
