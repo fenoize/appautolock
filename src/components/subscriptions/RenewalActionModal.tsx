@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { AlertTriangle, Copy, Mail, ExternalLink, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { AlertTriangle, Copy, Mail, ExternalLink, Loader2, CheckCircle2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -17,17 +19,33 @@ interface RenewalActionModalProps {
     fecha_vencimiento: string;
     client?: { razon_social?: string; nombre_comercial?: string; email_principal?: string };
     vehicle?: { patente?: string; marca?: string; modelo?: string };
-    plan?: { nombre?: string; precio?: number };
+    plan?: { id?: string; nombre?: string; precio?: number };
   };
 }
 
 export function RenewalActionModal({ open, onOpenChange, subscription }: RenewalActionModalProps) {
   const [sending, setSending] = useState(false);
-  const url = `https://portal.autolock.cl/renovar?sub=${subscription.id}`;
   const email = subscription.client?.email_principal;
   const clientName = subscription.client?.razon_social || subscription.client?.nombre_comercial || '-';
   const vencimiento = new Date(subscription.fecha_vencimiento);
   const diasRestantes = Math.ceil((vencimiento.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+
+  const { data: plans, isLoading: plansLoading } = useQuery({
+    queryKey: ['subscription-plans-active'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .select('id, nombre, precio, periodo_meses')
+        .eq('activo', true)
+        .order('precio', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const [selectedPlanId, setSelectedPlanId] = useState<string>(subscription.plan?.id ?? '');
+  const selectedPlan = plans?.find(p => p.id === selectedPlanId) ?? subscription.plan;
+  const url = `https://portal.autolock.cl/renovar?sub=${subscription.id}&plan=${selectedPlanId}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(url);
@@ -50,7 +68,8 @@ export function RenewalActionModal({ open, onOpenChange, subscription }: Renewal
             folio: subscription.folio,
             fecha_vencimiento: format(vencimiento, 'dd/MM/yyyy'),
             dias_restantes: diasRestantes,
-            plan_nombre: subscription.plan?.nombre,
+            plan_nombre: selectedPlan?.nombre ?? subscription.plan?.nombre,
+            precio: selectedPlan?.precio ?? subscription.plan?.precio,
             subscription_id: subscription.id,
             link_renovacion: url,
           },
@@ -109,6 +128,44 @@ export function RenewalActionModal({ open, onOpenChange, subscription }: Renewal
           <div className="col-span-2">
             <p className="text-muted-foreground text-xs">Vencimiento</p>
             <p className="font-medium">{format(vencimiento, 'dd/MM/yyyy')}</p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Plan de renovación</p>
+          <div className="grid gap-2">
+            {plansLoading && (
+              <div className="flex items-center gap-2 rounded-lg border border-border p-3 text-sm">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-muted-foreground">Cargando planes...</span>
+              </div>
+            )}
+            {plans?.map(plan => (
+              <button
+                key={plan.id}
+                type="button"
+                onClick={() => setSelectedPlanId(plan.id)}
+                className={cn(
+                  "flex items-center justify-between rounded-lg border p-3 text-sm transition-colors text-left",
+                  selectedPlanId === plan.id
+                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    : "border-border hover:border-muted-foreground/50"
+                )}
+              >
+                <div>
+                  <p className="font-medium">{plan.nombre}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {plan.periodo_meses === 1 ? '1 mes' : `${plan.periodo_meses} meses`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">${plan.precio.toLocaleString('es-CL')}</span>
+                  {selectedPlanId === plan.id && (
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  )}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
