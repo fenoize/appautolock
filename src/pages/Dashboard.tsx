@@ -20,6 +20,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+const formatCLP = (value: number) =>
+  new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(value);
+
+const formatAxisCLP = (value: number) => {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+  return `$${value}`;
+};
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -115,6 +125,45 @@ const Dashboard = () => {
           />
         )}
       </div>
+
+      {canViewInventory && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Ingresos mensuales</CardTitle>
+            <p className="text-sm text-muted-foreground">Últimos 6 meses · OTs completadas</p>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={stats?.ingresos_por_mes ?? []} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="mes" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis
+                  tickFormatter={formatAxisCLP}
+                  tick={{ fontSize: 12 }}
+                  stroke="hsl(var(--muted-foreground))"
+                  width={70}
+                />
+                <Tooltip
+                  contentStyle={{
+                    background: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 8,
+                    fontSize: 12,
+                  }}
+                  formatter={(value: any) => [formatCLP(Number(value)), 'Ingresos']}
+                />
+                <Area
+                  dataKey="ingresos"
+                  type="monotone"
+                  fill="hsl(var(--primary) / 0.15)"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Fila 2: Próximas OTs */}
       {proximasOTs && proximasOTs.length > 0 && (
