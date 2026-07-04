@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { WorkOrder } from '@/types/workOrders';
 import { useCloseWorkOrder } from '@/hooks/useWorkOrders';
+import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import { Progress } from '@/components/ui/progress';
 import { WOStatusBadge } from './WOStatusBadge';
 import { WOEvidenceUploader } from './WOEvidenceUploader';
 import { WOSignaturePad } from './WOSignaturePad';
+import { AssignTechnicianDialog } from './AssignTechnicianDialog';
 import {
   ArrowLeft,
   ArrowRight,
@@ -23,6 +25,8 @@ import {
   User as UserIcon,
   AlertTriangle,
   CheckCircle2,
+  Pencil,
+  UserPlus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -43,6 +47,10 @@ interface Props {
 export default function MobileWODetail({ wo }: Props) {
   const navigate = useNavigate();
   const closeWO = useCloseWorkOrder();
+  const { isAdmin, hasRole } = usePermissions();
+  const isSupervisor = hasRole('supervisor');
+  const isTecnico = hasRole('tecnico');
+  const canManage = isAdmin || isSupervisor;
   const [step, setStep] = useState<Step>('info');
   const [checklistItems, setChecklistItems] = useState(wo.checklist_data?.items || []);
   const [evidencias, setEvidencias] = useState<string[]>(wo.evidencias_urls || []);
@@ -50,6 +58,7 @@ export default function MobileWODetail({ wo }: Props) {
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
   const [pendingGps, setPendingGps] = useState<string[]>([]);
+  const [assignOpen, setAssignOpen] = useState(false);
 
   useEffect(() => {
     if (step === 'cierre') {
