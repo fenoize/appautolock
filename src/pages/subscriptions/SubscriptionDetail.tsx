@@ -43,28 +43,10 @@ export default function SubscriptionDetail() {
         <div className="flex gap-2">
           {(subscription.estado === 'activa' || subscription.estado === 'mora') && (
             <>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Renovar
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirmar Renovación</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      ¿Deseas renovar esta suscripción? Se extenderá por {subscription.plan?.periodo_meses} mes(es).
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => renewMutation.mutate(subscription.id)}>
-                      Confirmar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button onClick={() => { setRenewalModalMode('renovar'); setShowRenewalModal(true); }}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Renovar
+              </Button>
 
               <Button variant="outline" onClick={() => pauseMutation.mutate({ id: subscription.id })}>
                 <Pause className="h-4 w-4 mr-2" />
