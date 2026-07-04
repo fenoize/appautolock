@@ -12,11 +12,11 @@ import { format } from 'date-fns';
 export default function SubscriptionDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: subscription, isLoading } = useSubscription(id!);
-  const renewMutation = useRenewSubscription();
   const pauseMutation = usePauseSubscription();
   const reactivateMutation = useReactivateSubscription();
   const cancelMutation = useCancelSubscription();
   const [showRenewalModal, setShowRenewalModal] = useState(false);
+  const [renewalModalMode, setRenewalModalMode] = useState<'reactivar' | 'renovar'>('reactivar');
 
   if (isLoading) return <div>Cargando...</div>;
   if (!subscription) return <div>Suscripción no encontrada</div>;
