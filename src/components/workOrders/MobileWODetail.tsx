@@ -194,8 +194,38 @@ export default function MobileWODetail({ wo }: Props) {
               </Card>
             )}
 
+            {canManage && (
+              <Card className="p-3 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Acciones {isAdmin ? 'de administrador' : 'de supervisor'}
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    className="h-12"
+                    onClick={() => navigate(`/work-orders/${wo.id}/edit`)}
+                  >
+                    <Pencil className="h-4 w-4 mr-1" /> Editar OT
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-12"
+                    onClick={() => setAssignOpen(true)}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    {wo.tecnico_id ? 'Reasignar' : 'Asignar técnico'}
+                  </Button>
+                </div>
+                {wo.tecnico && (
+                  <p className="text-xs text-muted-foreground">
+                    Técnico actual: {wo.tecnico.nombre} {wo.tecnico.apellido || ''}
+                  </p>
+                )}
+              </Card>
+            )}
+
             <Button onClick={goNext} className="w-full h-14 text-base">
-              Iniciar trabajo <ArrowRight className="ml-2 h-5 w-5" />
+              {isTecnico ? 'Iniciar trabajo' : 'Continuar'} <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </>
         )}
