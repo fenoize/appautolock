@@ -258,6 +258,12 @@ export default function SubscriptionDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <RenewalActionModal
+        open={showRenewalModal}
+        onOpenChange={setShowRenewalModal}
+        subscription={subscription as any}
+      />
     </div>
   );
 }
