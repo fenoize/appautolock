@@ -13,8 +13,72 @@ export function useDashboardStats(branchId?: string) {
 
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
 
+      // Últimos 6 meses (incluyendo el actual)
+      const months = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() - (5 - i));
+        return {
+          label: d.toLocaleDateString('es-CL', { month: 'short', year: '2-digit' }),
+          from: new Date(d.getFullYear(), d.getMonth(), 1).toISOString(),
+          to: new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59).toISOString(),
+        };
+      });
+
+      const monthlyQueries = months.map(m =>
+        supabase
+          .from('wo_items')
+          .select('precio_unitario, cantidad, work_orders!inner(estado, updated_at)')
+          .eq('work_orders.estado', 'completada')
+          .gte('work_orders.updated_at', m.from)
+          .lte('work_orders.updated_at', m.to)
+      );
+
       // Parallel queries for performance
-      const [cotizaciones, ots, subs, stock, nuevosClientes, ingresosRes, mrrRes] = await Promise.all([
+      const [cotizaciones, ots, subs, stock, nuevosClientes, ingresosRes, mrrRes, ...monthlyResults] = await Promise.all([
+        supabase
+          .from('quotes')
+          .select('*', { count: 'exact', head: true })
+          .in('estado', ['borrador', 'enviada']),
+        supabase
+          .from('work_orders')
+          .select('*', { count: 'exact', head: true })
+          .gte('fecha_programada', startToday.toISOString())
+          .lte('fecha_programada', endToday.toISOString()),
+        supabase
+          .from('subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('estado', 'activa')
+          .lte('fecha_vencimiento', in7Days.toISOString())
+          .gte('fecha_vencimiento', today.toISOString()),
+        supabase
+          .from('stock_alerts')
+          .select('*', { count: 'exact', head: true })
+          .eq('resuelta', false),
+        supabase
+          .from('clients')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', startOfMonth),
+        supabase
+          .from('wo_items')
+          .select('precio_unitario, cantidad, work_order:work_orders!inner(estado, updated_at)')
+          .eq('work_order.estado', 'completada')
+          .gte('work_order.updated_at', startOfMonth),
+        supabase
+          .from('subscriptions')
+          .select('plan:subscription_plans(precio)')
+          .eq('estado', 'activa'),
+        ...monthlyQueries,
+      ]);
+
+      const ingresos_por_mes = months.map((m, i) => ({
+        mes: m.label,
+        ingresos: ((monthlyResults[i] as any)?.data ?? []).reduce(
+          (sum: number, item: any) =>
+            sum + Number(item.precio_unitario) * Number(item.cantidad),
+          0
+        ),
+      }));
         // Cotizaciones abiertas
         supabase
           .from('quotes')
