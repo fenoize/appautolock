@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Copy, Mail, ExternalLink, Loader2, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, Copy, Mail, ExternalLink, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
