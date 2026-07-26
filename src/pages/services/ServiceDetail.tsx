@@ -184,7 +184,10 @@ export default function ServiceDetail() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-8">Compatible con todos los vehículos</p>
+                <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
+                  <p className="text-muted-foreground font-medium">Sin reglas de compatibilidad configuradas</p>
+                  <p className="text-sm text-muted-foreground">Este servicio no tiene restricciones de compatibilidad definidas aún.</p>
+                </div>
               )}
             </CardContent>
           </Card>
