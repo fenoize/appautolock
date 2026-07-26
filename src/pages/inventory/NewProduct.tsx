@@ -29,36 +29,32 @@ export default function NewProduct() {
   const navigate = useNavigate();
   const createProduct = useCreateProduct();
 
+  const getDefaults = () => {
+    const fallback = {
+      sku: '',
+      nombre: '',
+      precio_venta: 0,
+      stock_minimo: 0,
+      unidad_medida: 'UND',
+      serializable: false,
+      aplica_iva: true,
+    };
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        return { ...fallback, ...JSON.parse(saved) };
+      } catch {
+        return fallback;
+      }
+    }
+    return fallback;
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: () => {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch {
-          return {
-            sku: '',
-            nombre: '',
-            precio_venta: 0,
-            stock_minimo: 0,
-            unidad_medida: 'UND',
-            serializable: false,
-            aplica_iva: true,
-          };
-        }
-      }
-      return {
-        sku: '',
-        nombre: '',
-        precio_venta: 0,
-        stock_minimo: 0,
-        unidad_medida: 'UND',
-        serializable: false,
-        aplica_iva: true,
-      };
-    },
+    defaultValues: getDefaults(),
   });
+
 
   // Auto-guardar en localStorage
   useEffect(() => {
