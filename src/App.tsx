@@ -78,7 +78,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
+          <Route path="/renovar" element={<RenovarPage />} />
           
           {/* Rutas protegidas con Layout */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
