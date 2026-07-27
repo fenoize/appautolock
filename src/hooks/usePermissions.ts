@@ -65,7 +65,7 @@ const PERMISSIONS: PermissionMatrix = {
 };
 
 export function usePermissions() {
-  const { data: session } = useQuery({
+  const { data: session, isLoading: sessionLoading } = useQuery({
     queryKey: ['session'],
     queryFn: async () => {
       const { data } = await supabase.auth.getSession();
@@ -73,7 +73,7 @@ export function usePermissions() {
     }
   });
 
-  const { data: roles } = useQuery({
+  const { data: roles, isLoading: rolesLoading } = useQuery({
     queryKey: ['user-roles', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return [];
@@ -107,6 +107,7 @@ export function usePermissions() {
     hasAnyRole, 
     can, 
     roles: roles || [],
-    isAdmin: hasRole('admin')
+    isAdmin: hasRole('admin'),
+    isLoading: sessionLoading || rolesLoading
   };
 }
