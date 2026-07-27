@@ -4,7 +4,9 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 import { useServiceComplete, useUpdateService } from "@/hooks/useServices";
 import { ArrowLeft, Edit, Copy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +23,31 @@ export default function ServiceDetail() {
   
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
   const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
+
+  const [iglaSearchBrand, setIglaSearchBrand] = useState("");
+  const [iglaSearchModel, setIglaSearchModel] = useState("");
+  const [iglaResults, setIglaResults] = useState<any[]>([]);
+  const [iglaLoading, setIglaLoading] = useState(false);
+  const [iglaSearched, setIglaSearched] = useState(false);
+
+  const handleIglaSearch = async () => {
+    if (!iglaSearchBrand.trim() || !iglaSearchModel.trim()) return;
+    setIglaLoading(true);
+    setIglaSearched(false);
+    try {
+      const { data, error } = await supabase
+        .from("igla_compatibility")
+        .select("brand, model, year_from, year_to, configuration, transmission, engine_type")
+        .ilike("brand", `%${iglaSearchBrand.trim()}%`)
+        .ilike("model", `%${iglaSearchModel.trim()}%`)
+        .eq("igla_compatible", true)
+        .order("year_from", { ascending: false });
+      if (!error) setIglaResults(data ?? []);
+    } finally {
+      setIglaLoading(false);
+      setIglaSearched(true);
+    }
+  };
 
   useEffect(() => {
     if (service) {
