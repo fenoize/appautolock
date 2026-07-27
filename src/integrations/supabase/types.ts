@@ -318,6 +318,7 @@ export type Database = {
           nombre_comercial: string | null
           notas: string | null
           pasaporte: string | null
+          preferencia_contacto: string[] | null
           razon_social: string | null
           rut: string | null
           telefonos: string[] | null
@@ -337,6 +338,7 @@ export type Database = {
           nombre_comercial?: string | null
           notas?: string | null
           pasaporte?: string | null
+          preferencia_contacto?: string[] | null
           razon_social?: string | null
           rut?: string | null
           telefonos?: string[] | null
@@ -356,6 +358,7 @@ export type Database = {
           nombre_comercial?: string | null
           notas?: string | null
           pasaporte?: string | null
+          preferencia_contacto?: string[] | null
           razon_social?: string | null
           rut?: string | null
           telefonos?: string[] | null
@@ -1463,8 +1466,10 @@ export type Database = {
         Row: {
           activo: boolean | null
           branch_id: string | null
+          categoria: string | null
           created_at: string | null
           descripcion: string | null
+          ficha_html: string | null
           id: string
           nombre: string
           porcentaje_utilidad: number
@@ -1481,8 +1486,10 @@ export type Database = {
         Insert: {
           activo?: boolean | null
           branch_id?: string | null
+          categoria?: string | null
           created_at?: string | null
           descripcion?: string | null
+          ficha_html?: string | null
           id?: string
           nombre: string
           porcentaje_utilidad?: number
@@ -1499,8 +1506,10 @@ export type Database = {
         Update: {
           activo?: boolean | null
           branch_id?: string | null
+          categoria?: string | null
           created_at?: string | null
           descripcion?: string | null
+          ficha_html?: string | null
           id?: string
           nombre?: string
           porcentaje_utilidad?: number

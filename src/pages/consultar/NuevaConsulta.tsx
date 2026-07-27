@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,22 +14,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
-  Megaphone,
-  Globe,
-  Instagram,
-  MessageCircle,
-  Mail,
-  User,
   Check,
   CheckCircle,
   XCircle,
   HelpCircle,
   Loader2,
   ArrowLeft,
+  Search,
+  Eye,
+  ChevronDown,
+  Download,
 } from 'lucide-react';
 
 type CompatEstado = 'compatible' | 'incompatible' | 'sin_datos';
@@ -40,6 +39,8 @@ type CompatResult = {
   descripcion: string;
   precio_base: number;
   estado: CompatEstado;
+  categoria: string | null;
+  ficha_html: string | null;
 };
 
 const clp = new Intl.NumberFormat('es-CL', {
@@ -48,27 +49,80 @@ const clp = new Intl.NumberFormat('es-CL', {
   maximumFractionDigits: 0,
 });
 
-const CANALES = [
-  { label: 'Meta Ads', icon: Megaphone },
-  { label: 'Google Ads', icon: Globe },
-  { label: 'Instagram', icon: Instagram },
-  { label: 'WhatsApp', icon: MessageCircle },
-  { label: 'Email', icon: Mail },
-  { label: 'Directo', icon: User },
-];
-
-const STEPS = ['Canal', 'Vehículo', 'Lead', 'Resultados'];
+const STEPS = ['Vehículo', 'Lead', 'Compatibilidad'];
 
 const COMBUSTIBLES = ['Bencina', 'Diesel', 'GLP', 'Eléctrico', 'Híbrido', 'Cualquiera'];
 const ENCENDIDOS = ['Llave', 'Push-Start', 'Sin llave', 'Cualquiera'];
+const PREFERENCIAS = ['WhatsApp', 'Llamada', 'Correo', 'Todos'];
+
+function FichaModal({ servicio, onClose }: { servicio: CompatResult; onClose: () => void }) {
+  const fichaRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    if (!fichaRef.current) return;
+    setDownloading(true);
+    try {
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(fichaRef.current, { scale: 2, useCORS: true });
+      const link = document.createElement('a');
+      link.download = `ficha-${servicio.nombre.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', 0.95);
+      link.click();
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{servicio.nombre}</DialogTitle>
+        </DialogHeader>
+        <div ref={fichaRef} className="rounded-lg bg-white dark:bg-gray-900 p-6 space-y-4">
+          {servicio.ficha_html ? (
+            <div
+              className="prose prose-sm dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: servicio.ficha_html }}
+            />
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Este servicio no tiene ficha comercial configurada.
+            </p>
+          )}
+          <div className="border-t pt-4">
+            <p className="text-sm text-muted-foreground">Precio de venta</p>
+            <p className="text-2xl font-bold text-primary">
+              {clp.format(Number(servicio.precio_base))}
+            </p>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onClose}>
+            Cerrar
+          </Button>
+          <Button onClick={handleDownload} disabled={downloading}>
+            {downloading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            Descargar JPG
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function NuevaConsulta() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const [step, setStep] = useState(1);
-  const [canal, setCanal] = useState<string>('');
   const [lead, setLead] = useState({ nombre: '', telefono: '', email: '' });
+  const [preferencias, setPreferencias] = useState<string[]>([]);
   const [vehiculo, setVehiculo] = useState({
     marca: '',
     modelo: '',
@@ -86,6 +140,10 @@ export default function NuevaConsulta() {
   const [loadingResults, setLoadingResults] = useState(false);
   const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
   const [creatingQuote, setCreatingQuote] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategoria, setFilterCategoria] = useState('');
+  const [showIncompatibles, setShowIncompatibles] = useState(false);
+  const [fichaServicio, setFichaServicio] = useState<CompatResult | null>(null);
 
   const handleMarcaChange = async (value: string) => {
     setVehiculo(prev => ({ ...prev, marca: value, modelo: '', anio: '' }));
@@ -159,11 +217,11 @@ export default function NuevaConsulta() {
       const hasta = r.anio_hasta ?? currentYear;
       for (let y = desde; y <= hasta; y++) years.add(y);
     });
-    const filtered = [...years]
+    const filteredYears = [...years]
       .filter(y => String(y).startsWith(value.trim()))
       .sort((a, b) => b - a);
-    setAnioOptions(filtered);
-    setShowAnioDropdown(filtered.length > 0);
+    setAnioOptions(filteredYears);
+    setShowAnioDropdown(filteredYears.length > 0);
   };
 
   const selectAnio = (value: number) => {
@@ -178,7 +236,7 @@ export default function NuevaConsulta() {
     const { data: compatData, error } = await supabase
       .from('services')
       .select(
-        `id, nombre, descripcion, precio_base,
+        `id, nombre, descripcion, precio_base, categoria, ficha_html,
          services_products(
            product_id,
            products(
@@ -193,7 +251,11 @@ export default function NuevaConsulta() {
       .eq('activo', true);
 
     if (error) {
-      toast({ title: 'Error al consultar compatibilidad', description: error.message, variant: 'destructive' });
+      toast({
+        title: 'Error al consultar compatibilidad',
+        description: error.message,
+        variant: 'destructive',
+      });
       setLoadingResults(false);
       return;
     }
@@ -205,6 +267,8 @@ export default function NuevaConsulta() {
         nombre: service.nombre,
         descripcion: service.descripcion ?? '',
         precio_base: service.precio_base,
+        categoria: service.categoria ?? null,
+        ficha_html: service.ficha_html ?? null,
       };
 
       if (allProducts.length === 0) return { ...base, estado: 'sin_datos' as CompatEstado };
@@ -235,7 +299,8 @@ export default function NuevaConsulta() {
         else hasIncompatible = true;
       }
 
-      if (hasCompatible && !hasIncompatible) return { ...base, estado: 'compatible' as CompatEstado };
+      if (hasCompatible && !hasIncompatible)
+        return { ...base, estado: 'compatible' as CompatEstado };
       if (hasIncompatible) return { ...base, estado: 'incompatible' as CompatEstado };
       return { ...base, estado: 'sin_datos' as CompatEstado };
     });
@@ -249,17 +314,21 @@ export default function NuevaConsulta() {
   };
 
   const goToResults = async () => {
-    setStep(4);
+    setStep(3);
     await loadCompatibility();
   };
 
   const resetWizard = () => {
     setStep(1);
-    setCanal('');
     setLead({ nombre: '', telefono: '', email: '' });
+    setPreferencias([]);
     setVehiculo({ marca: '', modelo: '', anio: '', combustible: '', tipoEncendido: '' });
     setCompatResults([]);
     setSelectedServices(new Set());
+    setSearchQuery('');
+    setFilterCategoria('');
+    setShowIncompatibles(false);
+    setFichaServicio(null);
   };
 
   const toggleService = (id: string) => {
@@ -304,7 +373,7 @@ export default function NuevaConsulta() {
           telefonos: lead.telefono ? [lead.telefono] : [],
           estado: 'prospecto' as const,
           pasaporte: 'PENDIENTE',
-          notas: `Canal: ${canal}`,
+          preferencia_contacto: preferencias.filter(p => p !== 'Todos'),
           branch_id: branchId,
         })
         .select()
@@ -326,7 +395,7 @@ export default function NuevaConsulta() {
           iva,
           total,
           estado: 'borrador' as const,
-          notas: `Vehículo: ${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio} | Canal: ${canal}`,
+          notas: `Vehículo: ${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio}`,
           folio: `CON-${Date.now()}`,
         })
         .select()
@@ -375,6 +444,60 @@ export default function NuevaConsulta() {
     );
   };
 
+  const categorias = [
+    ...new Set(compatResults.map(r => r.categoria).filter(Boolean)),
+  ] as string[];
+
+  const filtered = compatResults.filter(r => {
+    const q = searchQuery.toLowerCase();
+    const matchSearch =
+      !searchQuery ||
+      r.nombre.toLowerCase().includes(q) ||
+      (r.descripcion ?? '').toLowerCase().includes(q);
+    const matchCat = !filterCategoria || r.categoria === filterCategoria;
+    return matchSearch && matchCat;
+  });
+  const visibles = filtered.filter(r => r.estado !== 'incompatible');
+  const incompatibles = filtered.filter(r => r.estado === 'incompatible');
+
+  const renderServiceCard = (svc: CompatResult) => (
+    <Card key={svc.id} className={cn(svc.estado === 'incompatible' && 'opacity-70')}>
+      <CardContent className="flex items-start gap-3 p-4">
+        <Checkbox
+          className="mt-1"
+          checked={selectedServices.has(svc.id)}
+          disabled={svc.estado === 'incompatible'}
+          onCheckedChange={() => toggleService(svc.id)}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-medium">{svc.nombre}</span>
+            <div className="flex items-center gap-2">
+              {estadoBadge(svc.estado)}
+              {svc.ficha_html && (
+                <Button variant="outline" size="sm" onClick={() => setFichaServicio(svc)}>
+                  <Eye className="h-4 w-4 mr-1" /> Ver ficha
+                </Button>
+              )}
+            </div>
+          </div>
+          {svc.categoria && (
+            <Badge variant="outline" className="mt-1">
+              {svc.categoria}
+            </Badge>
+          )}
+          {svc.descripcion && (
+            <p className="mt-0.5 text-sm text-muted-foreground">{svc.descripcion}</p>
+          )}
+          <p className="mt-1 text-sm">
+            Precio de venta:{' '}
+            <span className="font-semibold">{clp.format(Number(svc.precio_base))}</span>
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <PageContainer>
       <div className="mb-6">
@@ -418,38 +541,8 @@ export default function NuevaConsulta() {
         })}
       </div>
 
-      {/* Step 1 - Canal */}
+      {/* Step 1 - Vehículo */}
       {step === 1 && (
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="mb-4 text-lg font-medium">Canal de origen</h2>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-              {CANALES.map(({ label, icon: Icon }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => {
-                    setCanal(label);
-                    setStep(2);
-                  }}
-                  className={cn(
-                    'flex flex-col items-center justify-center gap-2 rounded-xl border p-6 transition-colors hover:bg-accent',
-                    canal === label
-                      ? 'border-primary bg-primary text-primary-foreground hover:bg-primary'
-                      : 'border-border bg-card'
-                  )}
-                >
-                  <Icon className="h-6 w-6" />
-                  <span className="text-sm font-medium">{label}</span>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Step 2 - Vehículo */}
-      {step === 2 && (
         <Card>
           <CardContent className="space-y-4 p-6">
             <h2 className="text-lg font-medium">Vehículo del cliente</h2>
@@ -460,18 +553,24 @@ export default function NuevaConsulta() {
                 <Input
                   value={vehiculo.marca}
                   onChange={e => handleMarcaChange(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && marcaOptions.length > 0) {
+                      e.preventDefault();
+                      selectMarca(marcaOptions[0]);
+                    }
+                  }}
                   placeholder="Escribe al menos 3 caracteres..."
                   onBlur={() => setTimeout(() => setShowMarcaDropdown(false), 150)}
                   onFocus={() => marcaOptions.length > 0 && setShowMarcaDropdown(true)}
                   autoComplete="off"
                 />
                 {showMarcaDropdown && (
-                  <ul className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-52 overflow-y-auto">
+                  <ul className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover text-popover-foreground shadow-lg max-h-52 overflow-y-auto">
                     {marcaOptions.map(opt => (
                       <li
                         key={opt}
                         onMouseDown={() => selectMarca(opt)}
-                        className="px-3 py-2 cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
+                        className="px-3 py-2 cursor-pointer text-sm hover:bg-accent hover:text-accent-foreground"
                       >
                         {opt}
                       </li>
@@ -487,18 +586,24 @@ export default function NuevaConsulta() {
                 <Input
                   value={vehiculo.modelo}
                   onChange={e => handleModeloChange(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && modeloOptions.length > 0) {
+                      e.preventDefault();
+                      selectModelo(modeloOptions[0]);
+                    }
+                  }}
                   placeholder="Escribe al menos 3 caracteres..."
                   onBlur={() => setTimeout(() => setShowModeloDropdown(false), 150)}
                   onFocus={() => modeloOptions.length > 0 && setShowModeloDropdown(true)}
                   autoComplete="off"
                 />
                 {showModeloDropdown && (
-                  <ul className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-52 overflow-y-auto">
+                  <ul className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover text-popover-foreground shadow-lg max-h-52 overflow-y-auto">
                     {modeloOptions.map(opt => (
                       <li
                         key={opt}
                         onMouseDown={() => selectModelo(opt)}
-                        className="px-3 py-2 cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
+                        className="px-3 py-2 cursor-pointer text-sm hover:bg-accent hover:text-accent-foreground"
                       >
                         {opt}
                       </li>
@@ -515,18 +620,24 @@ export default function NuevaConsulta() {
                   <Input
                     value={vehiculo.anio}
                     onChange={e => handleAnioChange(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && anioOptions.length > 0) {
+                        e.preventDefault();
+                        selectAnio(anioOptions[0]);
+                      }
+                    }}
                     placeholder="Escribe al menos 3 caracteres..."
                     onBlur={() => setTimeout(() => setShowAnioDropdown(false), 150)}
                     onFocus={() => anioOptions.length > 0 && setShowAnioDropdown(true)}
                     autoComplete="off"
                   />
                   {showAnioDropdown && (
-                    <ul className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-52 overflow-y-auto">
+                    <ul className="absolute z-50 mt-1 w-full rounded-md border border-border bg-popover text-popover-foreground shadow-lg max-h-52 overflow-y-auto">
                       {anioOptions.map(opt => (
                         <li
                           key={opt}
                           onMouseDown={() => selectAnio(opt)}
-                          className="px-3 py-2 cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
+                          className="px-3 py-2 cursor-pointer text-sm hover:bg-accent hover:text-accent-foreground"
                         >
                           {opt}
                         </li>
@@ -580,13 +691,10 @@ export default function NuevaConsulta() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
-              <Button variant="ghost" onClick={() => setStep(1)}>
-                <ArrowLeft className="mr-1 h-4 w-4" /> Volver
-              </Button>
+            <div className="flex items-center justify-end pt-2">
               <Button
                 disabled={!vehiculo.marca || !vehiculo.modelo || !vehiculo.anio}
-                onClick={() => setStep(3)}
+                onClick={() => setStep(2)}
               >
                 Continuar →
               </Button>
@@ -595,8 +703,8 @@ export default function NuevaConsulta() {
         </Card>
       )}
 
-      {/* Step 3 - Lead */}
-      {step === 3 && (
+      {/* Step 2 - Lead */}
+      {step === 2 && (
         <Card>
           <CardContent className="space-y-4 p-6">
             <h2 className="text-lg font-medium">Datos del Lead</h2>
@@ -605,7 +713,10 @@ export default function NuevaConsulta() {
               <Input
                 id="nombre"
                 value={lead.nombre}
-                onChange={e => setLead({ ...lead, nombre: e.target.value })}
+                onChange={e => {
+                  const v = e.target.value;
+                  setLead({ ...lead, nombre: v.charAt(0).toUpperCase() + v.slice(1) });
+                }}
                 placeholder="Nombre del cliente"
               />
             </div>
@@ -627,8 +738,38 @@ export default function NuevaConsulta() {
                 placeholder="correo@email.com"
               />
             </div>
+
+            <div className="space-y-2">
+              <div>
+                <Label>Preferencia de contacto</Label>
+                <p className="text-xs text-muted-foreground">Opcional</p>
+              </div>
+              <div className="flex flex-wrap gap-4">
+                {PREFERENCIAS.map(opcion => (
+                  <label key={opcion} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={preferencias.includes(opcion)}
+                      onCheckedChange={checked => {
+                        if (opcion === 'Todos') {
+                          setPreferencias(checked ? ['WhatsApp', 'Llamada', 'Correo', 'Todos'] : []);
+                        } else {
+                          const indiv = ['WhatsApp', 'Llamada', 'Correo'];
+                          const next = checked
+                            ? [...preferencias.filter(p => p !== 'Todos'), opcion]
+                            : preferencias.filter(p => p !== opcion && p !== 'Todos');
+                          const allChecked = indiv.every(p => next.includes(p));
+                          setPreferencias(allChecked ? [...next, 'Todos'] : next);
+                        }
+                      }}
+                    />
+                    <span className="text-sm">{opcion}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div className="flex items-center justify-between pt-2">
-              <Button variant="ghost" onClick={() => setStep(2)}>
+              <Button variant="ghost" onClick={() => setStep(1)}>
                 <ArrowLeft className="mr-1 h-4 w-4" /> Volver
               </Button>
               <Button disabled={!lead.nombre.trim()} onClick={goToResults}>
@@ -639,15 +780,19 @@ export default function NuevaConsulta() {
         </Card>
       )}
 
-      {/* Step 4 - Resultados */}
-      {step === 4 && (
+      {/* Step 3 - Compatibilidad */}
+      {step === 3 && (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Consulta para <span className="font-medium text-foreground">{lead.nombre || 'Lead'}</span> ·{' '}
+            Consulta para{' '}
+            <span className="font-medium text-foreground">{lead.nombre || 'Lead'}</span> ·{' '}
             {vehiculo.marca} {vehiculo.modelo} {vehiculo.anio}
-            {vehiculo.combustible && vehiculo.combustible !== 'Cualquiera' ? ` · ${vehiculo.combustible}` : ''}
-            {vehiculo.tipoEncendido && vehiculo.tipoEncendido !== 'Cualquiera' ? ` · ${vehiculo.tipoEncendido}` : ''}
-            {' '}· Canal: {canal}
+            {vehiculo.combustible && vehiculo.combustible !== 'Cualquiera'
+              ? ` · ${vehiculo.combustible}`
+              : ''}
+            {vehiculo.tipoEncendido && vehiculo.tipoEncendido !== 'Cualquiera'
+              ? ` · ${vehiculo.tipoEncendido}`
+              : ''}
           </p>
 
           {loadingResults ? (
@@ -661,36 +806,74 @@ export default function NuevaConsulta() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-3">
-              {compatResults.map(svc => (
-                <Card
-                  key={svc.id}
-                  className={cn(svc.estado === 'incompatible' && 'opacity-70')}
-                >
-                  <CardContent className="flex items-start gap-3 p-4">
-                    <Checkbox
-                      className="mt-1"
-                      checked={selectedServices.has(svc.id)}
-                      disabled={svc.estado === 'incompatible'}
-                      onCheckedChange={() => toggleService(svc.id)}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="font-medium">{svc.nombre}</span>
-                        {estadoBadge(svc.estado)}
+            <>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="pl-9"
+                    placeholder="Buscar servicio..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                {categorias.length > 0 && (
+                  <Select
+                    value={filterCategoria || 'all'}
+                    onValueChange={v => setFilterCategoria(v === 'all' ? '' : v)}
+                  >
+                    <SelectTrigger className="w-full sm:w-48">
+                      <SelectValue placeholder="Todas las categorías" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas las categorías</SelectItem>
+                      {categorias.map(c => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                {visibles.map(svc => renderServiceCard(svc))}
+
+                {visibles.length === 0 && incompatibles.length === 0 && (
+                  <Card>
+                    <CardContent className="p-10 text-center text-muted-foreground">
+                      No hay servicios que coincidan con el filtro.
+                    </CardContent>
+                  </Card>
+                )}
+
+                {incompatibles.length > 0 && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowIncompatibles(prev => !prev)}
+                      className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ChevronDown
+                        className={cn(
+                          'h-4 w-4 transition-transform',
+                          showIncompatibles && 'rotate-180'
+                        )}
+                      />
+                      {showIncompatibles
+                        ? 'Ocultar'
+                        : `Ver ${incompatibles.length} no compatible${incompatibles.length > 1 ? 's' : ''}`}
+                    </button>
+                    {showIncompatibles && (
+                      <div className="mt-2 space-y-3">
+                        {incompatibles.map(svc => renderServiceCard(svc))}
                       </div>
-                      {svc.descripcion && (
-                        <p className="mt-0.5 text-sm text-muted-foreground">{svc.descripcion}</p>
-                      )}
-                      <p className="mt-1 text-sm">
-                        Precio de venta:{' '}
-                        <span className="font-semibold">{clp.format(Number(svc.precio_base))}</span>
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
@@ -706,6 +889,10 @@ export default function NuevaConsulta() {
             </Button>
           </div>
         </div>
+      )}
+
+      {fichaServicio && (
+        <FichaModal servicio={fichaServicio} onClose={() => setFichaServicio(null)} />
       )}
     </PageContainer>
   );
