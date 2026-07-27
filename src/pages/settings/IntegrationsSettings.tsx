@@ -206,7 +206,7 @@ export default function IntegrationsSettings() {
         description="Configura las conexiones con servicios externos"
       />
 
-      <Tabs defaultValue="resend" orientation="vertical" className="flex gap-6">
+      <Tabs defaultValue="mercadopago" orientation="vertical" className="flex gap-6">
         <TabsList className="flex-col h-auto w-40 shrink-0 justify-start bg-muted/50 p-1">
           {integrations.map(i => (
             <TabsTrigger key={i.value} value={i.value} className="w-full justify-start gap-2">
