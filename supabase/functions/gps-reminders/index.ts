@@ -92,7 +92,7 @@ serve(async (_req) => {
       .select(
         `id, folio, plan_id, fecha_vencimiento, ultima_notificacion_enviada,
          clients!client_id(razon_social, email_principal),
-         subscription_plans!plan_id(nombre, precio_base)`
+         subscription_plans!plan_id(nombre, precio)`
       )
       .eq("estado", "activa")
       .eq("fecha_vencimiento", dateStr);
@@ -122,8 +122,8 @@ serve(async (_req) => {
       const clientEmail: string | null = client?.email_principal ?? null;
       const clientName: string = client?.razon_social || "Cliente";
       const planName: string = plan?.nombre || "GPS";
-      const planPrecio: string = plan?.precio_base
-        ? new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(Number(plan.precio_base))
+      const planPrecio: string = plan?.precio
+        ? new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(Number(plan.precio))
         : "";
       const appUrl = getSetting("app_url") || "https://app.autolock.cl";
       const linkRenovacion = `${appUrl}/renovar?sub=${sub.id}&plan=${sub.plan_id ?? ""}`;
