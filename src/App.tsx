@@ -63,6 +63,7 @@ import ServicesList from "./pages/services/ServicesList";
 import NewService from "./pages/services/NewService";
 import ServiceDetail from "./pages/services/ServiceDetail";
 import NuevaConsulta from "./pages/consultar/NuevaConsulta";
+import RenovarPage from "./pages/public/RenovarPage";
 
 const queryClient = new QueryClient();
 
