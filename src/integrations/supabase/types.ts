@@ -1415,6 +1415,50 @@ export type Database = {
           },
         ]
       }
+      service_cost_items: {
+        Row: {
+          cantidad: number
+          created_at: string
+          id: string
+          nombre: string
+          orden: number
+          precio_unitario: number
+          service_id: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string
+          id?: string
+          nombre: string
+          orden?: number
+          precio_unitario?: number
+          service_id: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          id?: string
+          nombre?: string
+          orden?: number
+          precio_unitario?: number
+          service_id?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_cost_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       services: {
         Row: {
           activo: boolean | null
@@ -1423,6 +1467,7 @@ export type Database = {
           descripcion: string | null
           id: string
           nombre: string
+          porcentaje_utilidad: number
           precio_base: number
           requiere_checklist: boolean | null
           requiere_suscripcion: boolean | null
@@ -1440,6 +1485,7 @@ export type Database = {
           descripcion?: string | null
           id?: string
           nombre: string
+          porcentaje_utilidad?: number
           precio_base: number
           requiere_checklist?: boolean | null
           requiere_suscripcion?: boolean | null
@@ -1457,6 +1503,7 @@ export type Database = {
           descripcion?: string | null
           id?: string
           nombre?: string
+          porcentaje_utilidad?: number
           precio_base?: number
           requiere_checklist?: boolean | null
           requiere_suscripcion?: boolean | null

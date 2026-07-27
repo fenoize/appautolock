@@ -11,6 +11,8 @@ import { useServiceComplete, useUpdateService } from "@/hooks/useServices";
 import { ArrowLeft, Edit, Copy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ServiceMaterialsEditor } from "@/components/services/ServiceMaterialsEditor";
+import { ServiceCostItems } from "@/components/services/ServiceCostItems";
+
 import { ServiceChecklistEditor } from "@/components/services/ServiceChecklistEditor";
 import { SubscriptionPlanSelector } from "@/components/shared/SubscriptionPlanSelector";
 import { useState, useEffect } from "react";
@@ -225,12 +227,21 @@ export default function ServiceDetail() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="materiales">
-          <ServiceMaterialsEditor 
-            serviceId={service.id} 
-            materials={service.services_products || []} 
+        <TabsContent value="materiales" className="space-y-6">
+          <ServiceCostItems
+            serviceId={service.id}
+            porcentajeUtilidadInicial={(service as any).porcentaje_utilidad ?? 0}
           />
+
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold mb-4">Materiales de Inventario</h3>
+            <ServiceMaterialsEditor 
+              serviceId={service.id} 
+              materials={service.services_products || []} 
+            />
+          </div>
         </TabsContent>
+
 
         <TabsContent value="checklist">
           <ServiceChecklistEditor 
