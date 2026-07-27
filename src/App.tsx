@@ -63,6 +63,7 @@ import ServicesList from "./pages/services/ServicesList";
 import NewService from "./pages/services/NewService";
 import ServiceDetail from "./pages/services/ServiceDetail";
 import NuevaConsulta from "./pages/consultar/NuevaConsulta";
+import RenovarPage from "./pages/public/RenovarPage";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +79,8 @@ const App = () => (
           <Route path="/signup" element={<Signup />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
+          <Route path="/renovar" element={<RenovarPage />} />
+
           
           {/* Rutas protegidas con Layout */}
           <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
