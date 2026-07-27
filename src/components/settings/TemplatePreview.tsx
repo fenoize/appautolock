@@ -9,7 +9,6 @@ interface TemplatePreviewProps {
   sampleData?: TemplateData;
 }
 
-// Datos de ejemplo por defecto - exportado para uso en otros componentes
 export const defaultSampleData: TemplateData = {
   cliente: {
     razon_social: "Transportes ABC S.A.",
@@ -63,39 +62,47 @@ export const defaultSampleData: TemplateData = {
   }
 };
 
-export const TemplatePreview = ({ 
-  asunto, 
-  cuerpo, 
-  html_content,
-  sampleData 
-}: TemplatePreviewProps) => {
+function isHtmlString(s: string): boolean {
+  const trimmed = (s || '').trimStart();
+  return trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.startsWith('<HTML');
+}
+
+export const TemplatePreview = ({ asunto, cuerpo, html_content, sampleData }: TemplatePreviewProps) => {
   const data = sampleData || defaultSampleData;
-  
+
   const processedAsunto = processTemplate(asunto, data);
   const processedCuerpo = processTemplate(cuerpo, data);
   const processedHtml = html_content ? processTemplate(html_content, data) : null;
 
+  // Prefer explicit html_content, then fall back to cuerpo if it contains HTML
+  const htmlToRender = processedHtml || (isHtmlString(processedCuerpo) ? processedCuerpo : null);
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="text-base">Vista Previa</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         <div>
-          <label className="text-sm font-medium text-muted-foreground">Asunto:</label>
-          <p className="text-sm mt-1 font-semibold text-foreground">{processedAsunto}</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Asunto</p>
+          <p className="text-sm font-semibold text-foreground bg-muted/40 rounded px-3 py-2">
+            {processedAsunto || <span className="text-muted-foreground italic">Sin asunto</span>}
+          </p>
         </div>
-        
+
         <div>
-          <label className="text-sm font-medium text-muted-foreground">Cuerpo:</label>
-          {processedHtml ? (
-            <div 
-              className="mt-2 p-4 border rounded-md bg-background"
-              dangerouslySetInnerHTML={{ __html: processedHtml }}
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Correo</p>
+          {htmlToRender ? (
+            <iframe
+              srcDoc={htmlToRender}
+              title="Vista previa del correo"
+              className="w-full rounded-md border bg-white"
+              style={{ height: '480px' }}
+              sandbox="allow-same-origin"
             />
           ) : (
-            <div className="mt-2 p-4 border rounded-md bg-background whitespace-pre-wrap text-sm">
-              {processedCuerpo}
+            <div className="text-sm whitespace-pre-wrap bg-muted/40 rounded px-3 py-2 text-foreground min-h-[80px]">
+              {processedCuerpo || <span className="text-muted-foreground italic">Sin contenido</span>}
             </div>
           )}
         </div>

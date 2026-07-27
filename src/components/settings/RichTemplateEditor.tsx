@@ -11,7 +11,6 @@ import { useUpdateNotificationTemplate } from "@/hooks/useNotificationTemplates"
 import { NotificationTemplate } from "@/types/subscriptions";
 import { VariablePicker } from "./VariablePicker";
 import { TemplatePreview, defaultSampleData } from "./TemplatePreview";
-import { sanitizeHtml } from "@/lib/notification-processor";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -19,14 +18,22 @@ interface RichTemplateEditorProps {
   template: NotificationTemplate;
 }
 
+function isHtml(s: string) {
+  const t = (s || '').trimStart();
+  return t.startsWith('<!DOCTYPE') || t.startsWith('<html') || t.startsWith('<HTML');
+}
+
 export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
   const updateTemplate = useUpdateNotificationTemplate();
   const [asunto, setAsunto] = useState(template.asunto || "");
   const [cuerpo, setCuerpo] = useState(template.cuerpo);
-  const [htmlContent, setHtmlContent] = useState(template.html_content || "");
+  const initialIsHtml = isHtml(template.html_content || '') || isHtml(template.cuerpo || '');
+  const [htmlContent, setHtmlContent] = useState(
+    template.html_content || (isHtml(template.cuerpo || '') ? template.cuerpo : '') || ''
+  );
   const [activa, setActiva] = useState(template.activa);
-  const [editorMode, setEditorMode] = useState<'text' | 'html'>('text');
-  
+  const [editorMode, setEditorMode] = useState<'text' | 'html'>(initialIsHtml ? 'html' : 'text');
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const htmlTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -37,13 +44,13 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
       const end = ref.current.selectionEnd;
       const text = editorMode === 'html' ? htmlContent : cuerpo;
       const newText = text.substring(0, start) + variable + text.substring(end);
-      
+
       if (editorMode === 'html') {
         setHtmlContent(newText);
       } else {
         setCuerpo(newText);
       }
-      
+
       // Restaurar el foco y posición del cursor
       setTimeout(() => {
         ref.current?.focus();
@@ -53,22 +60,20 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
   };
 
   const handleSave = () => {
-    const sanitizedHtml = htmlContent ? sanitizeHtml(htmlContent) : null;
-    
     updateTemplate.mutate({
       id: template.id,
       asunto,
-      cuerpo: editorMode === 'text' ? cuerpo : '',
-      html_content: sanitizedHtml,
+      cuerpo: editorMode === 'html' ? htmlContent : cuerpo,
+      html_content: editorMode === 'html' ? htmlContent : null,
       activa,
     });
   };
 
   const handleTestSend = async () => {
     const testEmail = prompt('Ingresa el email para enviar prueba:');
-    
+
     if (!testEmail) return;
-    
+
     try {
       await supabase.functions.invoke('send-notification', {
         body: {
@@ -77,7 +82,7 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
           recipient: testEmail
         }
       });
-      
+
       toast.success('Email de prueba enviado correctamente');
     } catch (error: any) {
       toast.error(error.message || 'Error al enviar email de prueba');
@@ -85,8 +90,8 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
+    <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+      <div className="xl:col-span-3 space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>{template.evento}</CardTitle>
@@ -124,9 +129,9 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
                   ref={textareaRef}
                   value={cuerpo}
                   onChange={(e) => setCuerpo(e.target.value)}
-                  rows={12}
+                  rows={24}
                   placeholder="Contenido del mensaje en texto plano..."
-                  className="font-mono text-sm"
+                  className="font-mono text-sm resize-y min-h-[400px]"
                 />
               </TabsContent>
 
@@ -135,9 +140,9 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
                   ref={htmlTextareaRef}
                   value={htmlContent}
                   onChange={(e) => setHtmlContent(e.target.value)}
-                  rows={12}
+                  rows={24}
                   placeholder="<p>Contenido HTML del mensaje...</p>"
-                  className="font-mono text-sm"
+                  className="font-mono text-sm resize-y min-h-[400px]"
                 />
               </TabsContent>
             </Tabs>
@@ -152,7 +157,7 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button 
+              <Button
                 variant="outline"
                 onClick={handleTestSend}
                 className="gap-2"
@@ -160,9 +165,9 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
                 <Send className="h-4 w-4" />
                 Enviar Prueba
               </Button>
-              
-              <Button 
-                onClick={handleSave} 
+
+              <Button
+                onClick={handleSave}
                 disabled={updateTemplate.isPending}
               >
                 {updateTemplate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -173,24 +178,26 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
         </Card>
       </div>
 
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Variables Disponibles</CardTitle>
-            <CardDescription>
-              Haz clic para insertar en el cursor
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <VariablePicker onInsert={handleInsertVariable} />
-          </CardContent>
-        </Card>
+      <div className="xl:col-span-2">
+        <div className="sticky top-4 space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Variables Disponibles</CardTitle>
+              <CardDescription>
+                Haz clic para insertar en el cursor
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <VariablePicker onInsert={handleInsertVariable} />
+            </CardContent>
+          </Card>
 
-        <TemplatePreview 
-          asunto={asunto}
-          cuerpo={cuerpo}
-          html_content={htmlContent}
-        />
+          <TemplatePreview
+            asunto={asunto}
+            cuerpo={editorMode === 'html' ? htmlContent : cuerpo}
+            html_content={editorMode === 'html' ? htmlContent : undefined}
+          />
+        </div>
       </div>
     </div>
   );
