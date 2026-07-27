@@ -162,12 +162,12 @@ export default function SubscriptionExpiring() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <CardTitle className="text-base">{filtered.length} resultado(s)</CardTitle>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Plan:</span>
             <Select value={planFilter} onValueChange={setPlanFilter}>
-              <SelectTrigger className="w-56">
+              <SelectTrigger className="w-full sm:w-56">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -185,6 +185,56 @@ export default function SubscriptionExpiring() {
           ) : filtered.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No hay suscripciones que coincidan.</p>
           ) : (
+            <>
+            {/* Mobile: cards */}
+            <div className="sm:hidden space-y-3">
+              {filtered.map((s: any) => {
+                const u = urgencyVariant(s.diasRestantes);
+                return (
+                  <div key={s.id} className="rounded-lg border bg-card p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        {s.client ? (
+                          <Link to={`/clients/${s.client_id}`} className="font-semibold text-primary text-sm hover:underline">
+                            {s.client.razon_social || s.client.nombre_comercial}
+                          </Link>
+                        ) : <span className="text-sm text-muted-foreground">—</span>}
+                        <p className="text-xs text-muted-foreground mt-0.5">{s.vehicle ? `${s.vehicle.patente} · ${s.vehicle.marca} ${s.vehicle.modelo}` : '—'}</p>
+                      </div>
+                      <Badge className={`${u.cls} shrink-0 text-xs`}>{u.label}</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Plan</p>
+                        <p className="font-medium text-sm">{s.plan?.nombre || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Vencimiento</p>
+                        <p className="font-medium text-sm">{format(new Date(s.fecha_vencimiento), 'dd MMM yyyy', { locale: es })}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Días restantes</p>
+                        <p className="font-bold text-sm">{s.diasRestantes} días</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => setRenewTarget(s.id)}>
+                        <RefreshCw className="h-3.5 w-3.5 mr-1" /> Renovar
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1" onClick={() => openEmail(s)}>
+                        <Mail className="h-3.5 w-3.5 mr-1" /> Email
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => navigate(`/subscriptions/${s.id}`)}>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop: table */}
+            <div className="hidden sm:block">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -243,6 +293,8 @@ export default function SubscriptionExpiring() {
                 })}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
