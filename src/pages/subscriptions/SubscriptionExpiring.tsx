@@ -77,14 +77,20 @@ export default function SubscriptionExpiring() {
   }, [enriched, planFilter, bucket]);
 
   const openEmail = (s: any) => {
+    const clientName = s.client?.razon_social || s.client?.nombre_comercial || "";
+    const renewalLink = `${window.location.origin}/renovar?sub=${s.id}&plan=${s.plan_id}`;
+    const dias = s.diasRestantes;
+    const fechaFormateada = format(new Date(s.fecha_vencimiento), "dd/MM/yyyy");
     setEmailTarget(s);
-    setEmailTo(s.client?.email_principal || '');
+    setEmailTo(s.client?.email_principal || "");
     setEmailSubject(`Recordatorio: vencimiento de suscripción GPS ${s.folio}`);
     setEmailBody(
-      `Estimado/a ${s.client?.razon_social || s.client?.nombre_comercial || ''},\n\n` +
-      `Le recordamos que su suscripción ${s.folio} del plan ${s.plan?.nombre || ''} ` +
-      `vence el ${format(new Date(s.fecha_vencimiento), 'dd/MM/yyyy')}.\n\n` +
-      `Por favor contáctenos para coordinar la renovación.\n\nSaludos.`
+      `Estimado/a ${clientName},\n\n` +
+      `Le recordamos que su suscripción GPS (folio: ${s.folio}) del plan "${s.plan?.nombre || ""}" ` +
+      `vencerá el ${fechaFormateada}, en ${dias} día${dias === 1 ? "" : "s"}.\n\n` +
+      `Para renovar en línea, ingrese al siguiente enlace:\n${renewalLink}\n\n` +
+      `Si tiene consultas, puede contactarnos por WhatsApp o llamarnos al +56 9 2178 3957.\n\n` +
+      `Saludos cordiales,\nEquipo AutoLock GPS`
     );
   };
 

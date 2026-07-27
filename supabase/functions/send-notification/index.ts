@@ -9,6 +9,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function wrapEmailHtml(textContent: string, subject: string): string {
+  const escaped = textContent
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${subject}</title></head><body style="margin:0;padding:0;background:#F3F4F6;font-family:Arial,Helvetica,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)"><tr><td style="background:#E97316;padding:24px 32px;text-align:center"><p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:1px">AutoLock GPS</p></td></tr><tr><td style="padding:32px;font-size:15px;color:#374151;line-height:1.8">${escaped}</td></tr><tr><td style="border-top:1px solid #E5E7EB;padding:18px 32px;background:#F9FAFB;text-align:center"><p style="margin:0;font-size:13px;color:#6B7280">¿Dudas? Contáctanos por WhatsApp o llámanos al <strong>+56 9 2178 3957</strong></p></td></tr></table></td></tr></table></body></html>`;
+}
+
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -102,6 +112,9 @@ serve(async (req) => {
   }
 
   // Enviar via Resend
+  const isAlreadyHtml = emailBody.trimStart().startsWith("<!DOCTYPE") || emailBody.trimStart().startsWith("<html");
+  const htmlToSend = isAlreadyHtml ? emailBody : wrapEmailHtml(emailBody, subject);
+
   let resendError: string | null = null;
   const sendRes = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -113,7 +126,7 @@ serve(async (req) => {
       from: `${fromName} <${fromEmail}>`,
       to: [recipient],
       subject,
-      text: emailBody,
+      html: htmlToSend,
     }),
   });
 

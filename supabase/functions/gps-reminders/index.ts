@@ -7,17 +7,23 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 async function sendEmail(
   to: string,
   subject: string,
-  text: string,
+  content: string,
   apiKey: string,
   from: string
 ): Promise<void> {
+  const isHtml = content.trimStart().startsWith('<!DOCTYPE') || content.trimStart().startsWith('<html');
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from, to: [to], subject, text }),
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject,
+      ...(isHtml ? { html: content } : { text: content }),
+    }),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -35,7 +41,7 @@ serve(async (_req) => {
   const { data: settingsRows } = await supabase
     .from("settings")
     .select("clave, valor")
-    .in("clave", ["resend_api_key", "resend_from_email", "resend_from_name", "resend_admin_email"]);
+    .in("clave", ["resend_api_key", "resend_from_email", "resend_from_name", "resend_admin_email", "app_url"]);
 
   const getSetting = (key: string) =>
     settingsRows?.find((r: any) => r.clave === key)?.valor ?? "";
@@ -84,9 +90,9 @@ serve(async (_req) => {
     const { data: subs } = await supabase
       .from("subscriptions")
       .select(
-        `id, folio, fecha_vencimiento, ultima_notificacion_enviada,
+        `id, folio, plan_id, fecha_vencimiento, ultima_notificacion_enviada,
          clients!client_id(razon_social, email_principal),
-         subscription_plans!plan_id(nombre)`
+         subscription_plans!plan_id(nombre, precio_base)`
       )
       .eq("estado", "activa")
       .eq("fecha_vencimiento", dateStr);
@@ -116,6 +122,11 @@ serve(async (_req) => {
       const clientEmail: string | null = client?.email_principal ?? null;
       const clientName: string = client?.razon_social || "Cliente";
       const planName: string = plan?.nombre || "GPS";
+      const planPrecio: string = plan?.precio_base
+        ? new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(Number(plan.precio_base))
+        : "";
+      const appUrl = getSetting("app_url") || "https://app.autolock.cl";
+      const linkRenovacion = `${appUrl}/renovar?sub=${sub.id}&plan=${sub.plan_id ?? ""}`;
 
       const fechaVenc = new Date(sub.fecha_vencimiento + "T00:00:00");
       const fechaStr = fechaVenc.toLocaleDateString("es-CL", {
@@ -130,6 +141,8 @@ serve(async (_req) => {
         fecha_vencimiento: fechaStr,
         dias_restantes: String(rule.dias_previos),
         plan_nombre: planName,
+        precio: planPrecio,
+        link_renovacion: linkRenovacion,
       };
 
       const subject = renderTemplate(template.asunto, vars);
@@ -195,7 +208,7 @@ serve(async (_req) => {
 
     const eventoLabels: Record<string, string> = {
       recordatorio_30d: "30 días",
-      recordatorio_15d: "15 días",
+      recordatorio_10d: "10 días",
       recordatorio_7d: "7 días",
       recordatorio_1d: "1 día",
       vencimiento: "Vencidos",
