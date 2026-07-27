@@ -105,6 +105,7 @@ export default function ServiceDetail() {
 
   useEffect(() => {
     if (service) {
+      setEditNombre(service.nombre ?? "");
       setRequiereSuscripcion(service.requiere_suscripcion || false);
       setPlanesSeleccionados(
         Array.isArray(service.tipos_suscripcion_disponibles) 
