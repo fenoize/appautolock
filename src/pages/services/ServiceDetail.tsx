@@ -167,10 +167,32 @@ export default function ServiceDetail() {
     handleUpdateSuscripcion(requiereSuscripcion, planes);
   };
 
+  const handleNombreBlur = async () => {
+    const trimmed = editNombre.trim();
+    if (!trimmed || trimmed === service.nombre) return;
+    const { error } = await supabase
+      .from("services")
+      .update({ nombre: trimmed })
+      .eq("id", service.id);
+    if (error) {
+      toast({ title: "Error al actualizar nombre", variant: "destructive" });
+      setEditNombre(service.nombre);
+    } else {
+      toast({ title: "Nombre actualizado" });
+    }
+  };
+
   return (
     <PageContainer>
       <PageHeader
-        title={service.nombre}
+        title={
+          <input
+            value={editNombre}
+            onChange={e => setEditNombre(e.target.value)}
+            onBlur={handleNombreBlur}
+            className="text-2xl font-bold bg-transparent border-none outline-none focus:ring-1 focus:ring-ring rounded px-1 w-full"
+          />
+        }
         description={service.descripcion}
         action={
           <div className="flex gap-2">
