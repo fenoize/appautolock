@@ -228,10 +228,17 @@ export default function RenovarPage() {
                 </Button>
               )}
 
-              <div className="flex items-center gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
-                Pago en línea disponible próximamente
-              </div>
+              <Button
+                className="w-full bg-[#009ee3] hover:bg-[#007bb5] text-white font-semibold"
+                onClick={handlePagar}
+                disabled={paying || !data.plan}
+              >
+                {paying ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Iniciando pago...</>
+                ) : (
+                  <>💳 Pagar {data.plan ? clp(data.plan.precio) : ""} con MercadoPago</>
+                )}
+              </Button>
             </div>
 
             {data.empresa.web && (
