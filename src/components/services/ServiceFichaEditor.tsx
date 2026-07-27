@@ -142,6 +142,24 @@ export default function ServiceFichaEditor({
         </datalist>
       </div>
 
+      {/* Resumen para compartir */}
+      <div className="space-y-2">
+        <Label htmlFor="ficha_resumen">Resumen para compartir</Label>
+        <p className="text-xs text-muted-foreground">
+          Texto plano que aparece en el resumen de consulta. Usa emojis y saltos de línea. Sin formato HTML.
+        </p>
+        <Textarea
+          id="ficha_resumen"
+          value={fichaResumen}
+          onChange={e => setFichaResumen(e.target.value)}
+          placeholder={"👉 Invisible para detectores de señal.\n👉 Protección de puerto OBD II.\n👉 Contraseña configurable.\n👉 Inversión única."}
+          rows={6}
+          className="font-mono text-sm resize-y"
+        />
+      </div>
+
+
+
       {/* Editor Tiptap */}
       <div className="space-y-2">
         <Label>Contenido de la ficha</Label>
