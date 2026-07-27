@@ -404,6 +404,7 @@ export default function ServiceDetail() {
             serviceId={service.id}
             initialFichaHtml={(service as any).ficha_html ?? ''}
             initialCategoria={(service as any).categoria ?? ''}
+            initialFichaResumen={(service as any).ficha_resumen ?? ''}
           />
         </TabsContent>
       </Tabs>

@@ -7,6 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -24,15 +25,18 @@ interface ServiceFichaEditorProps {
   serviceId: string;
   initialFichaHtml: string;
   initialCategoria: string;
+  initialFichaResumen: string;
 }
 
 export default function ServiceFichaEditor({
   serviceId,
   initialFichaHtml,
   initialCategoria,
+  initialFichaResumen,
 }: ServiceFichaEditorProps) {
   const { toast } = useToast();
   const [categoria, setCategoria] = useState(initialCategoria);
+  const [fichaResumen, setFichaResumen] = useState(initialFichaResumen);
   const [categoriaOptions, setCategoriaOptions] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -101,7 +105,7 @@ export default function ServiceFichaEditor({
       const ficha_html = editor.getHTML();
       const { error } = await supabase
         .from('services')
-        .update({ ficha_html, categoria: categoria || null } as any)
+        .update({ ficha_html, categoria: categoria || null, ficha_resumen: fichaResumen || null } as any)
         .eq('id', serviceId);
 
       if (error) throw error;
@@ -137,6 +141,24 @@ export default function ServiceFichaEditor({
           ))}
         </datalist>
       </div>
+
+      {/* Resumen para compartir */}
+      <div className="space-y-2">
+        <Label htmlFor="ficha_resumen">Resumen para compartir</Label>
+        <p className="text-xs text-muted-foreground">
+          Texto plano que aparece en el resumen de consulta. Usa emojis y saltos de línea. Sin formato HTML.
+        </p>
+        <Textarea
+          id="ficha_resumen"
+          value={fichaResumen}
+          onChange={e => setFichaResumen(e.target.value)}
+          placeholder={"👉 Invisible para detectores de señal.\n👉 Protección de puerto OBD II.\n👉 Contraseña configurable.\n👉 Inversión única."}
+          rows={6}
+          className="font-mono text-sm resize-y"
+        />
+      </div>
+
+
 
       {/* Editor Tiptap */}
       <div className="space-y-2">

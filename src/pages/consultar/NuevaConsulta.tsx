@@ -14,7 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -29,6 +38,8 @@ import {
   Eye,
   ChevronDown,
   Download,
+  Copy,
+  AlertTriangle,
 } from 'lucide-react';
 
 type CompatEstado = 'compatible' | 'incompatible' | 'sin_datos';
@@ -41,6 +52,7 @@ type CompatResult = {
   estado: CompatEstado;
   categoria: string | null;
   ficha_html: string | null;
+  ficha_resumen: string | null;
 };
 
 const clp = new Intl.NumberFormat('es-CL', {
@@ -144,6 +156,38 @@ export default function NuevaConsulta() {
   const [filterCategoria, setFilterCategoria] = useState('');
   const [showIncompatibles, setShowIncompatibles] = useState(false);
   const [fichaServicio, setFichaServicio] = useState<CompatResult | null>(null);
+  const [showResumen, setShowResumen] = useState(false);
+  const [incluirPrecio, setIncluirPrecio] = useState(true);
+  const [resumenCopiado, setResumenCopiado] = useState(false);
+
+  const generarTextoResumen = () => {
+    const hoy = new Date().toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const header = `Resultados de la consulta:\n${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio} | ${lead.nombre} | ${hoy}`;
+
+    const serviciosSeleccionados = compatResults.filter(
+      s => selectedServices.has(s.id) && s.estado !== 'incompatible'
+    );
+
+    const cuerpo = serviciosSeleccionados
+      .map(svc => {
+        const precio = incluirPrecio
+          ? `\nPrecio de venta: ${clp.format(Number(svc.precio_base))}`
+          : '';
+        const resumen = svc.ficha_resumen
+          ? `\n${svc.ficha_resumen}`
+          : '\n(Sin resumen configurado)';
+        return `- ${svc.nombre}${precio}${resumen}`;
+      })
+      .join('\n\n');
+
+    return `${header}\n\n${cuerpo}`;
+  };
 
   const fetchMarcas = async (value: string) => {
     const q = value.trim();
@@ -238,7 +282,7 @@ export default function NuevaConsulta() {
     const { data: compatData, error } = await supabase
       .from('services')
       .select(
-        `id, nombre, descripcion, precio_base, categoria, ficha_html,
+        `id, nombre, descripcion, precio_base, categoria, ficha_html, ficha_resumen,
          services_products(
            product_id,
            products(
@@ -271,6 +315,7 @@ export default function NuevaConsulta() {
         precio_base: service.precio_base,
         categoria: service.categoria ?? null,
         ficha_html: service.ficha_html ?? null,
+        ficha_resumen: service.ficha_resumen ?? null,
       };
 
       if (allProducts.length === 0) return { ...base, estado: 'sin_datos' as CompatEstado };
@@ -473,7 +518,15 @@ export default function NuevaConsulta() {
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-medium">{svc.nombre}</span>
+            <span className="font-medium">
+              {svc.nombre}
+              {svc.estado !== 'incompatible' && !svc.ficha_resumen && (
+                <span className="ml-2 inline-flex items-center gap-1 text-xs text-amber-500">
+                  <AlertTriangle className="h-3 w-3" />
+                  Sin resumen
+                </span>
+              )}
+            </span>
             <div className="flex items-center gap-2">
               {estadoBadge(svc.estado)}
               {svc.ficha_html && (
@@ -882,13 +935,22 @@ export default function NuevaConsulta() {
             <Button variant="ghost" onClick={resetWizard}>
               <ArrowLeft className="mr-1 h-4 w-4" /> Nueva consulta
             </Button>
-            <Button
-              disabled={selectedServices.size === 0 || creatingQuote}
-              onClick={handleCreateQuote}
-            >
-              {creatingQuote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Crear Cotización →
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowResumen(true)}
+                disabled={selectedServices.size === 0}
+              >
+                Resumen
+              </Button>
+              <Button
+                disabled={selectedServices.size === 0 || creatingQuote}
+                onClick={handleCreateQuote}
+              >
+                {creatingQuote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Crear Cotización →
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -896,6 +958,54 @@ export default function NuevaConsulta() {
       {fichaServicio && (
         <FichaModal servicio={fichaServicio} onClose={() => setFichaServicio(null)} />
       )}
+
+      <Dialog open={showResumen} onOpenChange={setShowResumen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Resumen de consulta</DialogTitle>
+            <DialogDescription>
+              Copia este texto y pégalo en WhatsApp, Instagram o correo.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              id="incluir-precio"
+              checked={incluirPrecio}
+              onCheckedChange={setIncluirPrecio}
+            />
+            <Label htmlFor="incluir-precio">Incluir precio</Label>
+          </div>
+
+          <Textarea
+            readOnly
+            value={generarTextoResumen()}
+            rows={12}
+            className="font-mono text-sm resize-none bg-muted"
+          />
+
+          <DialogFooter>
+            <Button
+              onClick={async () => {
+                await navigator.clipboard.writeText(generarTextoResumen());
+                setResumenCopiado(true);
+                setTimeout(() => setResumenCopiado(false), 2000);
+              }}
+            >
+              {resumenCopiado ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />¡Copiado!
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 mr-2" />Copiar
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </PageContainer>
   );
 }
