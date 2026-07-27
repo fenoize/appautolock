@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -57,7 +57,10 @@ const CANALES = [
   { label: 'Directo', icon: User },
 ];
 
-const STEPS = ['Canal', 'Lead', 'Vehículo', 'Resultados'];
+const STEPS = ['Canal', 'Vehículo', 'Lead', 'Resultados'];
+
+const COMBUSTIBLES = ['Bencina', 'Diesel', 'GLP', 'Eléctrico', 'Híbrido', 'Cualquiera'];
+const ENCENDIDOS = ['Llave', 'Push-Start', 'Sin llave', 'Cualquiera'];
 
 export default function NuevaConsulta() {
   const navigate = useNavigate();
@@ -66,61 +69,108 @@ export default function NuevaConsulta() {
   const [step, setStep] = useState(1);
   const [canal, setCanal] = useState<string>('');
   const [lead, setLead] = useState({ nombre: '', telefono: '', email: '' });
-  const [vehiculo, setVehiculo] = useState({ marca: '', modelo: '', anio: '' });
+  const [vehiculo, setVehiculo] = useState({
+    marca: '',
+    modelo: '',
+    anio: '',
+    combustible: '',
+    tipoEncendido: '',
+  });
   const [marcaOptions, setMarcaOptions] = useState<string[]>([]);
   const [modeloOptions, setModeloOptions] = useState<string[]>([]);
   const [anioOptions, setAnioOptions] = useState<number[]>([]);
+  const [showMarcaDropdown, setShowMarcaDropdown] = useState(false);
+  const [showModeloDropdown, setShowModeloDropdown] = useState(false);
+  const [showAnioDropdown, setShowAnioDropdown] = useState(false);
   const [compatResults, setCompatResults] = useState<CompatResult[]>([]);
   const [loadingResults, setLoadingResults] = useState(false);
   const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
   const [creatingQuote, setCreatingQuote] = useState(false);
 
-  // Marcas
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from('vehicle_catalog').select('marca').order('marca');
-      setMarcaOptions([...new Set((data ?? []).map((r: any) => r.marca))]);
-    })();
-  }, []);
+  const handleMarcaChange = async (value: string) => {
+    setVehiculo(prev => ({ ...prev, marca: value, modelo: '', anio: '' }));
+    setShowModeloDropdown(false);
+    setShowAnioDropdown(false);
+    if (value.trim().length < 3) {
+      setMarcaOptions([]);
+      setShowMarcaDropdown(false);
+      return;
+    }
+    const { data } = await supabase
+      .from('vehicle_catalog')
+      .select('marca')
+      .ilike('marca', `${value.trim()}%`)
+      .order('marca')
+      .limit(30);
+    const unique = [...new Set((data ?? []).map((r: any) => r.marca))] as string[];
+    setMarcaOptions(unique);
+    setShowMarcaDropdown(unique.length > 0);
+  };
 
-  // Modelos
-  useEffect(() => {
-    if (!vehiculo.marca) {
+  const selectMarca = (value: string) => {
+    setVehiculo(prev => ({ ...prev, marca: value, modelo: '', anio: '' }));
+    setMarcaOptions([]);
+    setShowMarcaDropdown(false);
+  };
+
+  const handleModeloChange = async (value: string) => {
+    setVehiculo(prev => ({ ...prev, modelo: value, anio: '' }));
+    setShowAnioDropdown(false);
+    if (value.trim().length < 3) {
       setModeloOptions([]);
+      setShowModeloDropdown(false);
       return;
     }
-    (async () => {
-      const { data } = await supabase
-        .from('vehicle_catalog')
-        .select('modelo')
-        .eq('marca', vehiculo.marca)
-        .order('modelo');
-      setModeloOptions([...new Set((data ?? []).map((r: any) => r.modelo))]);
-    })();
-  }, [vehiculo.marca]);
+    let query = supabase
+      .from('vehicle_catalog')
+      .select('modelo')
+      .ilike('modelo', `${value.trim()}%`)
+      .order('modelo')
+      .limit(30);
+    if (vehiculo.marca) query = (query as any).eq('marca', vehiculo.marca);
+    const { data } = await query;
+    const unique = [...new Set((data ?? []).map((r: any) => r.modelo))] as string[];
+    setModeloOptions(unique);
+    setShowModeloDropdown(unique.length > 0);
+  };
 
-  // Años
-  useEffect(() => {
-    if (!vehiculo.marca || !vehiculo.modelo) {
+  const selectModelo = (value: string) => {
+    setVehiculo(prev => ({ ...prev, modelo: value, anio: '' }));
+    setModeloOptions([]);
+    setShowModeloDropdown(false);
+  };
+
+  const handleAnioChange = async (value: string) => {
+    setVehiculo(prev => ({ ...prev, anio: value }));
+    if (value.trim().length < 3) {
       setAnioOptions([]);
+      setShowAnioDropdown(false);
       return;
     }
-    (async () => {
-      const { data } = await supabase
-        .from('vehicle_catalog')
-        .select('anio_desde, anio_hasta')
-        .eq('marca', vehiculo.marca)
-        .eq('modelo', vehiculo.modelo);
-      const years = new Set<number>();
-      const currentYear = new Date().getFullYear() + 1;
-      (data ?? []).forEach((r: any) => {
-        const desde = r.anio_desde ?? 1990;
-        const hasta = r.anio_hasta ?? currentYear;
-        for (let y = desde; y <= hasta; y++) years.add(y);
-      });
-      setAnioOptions([...years].sort((a, b) => b - a));
-    })();
-  }, [vehiculo.marca, vehiculo.modelo]);
+    const { data } = await supabase
+      .from('vehicle_catalog')
+      .select('anio_desde, anio_hasta')
+      .eq('marca', vehiculo.marca)
+      .eq('modelo', vehiculo.modelo);
+    const years = new Set<number>();
+    const currentYear = new Date().getFullYear() + 1;
+    (data ?? []).forEach((r: any) => {
+      const desde = r.anio_desde ?? 1990;
+      const hasta = r.anio_hasta ?? currentYear;
+      for (let y = desde; y <= hasta; y++) years.add(y);
+    });
+    const filtered = [...years]
+      .filter(y => String(y).startsWith(value.trim()))
+      .sort((a, b) => b - a);
+    setAnioOptions(filtered);
+    setShowAnioDropdown(filtered.length > 0);
+  };
+
+  const selectAnio = (value: number) => {
+    setVehiculo(prev => ({ ...prev, anio: String(value) }));
+    setAnioOptions([]);
+    setShowAnioDropdown(false);
+  };
 
   const loadCompatibility = async () => {
     setLoadingResults(true);
@@ -135,7 +185,7 @@ export default function NuevaConsulta() {
              id, nombre,
              product_compatibility(
                estado,
-               vehicle_catalog(marca, modelo, anio_desde, anio_hasta)
+               vehicle_catalog(marca, modelo, anio_desde, anio_hasta, tipo_combustible, tipo_encendido)
              )
            )
          )`
@@ -170,7 +220,15 @@ export default function NuevaConsulta() {
             pc.vehicle_catalog.marca?.toLowerCase() === vehiculo.marca.toLowerCase() &&
             pc.vehicle_catalog.modelo?.toLowerCase() === vehiculo.modelo.toLowerCase() &&
             (pc.vehicle_catalog.anio_desde ?? 0) <= anio &&
-            (pc.vehicle_catalog.anio_hasta ?? 9999) >= anio
+            (pc.vehicle_catalog.anio_hasta ?? 9999) >= anio &&
+            (!vehiculo.combustible ||
+              vehiculo.combustible === 'Cualquiera' ||
+              pc.vehicle_catalog.tipo_combustible === vehiculo.combustible ||
+              pc.vehicle_catalog.tipo_combustible === 'Cualquiera') &&
+            (!vehiculo.tipoEncendido ||
+              vehiculo.tipoEncendido === 'Cualquiera' ||
+              pc.vehicle_catalog.tipo_encendido === vehiculo.tipoEncendido ||
+              pc.vehicle_catalog.tipo_encendido === 'Cualquiera')
         );
         if (!match) hasIncompatible = true;
         else if (match.estado === 'verde') hasCompatible = true;
@@ -199,7 +257,7 @@ export default function NuevaConsulta() {
     setStep(1);
     setCanal('');
     setLead({ nombre: '', telefono: '', email: '' });
-    setVehiculo({ marca: '', modelo: '', anio: '' });
+    setVehiculo({ marca: '', modelo: '', anio: '', combustible: '', tipoEncendido: '' });
     setCompatResults([]);
     setSelectedServices(new Set());
   };
@@ -360,7 +418,7 @@ export default function NuevaConsulta() {
         })}
       </div>
 
-      {/* Step 1 */}
+      {/* Step 1 - Canal */}
       {step === 1 && (
         <Card>
           <CardContent className="p-6">
@@ -390,8 +448,155 @@ export default function NuevaConsulta() {
         </Card>
       )}
 
-      {/* Step 2 */}
+      {/* Step 2 - Vehículo */}
       {step === 2 && (
+        <Card>
+          <CardContent className="space-y-4 p-6">
+            <h2 className="text-lg font-medium">Vehículo del cliente</h2>
+
+            <div className="space-y-2">
+              <Label>Marca *</Label>
+              <div className="relative">
+                <Input
+                  value={vehiculo.marca}
+                  onChange={e => handleMarcaChange(e.target.value)}
+                  placeholder="Escribe al menos 3 caracteres..."
+                  onBlur={() => setTimeout(() => setShowMarcaDropdown(false), 150)}
+                  onFocus={() => marcaOptions.length > 0 && setShowMarcaDropdown(true)}
+                  autoComplete="off"
+                />
+                {showMarcaDropdown && (
+                  <ul className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-52 overflow-y-auto">
+                    {marcaOptions.map(opt => (
+                      <li
+                        key={opt}
+                        onMouseDown={() => selectMarca(opt)}
+                        className="px-3 py-2 cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
+                      >
+                        {opt}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Modelo *</Label>
+              <div className="relative">
+                <Input
+                  value={vehiculo.modelo}
+                  onChange={e => handleModeloChange(e.target.value)}
+                  placeholder="Escribe al menos 3 caracteres..."
+                  onBlur={() => setTimeout(() => setShowModeloDropdown(false), 150)}
+                  onFocus={() => modeloOptions.length > 0 && setShowModeloDropdown(true)}
+                  autoComplete="off"
+                />
+                {showModeloDropdown && (
+                  <ul className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-52 overflow-y-auto">
+                    {modeloOptions.map(opt => (
+                      <li
+                        key={opt}
+                        onMouseDown={() => selectModelo(opt)}
+                        className="px-3 py-2 cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
+                      >
+                        {opt}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Año *</Label>
+                <div className="relative">
+                  <Input
+                    value={vehiculo.anio}
+                    onChange={e => handleAnioChange(e.target.value)}
+                    placeholder="Escribe al menos 3 caracteres..."
+                    onBlur={() => setTimeout(() => setShowAnioDropdown(false), 150)}
+                    onFocus={() => anioOptions.length > 0 && setShowAnioDropdown(true)}
+                    autoComplete="off"
+                  />
+                  {showAnioDropdown && (
+                    <ul className="absolute z-50 mt-1 w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-lg max-h-52 overflow-y-auto">
+                      {anioOptions.map(opt => (
+                        <li
+                          key={opt}
+                          onMouseDown={() => selectAnio(opt)}
+                          className="px-3 py-2 cursor-pointer text-sm hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
+                        >
+                          {opt}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  Combustible <span className="text-muted-foreground font-normal">(opcional)</span>
+                </Label>
+                <Select
+                  value={vehiculo.combustible || 'Cualquiera'}
+                  onValueChange={v => setVehiculo(prev => ({ ...prev, combustible: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="— Cualquiera —" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COMBUSTIBLES.map(c => (
+                      <SelectItem key={c} value={c}>
+                        {c === 'Cualquiera' ? '— Cualquiera —' : c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  Tipo de Encendido{' '}
+                  <span className="text-muted-foreground font-normal">(opcional)</span>
+                </Label>
+                <Select
+                  value={vehiculo.tipoEncendido || 'Cualquiera'}
+                  onValueChange={v => setVehiculo(prev => ({ ...prev, tipoEncendido: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="— Cualquiera —" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ENCENDIDOS.map(c => (
+                      <SelectItem key={c} value={c}>
+                        {c === 'Cualquiera' ? '— Cualquiera —' : c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <Button variant="ghost" onClick={() => setStep(1)}>
+                <ArrowLeft className="mr-1 h-4 w-4" /> Volver
+              </Button>
+              <Button
+                disabled={!vehiculo.marca || !vehiculo.modelo || !vehiculo.anio}
+                onClick={() => setStep(3)}
+              >
+                Continuar →
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Step 3 - Lead */}
+      {step === 3 && (
         <Card>
           <CardContent className="space-y-4 p-6">
             <h2 className="text-lg font-medium">Datos del Lead</h2>
@@ -423,86 +628,10 @@ export default function NuevaConsulta() {
               />
             </div>
             <div className="flex items-center justify-between pt-2">
-              <Button variant="ghost" onClick={() => setStep(1)}>
-                <ArrowLeft className="mr-1 h-4 w-4" /> Volver
-              </Button>
-              <Button disabled={!lead.nombre.trim()} onClick={() => setStep(3)}>
-                Continuar →
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Step 3 */}
-      {step === 3 && (
-        <Card>
-          <CardContent className="space-y-4 p-6">
-            <h2 className="text-lg font-medium">Vehículo del cliente</h2>
-            <div className="space-y-2">
-              <Label>Marca</Label>
-              <Select
-                value={vehiculo.marca}
-                onValueChange={v => setVehiculo({ marca: v, modelo: '', anio: '' })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona una marca" />
-                </SelectTrigger>
-                <SelectContent>
-                  {marcaOptions.map(m => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Modelo</Label>
-              <Select
-                value={vehiculo.modelo}
-                disabled={!vehiculo.marca}
-                onValueChange={v => setVehiculo(prev => ({ ...prev, modelo: v, anio: '' }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un modelo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {modeloOptions.map(m => (
-                    <SelectItem key={m} value={m}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Año</Label>
-              <Select
-                value={vehiculo.anio}
-                disabled={!vehiculo.modelo}
-                onValueChange={v => setVehiculo(prev => ({ ...prev, anio: v }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un año" />
-                </SelectTrigger>
-                <SelectContent>
-                  {anioOptions.map(y => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center justify-between pt-2">
               <Button variant="ghost" onClick={() => setStep(2)}>
                 <ArrowLeft className="mr-1 h-4 w-4" /> Volver
               </Button>
-              <Button
-                disabled={!vehiculo.marca || !vehiculo.modelo || !vehiculo.anio}
-                onClick={goToResults}
-              >
+              <Button disabled={!lead.nombre.trim()} onClick={goToResults}>
                 Ver compatibilidad →
               </Button>
             </div>
@@ -510,12 +639,15 @@ export default function NuevaConsulta() {
         </Card>
       )}
 
-      {/* Step 4 */}
+      {/* Step 4 - Resultados */}
       {step === 4 && (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Consulta para <span className="font-medium text-foreground">{lead.nombre}</span> ·{' '}
-            {vehiculo.marca} {vehiculo.modelo} {vehiculo.anio} · Canal: {canal}
+            Consulta para <span className="font-medium text-foreground">{lead.nombre || 'Lead'}</span> ·{' '}
+            {vehiculo.marca} {vehiculo.modelo} {vehiculo.anio}
+            {vehiculo.combustible && vehiculo.combustible !== 'Cualquiera' ? ` · ${vehiculo.combustible}` : ''}
+            {vehiculo.tipoEncendido && vehiculo.tipoEncendido !== 'Cualquiera' ? ` · ${vehiculo.tipoEncendido}` : ''}
+            {' '}· Canal: {canal}
           </p>
 
           {loadingResults ? (
