@@ -29,6 +29,11 @@ interface RenewalActionModalProps {
 
 export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'reactivar' }: RenewalActionModalProps) {
   const [sending, setSending] = useState(false);
+  const [showEmailCompose, setShowEmailCompose] = useState(false);
+  const [emailTo, setEmailTo] = useState('');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailBody, setEmailBody] = useState('');
+
   const email = subscription.client?.email_principal;
   const clientName = subscription.client?.razon_social || subscription.client?.nombre_comercial || '-';
   const vencimiento = new Date(subscription.fecha_vencimiento);
