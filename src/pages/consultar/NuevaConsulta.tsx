@@ -561,9 +561,9 @@ export default function NuevaConsulta() {
                       selectMarca(marcaOptions[0]);
                     }
                   }}
-                  placeholder="Escribe al menos 3 caracteres..."
+                  placeholder="Buscar marca..."
                   onBlur={() => setTimeout(() => setShowMarcaDropdown(false), 150)}
-                  onFocus={() => marcaOptions.length > 0 && setShowMarcaDropdown(true)}
+                  onFocus={() => fetchMarcas(vehiculo.marca)}
                   autoComplete="off"
                 />
                 {showMarcaDropdown && (
