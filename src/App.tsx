@@ -62,6 +62,7 @@ import EditQuote from "./pages/quotes/EditQuote";
 import ServicesList from "./pages/services/ServicesList";
 import NewService from "./pages/services/NewService";
 import ServiceDetail from "./pages/services/ServiceDetail";
+import NuevaConsulta from "./pages/consultar/NuevaConsulta";
 
 const queryClient = new QueryClient();
 
@@ -102,6 +103,9 @@ const App = () => (
           <Route path="/subscriptions/plans/:id" element={<ProtectedRoute><AppLayout><PlanDetail /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/reports" element={<ProtectedRoute><AppLayout><SubscriptionReports /></AppLayout></ProtectedRoute>} />
           
+          {/* Consultar */}
+          <Route path="/consultar" element={<ProtectedRoute><AppLayout><NuevaConsulta /></AppLayout></ProtectedRoute>} />
+
           {/* Cotizaciones */}
           <Route path="/quotes" element={<ProtectedRoute><AppLayout><QuotesList /></AppLayout></ProtectedRoute>} />
           <Route path="/quotes/new" element={<ProtectedRoute><AppLayout><NewQuote /></AppLayout></ProtectedRoute>} />
