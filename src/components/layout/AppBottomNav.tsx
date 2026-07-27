@@ -82,11 +82,11 @@ export function AppBottomNav() {
               <span className="text-xs">Más</span>
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-auto max-h-[85vh]">
-            <SheetHeader>
+          <SheetContent side="bottom" className="h-auto max-h-[85vh] flex flex-col">
+            <SheetHeader className="shrink-0">
               <SheetTitle>Menú</SheetTitle>
             </SheetHeader>
-            <div className="mt-4 grid grid-cols-3 gap-3 pb-4 overflow-y-auto">
+            <div className="mt-4 grid grid-cols-3 gap-3 pb-6 overflow-y-auto">
               {visibleMoreItems.map((item) => (
                 <button
                   key={item.path}
