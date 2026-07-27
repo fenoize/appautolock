@@ -4,7 +4,9 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 import { useServiceComplete, useUpdateService } from "@/hooks/useServices";
 import { ArrowLeft, Edit, Copy } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +23,31 @@ export default function ServiceDetail() {
   
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
   const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
+
+  const [iglaSearchBrand, setIglaSearchBrand] = useState("");
+  const [iglaSearchModel, setIglaSearchModel] = useState("");
+  const [iglaResults, setIglaResults] = useState<any[]>([]);
+  const [iglaLoading, setIglaLoading] = useState(false);
+  const [iglaSearched, setIglaSearched] = useState(false);
+
+  const handleIglaSearch = async () => {
+    if (!iglaSearchBrand.trim() || !iglaSearchModel.trim()) return;
+    setIglaLoading(true);
+    setIglaSearched(false);
+    try {
+      const { data, error } = await supabase
+        .from("igla_compatibility")
+        .select("brand, model, year_from, year_to, configuration, transmission, engine_type")
+        .ilike("brand", `%${iglaSearchBrand.trim()}%`)
+        .ilike("model", `%${iglaSearchModel.trim()}%`)
+        .eq("igla_compatible", true)
+        .order("year_from", { ascending: false });
+      if (!error) setIglaResults(data ?? []);
+    } finally {
+      setIglaLoading(false);
+      setIglaSearched(true);
+    }
+  };
 
   useEffect(() => {
     if (service) {
@@ -167,10 +194,69 @@ export default function ServiceDetail() {
         <TabsContent value="compatibilidad">
           <Card>
             <CardHeader>
-              <CardTitle>Reglas de Compatibilidad</CardTitle>
+              <CardTitle>{(service as any).usa_compatibilidad_igla ? "Compatibilidad IGLA AI200" : "Reglas de Compatibilidad"}</CardTitle>
             </CardHeader>
             <CardContent>
-              {service.service_compat_rules && service.service_compat_rules.length > 0 ? (
+              {(service as any).usa_compatibilidad_igla ? (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-lg mb-1">Verifica si tu vehículo es compatible</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Ingresa la marca y modelo de tu vehículo para consultar la compatibilidad con el sistema IGLA AI200.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Input
+                      placeholder="Marca (ej: Toyota, BMW...)"
+                      value={iglaSearchBrand}
+                      onChange={(e) => { setIglaSearchBrand(e.target.value); setIglaResults([]); setIglaSearched(false); }}
+                      className="sm:w-48"
+                    />
+                    <Input
+                      placeholder="Modelo (ej: Hilux, X5...)"
+                      value={iglaSearchModel}
+                      onChange={(e) => { setIglaSearchModel(e.target.value); setIglaResults([]); setIglaSearched(false); }}
+                      className="flex-1"
+                    />
+                    <Button onClick={handleIglaSearch} disabled={iglaLoading || !iglaSearchBrand.trim() || !iglaSearchModel.trim()}>
+                      {iglaLoading ? "Buscando..." : "Buscar"}
+                    </Button>
+                  </div>
+
+                  {iglaSearched && !iglaLoading && (
+                    iglaResults.length === 0 ? (
+                      <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 flex items-start gap-3">
+                        <span className="text-yellow-500 text-xl">⚠️</span>
+                        <div>
+                          <p className="font-medium text-yellow-800">Vehículo no encontrado</p>
+                          <p className="text-sm text-yellow-700">No encontramos compatibilidad registrada para ese vehículo. Contáctanos para confirmarlo.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm text-muted-foreground">{iglaResults.length} variante(s) compatible(s) encontrada(s):</p>
+                        {iglaResults.map((row, i) => (
+                          <div key={i} className="rounded-lg border bg-green-50 border-green-200 p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-green-600 text-sm">✓</span>
+                              <span className="font-semibold text-sm">{row.brand} {row.model}</span>
+                              {(row.year_from || row.year_to) && (
+                                <span className="text-xs text-muted-foreground">({row.year_from}–{row.year_to ?? "hoy"})</span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                              {row.configuration && <span className="bg-white rounded px-2 py-0.5 border">{row.configuration}</span>}
+                              {row.transmission && <span className="bg-white rounded px-2 py-0.5 border">{row.transmission}</span>}
+                              {row.engine_type && <span className="bg-white rounded px-2 py-0.5 border">{row.engine_type}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  )}
+                </div>
+              ) : service.service_compat_rules && service.service_compat_rules.length > 0 ? (
                 <div className="space-y-2">
                   {service.service_compat_rules.map((rule) => (
                     <div key={rule.id} className="p-3 border rounded space-y-2">

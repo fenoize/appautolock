@@ -462,6 +462,45 @@ export type Database = {
         }
         Relationships: []
       }
+      igla_compatibility: {
+        Row: {
+          brand: string
+          configuration: string | null
+          created_at: string
+          engine_type: string | null
+          id: number
+          igla_compatible: boolean
+          model: string
+          transmission: string | null
+          year_from: number | null
+          year_to: number | null
+        }
+        Insert: {
+          brand: string
+          configuration?: string | null
+          created_at?: string
+          engine_type?: string | null
+          id?: number
+          igla_compatible?: boolean
+          model: string
+          transmission?: string | null
+          year_from?: number | null
+          year_to?: number | null
+        }
+        Update: {
+          brand?: string
+          configuration?: string | null
+          created_at?: string
+          engine_type?: string | null
+          id?: number
+          igla_compatible?: boolean
+          model?: string
+          transmission?: string | null
+          year_from?: number | null
+          year_to?: number | null
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           branch_id: string | null
@@ -1391,6 +1430,7 @@ export type Database = {
           tiempo_estimado_minutos: number
           tipos_suscripcion_disponibles: Json | null
           updated_at: string | null
+          usa_compatibilidad_igla: boolean
           version: number | null
         }
         Insert: {
@@ -1407,6 +1447,7 @@ export type Database = {
           tiempo_estimado_minutos?: number
           tipos_suscripcion_disponibles?: Json | null
           updated_at?: string | null
+          usa_compatibilidad_igla?: boolean
           version?: number | null
         }
         Update: {
@@ -1423,6 +1464,7 @@ export type Database = {
           tiempo_estimado_minutos?: number
           tipos_suscripcion_disponibles?: Json | null
           updated_at?: string | null
+          usa_compatibilidad_igla?: boolean
           version?: number | null
         }
         Relationships: [
