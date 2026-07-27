@@ -245,6 +245,7 @@ export default function NuevaConsulta() {
           email_principal: lead.email || null,
           telefonos: lead.telefono ? [lead.telefono] : [],
           estado: 'prospecto' as const,
+          pasaporte: 'PENDIENTE',
           notas: `Canal: ${canal}`,
           branch_id: branchId,
         })
