@@ -53,31 +53,55 @@ export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'r
     toast.success('Link copiado');
   };
 
+  const planChanged = selectedPlanId !== (subscription.plan?.id ?? '');
+
+  const openEmailCompose = () => {
+    const planNombre = selectedPlan?.nombre ?? '-';
+    const planPrecio = selectedPlan?.precio != null ? selectedPlan.precio.toLocaleString('es-CL') : '-';
+
+    setEmailTo(email || '');
+    if (planChanged) {
+      setEmailSubject(`Tu suscripción GPS ha sido actualizada — ${subscription.folio}`);
+      setEmailBody(
+        `Estimado/a ${clientName},\n\n` +
+        `Hemos actualizado tu suscripción GPS al plan "${planNombre}".\n\n` +
+        `Folio: ${subscription.folio}\n` +
+        `Nuevo plan: ${planNombre}\n` +
+        `Valor: $${planPrecio}\n\n` +
+        `Para completar el pago y activar tu suscripción, ingresa al siguiente enlace:\n${url}\n\n` +
+        `Si tienes consultas, puedes contactarnos por WhatsApp o llamarnos al +56 9 2178 3957.\n\n` +
+        `Saludos cordiales,\nAutoLock GPS`
+      );
+    } else {
+      setEmailSubject(`Recordatorio: vencimiento de suscripción GPS ${subscription.folio}`);
+      setEmailBody(
+        `Estimado/a ${clientName},\n\n` +
+        `Le recordamos que su suscripción GPS (folio: ${subscription.folio}) del plan "${planNombre}" vencerá el ${format(vencimiento, 'dd/MM/yyyy')}, en ${diasRestantes} días.\n\n` +
+        `Para renovar en línea, ingrese al siguiente enlace:\n${url}\n\n` +
+        `Si tiene consultas, puede contactarnos por WhatsApp o llamarnos al +56 9 2178 3957.\n\n` +
+        `Saludos cordiales,\nAutoLock GPS`
+      );
+    }
+    setShowEmailCompose(true);
+  };
+
   const handleSendEmail = async () => {
-    if (!email) {
-      toast.error('El cliente no tiene email registrado');
+    if (!emailTo) {
+      toast.error('Ingresa un destinatario');
       return;
     }
     setSending(true);
     try {
       const { error } = await supabase.functions.invoke('send-notification', {
         body: {
-          evento: 'recordatorio_30d',
-          recipient: email,
-          data: {
-            nombre_cliente: clientName,
-            folio: subscription.folio,
-            fecha_vencimiento: format(vencimiento, 'dd/MM/yyyy'),
-            dias_restantes: diasRestantes,
-            plan_nombre: selectedPlan?.nombre ?? subscription.plan?.nombre,
-            precio: selectedPlan?.precio ?? subscription.plan?.precio,
-            subscription_id: subscription.id,
-            link_renovacion: url,
-          },
+          recipient: emailTo,
+          evento: planChanged ? 'actualizacion_plan' : 'subscription_expiring_reminder',
+          data: { subject: emailSubject, body: emailBody },
         },
       });
       if (error) throw error;
-      toast.success(`Email enviado a ${email}`);
+      toast.success(`Email enviado a ${emailTo}`);
+      setShowEmailCompose(false);
       onOpenChange(false);
     } catch (err: any) {
       toast.error(err.message || 'Error al enviar email');
@@ -85,6 +109,7 @@ export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'r
       setSending(false);
     }
   };
+
 
   const handleOpenLink = () => {
     window.open(url, '_blank', 'noopener,noreferrer');
