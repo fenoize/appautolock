@@ -935,13 +935,22 @@ export default function NuevaConsulta() {
             <Button variant="ghost" onClick={resetWizard}>
               <ArrowLeft className="mr-1 h-4 w-4" /> Nueva consulta
             </Button>
-            <Button
-              disabled={selectedServices.size === 0 || creatingQuote}
-              onClick={handleCreateQuote}
-            >
-              {creatingQuote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Crear Cotización →
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowResumen(true)}
+                disabled={selectedServices.size === 0}
+              >
+                Resumen
+              </Button>
+              <Button
+                disabled={selectedServices.size === 0 || creatingQuote}
+                onClick={handleCreateQuote}
+              >
+                {creatingQuote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Crear Cotización →
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -949,6 +958,54 @@ export default function NuevaConsulta() {
       {fichaServicio && (
         <FichaModal servicio={fichaServicio} onClose={() => setFichaServicio(null)} />
       )}
+
+      <Dialog open={showResumen} onOpenChange={setShowResumen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Resumen de consulta</DialogTitle>
+            <DialogDescription>
+              Copia este texto y pégalo en WhatsApp, Instagram o correo.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              id="incluir-precio"
+              checked={incluirPrecio}
+              onCheckedChange={setIncluirPrecio}
+            />
+            <Label htmlFor="incluir-precio">Incluir precio</Label>
+          </div>
+
+          <Textarea
+            readOnly
+            value={generarTextoResumen()}
+            rows={12}
+            className="font-mono text-sm resize-none bg-muted"
+          />
+
+          <DialogFooter>
+            <Button
+              onClick={async () => {
+                await navigator.clipboard.writeText(generarTextoResumen());
+                setResumenCopiado(true);
+                setTimeout(() => setResumenCopiado(false), 2000);
+              }}
+            >
+              {resumenCopiado ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" />¡Copiado!
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4 mr-2" />Copiar
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </PageContainer>
   );
 }
