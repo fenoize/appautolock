@@ -44,7 +44,7 @@ export default function SubscriptionPlans() {
                 <TableHead>Plan</TableHead>
                 <TableHead>Período</TableHead>
                 <TableHead>Precio</TableHead>
-                <TableHead>Recordatorios</TableHead>
+                
                 <TableHead>Suspensión Auto</TableHead>
                 <TableHead>Activo</TableHead>
                 <TableHead></TableHead>
@@ -53,7 +53,7 @@ export default function SubscriptionPlans() {
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <SkeletonTableRow key={i} columns={7} />
+                  <SkeletonTableRow key={i} columns={6} />
                 ))
               ) : (
                 plans?.map((plan) => (
@@ -78,11 +78,6 @@ export default function SubscriptionPlans() {
                     </TableCell>
                     <TableCell>{plan.periodo_meses} {plan.periodo_meses === 1 ? 'mes' : 'meses'}</TableCell>
                     <TableCell className="font-medium">${plan.precio.toLocaleString('es-CL')}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {plan.notificacion_config?.recordatorios?.filter((r: any) => r.activo).length || 0} activos
-                      </Badge>
-                    </TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
                       <Switch
                         checked={plan.suspension_automatica}
