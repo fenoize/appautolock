@@ -1530,6 +1530,7 @@ export type Database = {
           created_at: string | null
           es_sustituible: boolean | null
           id: string
+          precio_costo_snapshot: number | null
           product_id: string
           service_id: string
         }
@@ -1538,6 +1539,7 @@ export type Database = {
           created_at?: string | null
           es_sustituible?: boolean | null
           id?: string
+          precio_costo_snapshot?: number | null
           product_id: string
           service_id: string
         }
@@ -1546,6 +1548,7 @@ export type Database = {
           created_at?: string | null
           es_sustituible?: boolean | null
           id?: string
+          precio_costo_snapshot?: number | null
           product_id?: string
           service_id?: string
         }
