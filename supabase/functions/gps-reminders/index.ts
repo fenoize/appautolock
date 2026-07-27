@@ -58,6 +58,8 @@ serve(async (_req) => {
     log: [],
   };
 
+  const adminLog: { evento: string; folio: string; cliente: string; fecha: string; error?: string }[] = [];
+
   // 1. Cargar reglas activas de recordatorio por email
   const { data: rules, error: rulesErr } = await supabase
     .from("reminder_settings")
@@ -141,9 +143,6 @@ serve(async (_req) => {
           await sendEmail(clientEmail, subject, body, resendApiKey, fromFull);
         }
 
-        const adminSubject = `[Admin GPS] ${subject} — ${clientName}`;
-        await sendEmail(adminEmail, adminSubject, body, resendApiKey, fromFull);
-
         await supabase
           .from("subscriptions")
           .update({
@@ -153,10 +152,12 @@ serve(async (_req) => {
           .eq("id", sub.id);
 
         results.sent++;
+        adminLog.push({ evento: rule.evento, folio: sub.folio, cliente: clientName, fecha: fechaStr });
       } catch (err: any) {
         estadoLog = "error";
         errorMsg = err.message;
         results.errors++;
+        adminLog.push({ evento: rule.evento, folio: sub.folio, cliente: clientName, fecha: fechaStr, error: errorMsg ?? undefined });
       }
 
       await supabase.from("notifications").insert({
@@ -177,6 +178,57 @@ serve(async (_req) => {
         estado: estadoLog,
         error: errorMsg,
       });
+    }
+  }
+
+  if (adminEmail && adminLog.length > 0) {
+    const hoy = new Date().toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit", year: "numeric" });
+
+    const exitosos = adminLog.filter((l) => !l.error);
+    const errores = adminLog.filter((l) => l.error);
+
+    const byEvento: Record<string, typeof exitosos> = {};
+    for (const item of exitosos) {
+      if (!byEvento[item.evento]) byEvento[item.evento] = [];
+      byEvento[item.evento].push(item);
+    }
+
+    const eventoLabels: Record<string, string> = {
+      recordatorio_30d: "30 días",
+      recordatorio_15d: "15 días",
+      recordatorio_7d: "7 días",
+      recordatorio_1d: "1 día",
+      vencimiento: "Vencidos",
+      suspension: "Suspendidos",
+    };
+
+    let body = `Resumen de recordatorios GPS enviados - ${hoy}\n\n`;
+    body += `Se enviaron ${exitosos.length} notificaciones:\n`;
+
+    for (const [evento, items] of Object.entries(byEvento)) {
+      body += `\n${eventoLabels[evento] ?? evento}:\n`;
+      for (const item of items) {
+        body += `- ${item.folio} | ${item.cliente} | vence ${item.fecha}\n`;
+      }
+    }
+
+    if (errores.length > 0) {
+      body += `\nErrores (${errores.length}):\n`;
+      for (const item of errores) {
+        body += `- ${item.folio} | ${item.cliente} | ${item.error}\n`;
+      }
+    }
+
+    try {
+      await sendEmail(
+        adminEmail,
+        `[AutoLock GPS] Recordatorios enviados - ${hoy}`,
+        body,
+        resendApiKey,
+        fromFull
+      );
+    } catch (_) {
+      // No bloquear si falla el resumen al admin
     }
   }
 
