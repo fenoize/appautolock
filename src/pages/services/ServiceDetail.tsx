@@ -231,7 +231,9 @@ export default function ServiceDetail() {
           <ServiceCostItems
             serviceId={service.id}
             porcentajeUtilidadInicial={(service as any).porcentaje_utilidad ?? 0}
+            precioBaseActual={service.precio_base ?? 0}
           />
+
 
           <div className="border-t pt-6">
             <h3 className="text-lg font-semibold mb-4">Materiales de Inventario</h3>
