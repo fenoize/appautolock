@@ -293,6 +293,8 @@ export default function SubscriptionExpiring() {
                 })}
               </TableBody>
             </Table>
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
