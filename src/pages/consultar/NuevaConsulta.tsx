@@ -14,7 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -29,6 +38,8 @@ import {
   Eye,
   ChevronDown,
   Download,
+  Copy,
+  AlertTriangle,
 } from 'lucide-react';
 
 type CompatEstado = 'compatible' | 'incompatible' | 'sin_datos';
@@ -41,6 +52,7 @@ type CompatResult = {
   estado: CompatEstado;
   categoria: string | null;
   ficha_html: string | null;
+  ficha_resumen: string | null;
 };
 
 const clp = new Intl.NumberFormat('es-CL', {
