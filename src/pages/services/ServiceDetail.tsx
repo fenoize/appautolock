@@ -14,6 +14,7 @@ import { ServiceMaterialsEditor } from "@/components/services/ServiceMaterialsEd
 import { ServiceCostItems } from "@/components/services/ServiceCostItems";
 
 import { ServiceChecklistEditor } from "@/components/services/ServiceChecklistEditor";
+import ServiceFichaEditor from "@/components/services/ServiceFichaEditor";
 import { SubscriptionPlanSelector } from "@/components/shared/SubscriptionPlanSelector";
 import { useState, useEffect } from "react";
 
@@ -197,6 +198,7 @@ export default function ServiceDetail() {
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="compatibilidad">Compatibilidad</TabsTrigger>
           <TabsTrigger value="suscripciones">Suscripciones</TabsTrigger>
+          <TabsTrigger value="ficha">Ficha Comercial</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumen">
@@ -394,6 +396,14 @@ export default function ServiceDetail() {
             planesSeleccionados={planesSeleccionados}
             onToggleRequiereSuscripcion={handleToggleRequiereSuscripcion}
             onSelectPlanes={handleSelectPlanes}
+          />
+        </TabsContent>
+
+        <TabsContent value="ficha">
+          <ServiceFichaEditor
+            serviceId={service.id}
+            initialFichaHtml={(service as any).ficha_html ?? ''}
+            initialCategoria={(service as any).categoria ?? ''}
           />
         </TabsContent>
       </Tabs>
