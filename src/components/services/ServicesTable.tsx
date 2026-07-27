@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
@@ -10,9 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Service } from "@/types/services";
-import { Edit, Trash2, Copy } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { Edit, Trash2, Copy, AlertTriangle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ServicesTableProps {
   services: Service[];
@@ -23,10 +23,33 @@ interface ServicesTableProps {
 
 export function ServicesTable({ services, isLoading, onDelete, onDuplicate }: ServicesTableProps) {
   const navigate = useNavigate();
+  const [staleServiceIds, setStaleServiceIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("services_products")
+        .select("service_id, precio_costo_snapshot, products(precio_costo)")
+        .not("precio_costo_snapshot", "is", null);
+      if (!active || !data) return;
+      setStaleServiceIds(
+        new Set(
+          (data as any[])
+            .filter((m) => Number(m.precio_costo_snapshot) !== Number(m.products?.precio_costo ?? 0))
+            .map((m) => m.service_id as string),
+        ),
+      );
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   if (isLoading) {
     return <div className="flex justify-center py-8">Cargando...</div>;
   }
+
 
   return (
     <Table>
