@@ -71,7 +71,16 @@ export function ServicesTable({ services, isLoading, onDelete, onDuplicate }: Se
           >
             <TableCell>
               <div>
-                <div className="font-medium">{service.nombre}</div>
+                <div className="font-medium flex items-center gap-2">
+                  {staleServiceIds.has(service.id) && (
+                    <AlertTriangle
+                      className="h-4 w-4 text-amber-500 shrink-0"
+                      aria-label="Precios de materiales actualizados — revisar servicio"
+                    />
+                  )}
+                  {service.nombre}
+                </div>
+
                 {service.descripcion && (
                   <div className="text-sm text-muted-foreground truncate max-w-md">
                     {service.descripcion}
