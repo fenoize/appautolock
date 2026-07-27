@@ -46,7 +46,7 @@ export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'r
 
   const [selectedPlanId, setSelectedPlanId] = useState<string>(subscription.plan?.id ?? '');
   const selectedPlan = plans?.find(p => p.id === selectedPlanId) ?? subscription.plan;
-  const url = `https://portal.autolock.cl/renovar?sub=${subscription.id}&plan=${selectedPlanId}`;
+  const url = `${window.location.origin}/renovar?sub=${subscription.id}&plan=${selectedPlanId}`;
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(url);
