@@ -518,7 +518,15 @@ export default function NuevaConsulta() {
         />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-medium">{svc.nombre}</span>
+            <span className="font-medium">
+              {svc.nombre}
+              {svc.estado !== 'incompatible' && !svc.ficha_resumen && (
+                <span className="ml-2 inline-flex items-center gap-1 text-xs text-amber-500">
+                  <AlertTriangle className="h-3 w-3" />
+                  Sin resumen
+                </span>
+              )}
+            </span>
             <div className="flex items-center gap-2">
               {estadoBadge(svc.estado)}
               {svc.ficha_html && (
