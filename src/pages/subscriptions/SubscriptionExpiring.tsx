@@ -98,10 +98,8 @@ export default function SubscriptionExpiring() {
       const { error } = await supabase.functions.invoke('send-notification', {
         body: {
           recipient: emailTo.trim(),
-          subject: emailSubject,
-          body: emailBody,
-          channel: 'email',
           evento: 'subscription_expiring_reminder',
+          data: { subject: emailSubject, body: emailBody },
         },
       });
       if (error) throw error;
