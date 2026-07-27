@@ -628,9 +628,9 @@ export default function NuevaConsulta() {
                         selectAnio(anioOptions[0]);
                       }
                     }}
-                    placeholder="Escribe al menos 3 caracteres..."
+                    placeholder="Buscar año..."
                     onBlur={() => setTimeout(() => setShowAnioDropdown(false), 150)}
-                    onFocus={() => anioOptions.length > 0 && setShowAnioDropdown(true)}
+                    onFocus={() => fetchAnios(vehiculo.anio)}
                     autoComplete="off"
                   />
                   {showAnioDropdown && (
