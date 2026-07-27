@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+
 import { Separator } from '@/components/ui/separator';
 
 
@@ -67,31 +67,92 @@ export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'r
     const planNombre = selectedPlan?.nombre ?? '-';
     const planPrecio = selectedPlan?.precio != null ? selectedPlan.precio.toLocaleString('es-CL') : '-';
 
+    const header = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
+      <tr><td style="background:#f97316;padding:30px 40px;text-align:center;">
+        <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:bold;letter-spacing:1px;">AutoLock GPS</h1>
+        <p style="color:#fed7aa;margin:8px 0 0;font-size:13px;">Sistema de Electroseguridad Automotriz</p>
+      </td></tr>`;
+
+    const footer = `
+      <tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center;">
+        <p style="color:#9ca3af;font-size:12px;margin:0;">© 2025 AutoLock GPS · Electroseguridad Automotriz</p>
+        <p style="color:#9ca3af;font-size:12px;margin:4px 0 0;">contacto@autolock.cl · +56 9 2178 3957</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
     setEmailTo(email || '');
+
     if (planChanged) {
       setEmailSubject(`Tu suscripción GPS ha sido actualizada — ${subscription.folio}`);
-      setEmailBody(
-        `Estimado/a ${clientName},\n\n` +
-        `Hemos actualizado tu suscripción GPS al plan "${planNombre}".\n\n` +
-        `Folio: ${subscription.folio}\n` +
-        `Nuevo plan: ${planNombre}\n` +
-        `Valor: $${planPrecio}\n\n` +
-        `Para completar el pago y activar tu suscripción, ingresa al siguiente enlace:\n${url}\n\n` +
-        `Si tienes consultas, puedes contactarnos por WhatsApp o llamarnos al +56 9 2178 3957.\n\n` +
-        `Saludos cordiales,\nAutoLock GPS`
-      );
+      setEmailBody(`${header}
+      <tr><td style="padding:40px;">
+        <p style="color:#374151;font-size:15px;margin:0 0 20px;">Estimado/a <strong>${clientName}</strong>,</p>
+        <p style="color:#374151;font-size:15px;margin:0 0 24px;">Hemos actualizado tu suscripción GPS con el siguiente plan:</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;margin:0 0 24px;">
+          <tr><td style="padding:20px;">
+            <p style="margin:0 0 8px;color:#9a3412;font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Detalle de la actualización</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Folio</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${subscription.folio}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Plan</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${planNombre}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Valor</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">$${planPrecio}</td></tr>
+            </table>
+          </td></tr>
+        </table>
+        <p style="color:#374151;font-size:15px;margin:0 0 24px;">Para completar el pago y activar tu suscripción, haz clic en el siguiente botón:</p>
+        <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+          <tr><td align="center" style="background:#f97316;border-radius:6px;padding:14px 32px;">
+            <a href="${url}" style="color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;">Pagar y renovar ahora</a>
+          </td></tr>
+        </table>
+        <p style="color:#6b7280;font-size:13px;margin:0 0 4px;">Si el botón no funciona, copia este enlace:</p>
+        <p style="color:#f97316;font-size:12px;margin:0 0 28px;word-break:break-all;">${url}</p>
+        <p style="color:#374151;font-size:14px;margin:0;">Si tienes consultas, contáctanos por WhatsApp o al <strong>+56 9 2178 3957</strong>.</p>
+      </td></tr>${footer}`);
     } else {
+      const boxBg = diasRestantes <= 1 ? '#fee2e2' : diasRestantes <= 7 ? '#fefce8' : '#fff7ed';
+      const boxBorder = diasRestantes <= 1 ? '#fca5a5' : diasRestantes <= 7 ? '#fde68a' : '#fed7aa';
+      const fechaVenc = format(vencimiento, 'dd/MM/yyyy');
+
       setEmailSubject(`Recordatorio: vencimiento de suscripción GPS ${subscription.folio}`);
-      setEmailBody(
-        `Estimado/a ${clientName},\n\n` +
-        `Le recordamos que su suscripción GPS (folio: ${subscription.folio}) del plan "${planNombre}" vencerá el ${format(vencimiento, 'dd/MM/yyyy')}, en ${diasRestantes} días.\n\n` +
-        `Para renovar en línea, ingrese al siguiente enlace:\n${url}\n\n` +
-        `Si tiene consultas, puede contactarnos por WhatsApp o llamarnos al +56 9 2178 3957.\n\n` +
-        `Saludos cordiales,\nAutoLock GPS`
-      );
+      setEmailBody(`${header}
+      <tr><td style="padding:40px;">
+        <p style="color:#374151;font-size:15px;margin:0 0 20px;">Estimado/a <strong>${clientName}</strong>,</p>
+        <p style="color:#374151;font-size:15px;margin:0 0 24px;">Le recordamos que su suscripción GPS (folio: <strong>${subscription.folio}</strong>) del plan "<strong>${planNombre}</strong>" vencerá el <strong>${fechaVenc}</strong>, en <strong>${diasRestantes} días</strong>.</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:${boxBg};border:1px solid ${boxBorder};border-radius:6px;margin:0 0 24px;">
+          <tr><td style="padding:20px;">
+            <p style="margin:0 0 8px;color:#9a3412;font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Detalle de la suscripción</p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Folio</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${subscription.folio}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Plan</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${planNombre}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Vencimiento</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${fechaVenc}</td></tr>
+              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Días restantes</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${diasRestantes} días</td></tr>
+            </table>
+          </td></tr>
+        </table>
+        <p style="color:#374151;font-size:15px;margin:0 0 24px;">Para renovar en línea, haz clic en el siguiente botón:</p>
+        <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+          <tr><td align="center" style="background:#f97316;border-radius:6px;padding:14px 32px;">
+            <a href="${url}" style="color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;">Renovar mi suscripción</a>
+          </td></tr>
+        </table>
+        <p style="color:#6b7280;font-size:13px;margin:0 0 4px;">Si el botón no funciona, copia este enlace:</p>
+        <p style="color:#f97316;font-size:12px;margin:0 0 28px;word-break:break-all;">${url}</p>
+        <p style="color:#374151;font-size:14px;margin:0;">Si tiene consultas, contáctenos por WhatsApp o al <strong>+56 9 2178 3957</strong>.</p>
+      </td></tr>${footer}`);
     }
     setShowEmailCompose(true);
   };
+
 
   const handleSendEmail = async () => {
     if (!emailTo) {
