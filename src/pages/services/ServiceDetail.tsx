@@ -193,7 +193,7 @@ export default function ServiceDetail() {
       <Tabs defaultValue="resumen" className="space-y-4">
         <TabsList>
           <TabsTrigger value="resumen">Resumen</TabsTrigger>
-          <TabsTrigger value="materiales">Materiales</TabsTrigger>
+          <TabsTrigger value="materiales">Costos</TabsTrigger>
           <TabsTrigger value="checklist">Checklist</TabsTrigger>
           <TabsTrigger value="compatibilidad">Compatibilidad</TabsTrigger>
           <TabsTrigger value="suscripciones">Suscripciones</TabsTrigger>
@@ -228,18 +228,19 @@ export default function ServiceDetail() {
         </TabsContent>
 
         <TabsContent value="materiales" className="space-y-6">
-          <ServiceCostItems
-            serviceId={service.id}
-            porcentajeUtilidadInicial={(service as any).porcentaje_utilidad ?? 0}
-            precioBaseActual={service.precio_base ?? 0}
-          />
-
-
-          <div className="border-t pt-6">
+          <div>
             <h3 className="text-lg font-semibold mb-4">Materiales de Inventario</h3>
             <ServiceMaterialsEditor 
               serviceId={service.id} 
               materials={service.services_products || []} 
+            />
+          </div>
+
+          <div className="border-t pt-6">
+            <ServiceCostItems
+              serviceId={service.id}
+              porcentajeUtilidadInicial={(service as any).porcentaje_utilidad ?? 0}
+              precioBaseActual={service.precio_base ?? 0}
             />
           </div>
         </TabsContent>
