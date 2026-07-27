@@ -231,16 +231,43 @@ export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'r
             <ExternalLink className="mr-2 h-4 w-4" />
             Abrir link de pago
           </Button>
-          <Button onClick={handleSendEmail} disabled={sending || !email}>
-            {sending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Mail className="mr-2 h-4 w-4" />
-            )}
+          <Button onClick={openEmailCompose}>
+            <Mail className="mr-2 h-4 w-4" />
             Enviar link por correo
           </Button>
         </div>
+
+        <Dialog open={showEmailCompose} onOpenChange={setShowEmailCompose}>
+          <DialogContent className="z-[60] max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Enviar correo al cliente</DialogTitle>
+              <DialogDescription>Revisa y edita el mensaje antes de enviarlo.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="renewal-email-to">Destinatario</Label>
+                <Input id="renewal-email-to" type="email" value={emailTo} onChange={(e) => setEmailTo(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="renewal-email-subject">Asunto</Label>
+                <Input id="renewal-email-subject" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="renewal-email-body">Mensaje</Label>
+                <Textarea id="renewal-email-body" rows={10} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} />
+              </div>
+            </div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={() => setShowEmailCompose(false)}>Cancelar</Button>
+              <Button onClick={handleSendEmail} disabled={sending}>
+                {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
+                Enviar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
+
 }
