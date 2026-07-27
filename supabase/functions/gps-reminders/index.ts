@@ -41,7 +41,7 @@ serve(async (_req) => {
   const { data: settingsRows } = await supabase
     .from("settings")
     .select("clave, valor")
-    .in("clave", ["resend_api_key", "resend_from_email", "resend_from_name", "resend_admin_email"]);
+    .in("clave", ["resend_api_key", "resend_from_email", "resend_from_name", "resend_admin_email", "app_url"]);
 
   const getSetting = (key: string) =>
     settingsRows?.find((r: any) => r.clave === key)?.valor ?? "";
