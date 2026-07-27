@@ -105,7 +105,7 @@ export default function ServiceFichaEditor({
       const ficha_html = editor.getHTML();
       const { error } = await supabase
         .from('services')
-        .update({ ficha_html, categoria: categoria || null } as any)
+        .update({ ficha_html, categoria: categoria || null, ficha_resumen: fichaResumen || null } as any)
         .eq('id', serviceId);
 
       if (error) throw error;
