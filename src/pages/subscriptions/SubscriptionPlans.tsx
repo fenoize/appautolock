@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { SkeletonTableRow } from '@/components/shared/SkeletonTableRow';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+
 import { Plus, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
