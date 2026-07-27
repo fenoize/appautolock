@@ -28,8 +28,16 @@ export default function RenovarPage() {
   const [data, setData] = useState<RenewalData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
+
+  const pathname = window.location.pathname;
+  const isSuccess = pathname.endsWith("/success");
+  const isFailure = pathname.endsWith("/failure");
+  const isPending = pathname.endsWith("/pending");
+  const isResultPage = isSuccess || isFailure || isPending;
 
   useEffect(() => {
+    if (isResultPage) { setLoading(false); return; }
     if (!subId) { setError("Link inválido"); setLoading(false); return; }
 
     const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/renewal-info?sub=${subId}${planId ? `&plan=${planId}` : ""}`;
@@ -44,7 +52,63 @@ export default function RenovarPage() {
       })
       .catch(() => setError("No se pudo cargar la información"))
       .finally(() => setLoading(false));
-  }, [subId, planId]);
+  }, [subId, planId, isResultPage]);
+
+  const handlePagar = async () => {
+    if (!subId) return;
+    setPaying(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-mp-preference`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ sub_id: subId, plan_id: planId }),
+      });
+      const result = await res.json();
+      if (result.error) throw new Error(result.error);
+      window.location.href = result.checkout_url;
+    } catch (e: any) {
+      alert(e.message || "No se pudo iniciar el pago. Intenta nuevamente.");
+      setPaying(false);
+    }
+  };
+
+  if (isSuccess) return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md text-center space-y-4">
+        <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
+        <h1 className="text-2xl font-bold">¡Pago recibido!</h1>
+        <p className="text-muted-foreground">Tu suscripción GPS ha sido renovada exitosamente. Recibirás una confirmación por correo.</p>
+        <div className="text-sm text-muted-foreground">Folio de suscripción: <span className="font-mono font-medium">{subId}</span></div>
+      </div>
+    </div>
+  );
+
+  if (isFailure) return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md text-center space-y-4">
+        <AlertTriangle className="h-16 w-16 text-red-500 mx-auto" />
+        <h1 className="text-2xl font-bold">Pago no completado</h1>
+        <p className="text-muted-foreground">El pago no se pudo procesar. Puedes intentarlo nuevamente.</p>
+        <Button onClick={() => { window.location.href = `/renovar?sub=${subId}${planId ? `&plan=${planId}` : ""}`; }}>
+          Intentar nuevamente
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (isPending) return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md text-center space-y-4">
+        <Clock className="h-16 w-16 text-amber-500 mx-auto" />
+        <h1 className="text-2xl font-bold">Pago en proceso</h1>
+        <p className="text-muted-foreground">Tu pago está siendo procesado. Te notificaremos cuando se confirme.</p>
+      </div>
+    </div>
+  );
+
 
   const vencimiento = data ? new Date(data.fecha_vencimiento + "T00:00:00") : null;
   const diasRestantes = vencimiento
