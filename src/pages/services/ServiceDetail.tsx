@@ -29,6 +29,54 @@ export default function ServiceDetail() {
   const [iglaResults, setIglaResults] = useState<any[]>([]);
   const [iglaLoading, setIglaLoading] = useState(false);
   const [iglaSearched, setIglaSearched] = useState(false);
+  const [brandOptions, setBrandOptions] = useState<string[]>([]);
+  const [modelOptions, setModelOptions] = useState<string[]>([]);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [showModelDropdown, setShowModelDropdown] = useState(false);
+
+  const handleBrandInputChange = async (value: string) => {
+    setIglaSearchBrand(value);
+    setIglaResults([]);
+    setIglaSearched(false);
+    if (value.trim().length === 0) {
+      setBrandOptions([]);
+      setShowBrandDropdown(false);
+      return;
+    }
+    const { data } = await supabase
+      .from("igla_compatibility")
+      .select("brand")
+      .ilike("brand", `${value.trim()}%`)
+      .order("brand")
+      .limit(50);
+    const unique = [...new Set((data ?? []).map((r: any) => r.brand))].slice(0, 8) as string[];
+    setBrandOptions(unique);
+    setShowBrandDropdown(unique.length > 0);
+  };
+
+  const handleModelInputChange = async (value: string) => {
+    setIglaSearchModel(value);
+    setIglaResults([]);
+    setIglaSearched(false);
+    if (value.trim().length === 0) {
+      setModelOptions([]);
+      setShowModelDropdown(false);
+      return;
+    }
+    let query = supabase
+      .from("igla_compatibility")
+      .select("model")
+      .ilike("model", `${value.trim()}%`)
+      .order("model")
+      .limit(50);
+    if (iglaSearchBrand.trim()) {
+      query = (query as any).ilike("brand", iglaSearchBrand.trim());
+    }
+    const { data } = await query;
+    const unique = [...new Set((data ?? []).map((r: any) => r.model))].slice(0, 8) as string[];
+    setModelOptions(unique);
+    setShowModelDropdown(unique.length > 0);
+  };
 
   const handleIglaSearch = async () => {
     if (!iglaSearchBrand.trim() || !iglaSearchModel.trim()) return;
@@ -207,48 +255,95 @@ export default function ServiceDetail() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Input
-                      placeholder="Marca (ej: Toyota, BMW...)"
-                      value={iglaSearchBrand}
-                      onChange={(e) => { setIglaSearchBrand(e.target.value); setIglaResults([]); setIglaSearched(false); }}
-                      className="sm:w-48"
-                    />
-                    <Input
-                      placeholder="Modelo (ej: Hilux, X5...)"
-                      value={iglaSearchModel}
-                      onChange={(e) => { setIglaSearchModel(e.target.value); setIglaResults([]); setIglaSearched(false); }}
-                      className="flex-1"
-                    />
-                    <Button onClick={handleIglaSearch} disabled={iglaLoading || !iglaSearchBrand.trim() || !iglaSearchModel.trim()}>
+                    <div className="relative sm:w-48">
+                      <Input
+                        placeholder="Marca (ej: Toyota...)"
+                        value={iglaSearchBrand}
+                        onChange={(e) => handleBrandInputChange(e.target.value)}
+                        onBlur={() => setTimeout(() => setShowBrandDropdown(false), 150)}
+                        onFocus={() => brandOptions.length > 0 && setShowBrandDropdown(true)}
+                        autoComplete="off"
+                      />
+                      {showBrandDropdown && (
+                        <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-48 overflow-auto">
+                          {brandOptions.map((opt) => (
+                            <li
+                              key={opt}
+                              className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
+                              onMouseDown={() => {
+                                setIglaSearchBrand(opt);
+                                setBrandOptions([]);
+                                setShowBrandDropdown(false);
+                              }}
+                            >
+                              {opt}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    <div className="relative flex-1">
+                      <Input
+                        placeholder="Modelo (ej: Hilux...)"
+                        value={iglaSearchModel}
+                        onChange={(e) => handleModelInputChange(e.target.value)}
+                        onBlur={() => setTimeout(() => setShowModelDropdown(false), 150)}
+                        onFocus={() => modelOptions.length > 0 && setShowModelDropdown(true)}
+                        autoComplete="off"
+                      />
+                      {showModelDropdown && (
+                        <ul className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-48 overflow-auto">
+                          {modelOptions.map((opt) => (
+                            <li
+                              key={opt}
+                              className="px-3 py-2 text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-200"
+                              onMouseDown={() => {
+                                setIglaSearchModel(opt);
+                                setModelOptions([]);
+                                setShowModelDropdown(false);
+                              }}
+                            >
+                              {opt}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+
+                    <Button
+                      onClick={handleIglaSearch}
+                      disabled={iglaLoading || !iglaSearchBrand.trim() || !iglaSearchModel.trim()}
+                    >
                       {iglaLoading ? "Buscando..." : "Buscar"}
                     </Button>
                   </div>
 
                   {iglaSearched && !iglaLoading && (
                     iglaResults.length === 0 ? (
-                      <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 flex items-start gap-3">
+                      <div className="rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/30 p-4 flex items-start gap-3">
                         <span className="text-yellow-500 text-xl">⚠️</span>
                         <div>
-                          <p className="font-medium text-yellow-800">Vehículo no encontrado</p>
-                          <p className="text-sm text-yellow-700">No encontramos compatibilidad registrada para ese vehículo. Contáctanos para confirmarlo.</p>
+                          <p className="font-medium text-yellow-800 dark:text-yellow-200">Vehículo no encontrado</p>
+                          <p className="text-sm text-yellow-700 dark:text-yellow-300">No encontramos compatibilidad registrada para ese vehículo. Contáctanos para confirmarlo.</p>
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         <p className="text-sm text-muted-foreground">{iglaResults.length} variante(s) compatible(s) encontrada(s):</p>
                         {iglaResults.map((row, i) => (
-                          <div key={i} className="rounded-lg border bg-green-50 border-green-200 p-3">
+                          <div key={i} className="rounded-lg border bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 p-3">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-green-600 text-sm">✓</span>
+                              <span className="text-green-600 dark:text-green-400 text-sm">✓</span>
                               <span className="font-semibold text-sm">{row.brand} {row.model}</span>
                               {(row.year_from || row.year_to) && (
                                 <span className="text-xs text-muted-foreground">({row.year_from}–{row.year_to ?? "hoy"})</span>
                               )}
                             </div>
                             <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                              {row.configuration && <span className="bg-white rounded px-2 py-0.5 border">{row.configuration}</span>}
-                              {row.transmission && <span className="bg-white rounded px-2 py-0.5 border">{row.transmission}</span>}
-                              {row.engine_type && <span className="bg-white rounded px-2 py-0.5 border">{row.engine_type}</span>}
+                              {row.configuration && <span className="bg-white dark:bg-gray-800 rounded px-2 py-0.5 border dark:border-gray-600 dark:text-gray-300">{row.configuration}</span>}
+                              {row.transmission && <span className="bg-white dark:bg-gray-800 rounded px-2 py-0.5 border dark:border-gray-600 dark:text-gray-300">{row.transmission}</span>}
+                              {row.engine_type && <span className="bg-white dark:bg-gray-800 rounded px-2 py-0.5 border dark:border-gray-600 dark:text-gray-300">{row.engine_type}</span>}
                             </div>
                           </div>
                         ))}
