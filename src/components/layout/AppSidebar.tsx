@@ -26,6 +26,7 @@ import {
   Briefcase,
   Settings,
   ChevronRight,
+  SearchCheck,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -85,6 +86,12 @@ export function AppSidebar() {
     {
       label: 'Operación',
       items: [
+        {
+          title: 'Consultar',
+          icon: SearchCheck,
+          path: '/consultar',
+          show: isAdmin || can('view', 'quotes'),
+        },
         {
           title: 'Cotizaciones',
           icon: FileText,
