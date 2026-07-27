@@ -1962,10 +1962,13 @@ export type Database = {
       subscriptions: {
         Row: {
           app_alojada: string | null
+          clave_usuario: string | null
           client_id: string
           compania: string | null
           correo_usuario: string | null
           created_at: string | null
+          enlace_descarga: string | null
+          enlace_ingreso: string | null
           estado: Database["public"]["Enums"]["subscription_status"] | null
           fecha_inicio: string
           fecha_ultima_notificacion: string | null
@@ -1987,10 +1990,13 @@ export type Database = {
         }
         Insert: {
           app_alojada?: string | null
+          clave_usuario?: string | null
           client_id: string
           compania?: string | null
           correo_usuario?: string | null
           created_at?: string | null
+          enlace_descarga?: string | null
+          enlace_ingreso?: string | null
           estado?: Database["public"]["Enums"]["subscription_status"] | null
           fecha_inicio: string
           fecha_ultima_notificacion?: string | null
@@ -2012,10 +2018,13 @@ export type Database = {
         }
         Update: {
           app_alojada?: string | null
+          clave_usuario?: string | null
           client_id?: string
           compania?: string | null
           correo_usuario?: string | null
           created_at?: string | null
+          enlace_descarga?: string | null
+          enlace_ingreso?: string | null
           estado?: Database["public"]["Enums"]["subscription_status"] | null
           fecha_inicio?: string
           fecha_ultima_notificacion?: string | null
