@@ -250,7 +250,7 @@ export default function NuevaConsulta() {
     const { data: compatData, error } = await supabase
       .from('services')
       .select(
-        `id, nombre, descripcion, precio_base, categoria, ficha_html,
+        `id, nombre, descripcion, precio_base, categoria, ficha_html, ficha_resumen,
          services_products(
            product_id,
            products(
