@@ -7,17 +7,23 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 async function sendEmail(
   to: string,
   subject: string,
-  text: string,
+  content: string,
   apiKey: string,
   from: string
 ): Promise<void> {
+  const isHtml = content.trimStart().startsWith('<!DOCTYPE') || content.trimStart().startsWith('<html');
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ from, to: [to], subject, text }),
+    body: JSON.stringify({
+      from,
+      to: [to],
+      subject,
+      ...(isHtml ? { html: content } : { text: content }),
+    }),
   });
   if (!res.ok) {
     const err = await res.text();

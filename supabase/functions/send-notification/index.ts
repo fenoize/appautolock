@@ -112,6 +112,9 @@ serve(async (req) => {
   }
 
   // Enviar via Resend
+  const isAlreadyHtml = emailBody.trimStart().startsWith("<!DOCTYPE") || emailBody.trimStart().startsWith("<html");
+  const htmlToSend = isAlreadyHtml ? emailBody : wrapEmailHtml(emailBody, subject);
+
   let resendError: string | null = null;
   const sendRes = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -123,7 +126,7 @@ serve(async (req) => {
       from: `${fromName} <${fromEmail}>`,
       to: [recipient],
       subject,
-      text: emailBody,
+      html: htmlToSend,
     }),
   });
 
