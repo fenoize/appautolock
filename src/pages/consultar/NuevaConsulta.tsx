@@ -176,17 +176,24 @@ export default function NuevaConsulta() {
 
     const cuerpo = serviciosSeleccionados
       .map(svc => {
-        const precio = incluirPrecio
-          ? `\nPrecio de venta: ${clp.format(Number(svc.precio_base))}`
-          : '';
         const resumen = svc.ficha_resumen
           ? `\n${svc.ficha_resumen}`
           : '\n(Sin resumen configurado)';
-        return `- ${svc.nombre}${precio}${resumen}`;
+        const precio = incluirPrecio
+          ? `\n${clp.format(Number(svc.precio_base))}`
+          : '';
+        return `- ${svc.nombre}${resumen}${precio}`;
       })
       .join('\n\n');
 
-    return `${header}\n\n${cuerpo}`;
+    const total =
+      incluirPrecio && serviciosSeleccionados.length >= 2
+        ? `\n\nTotal:\n${clp.format(
+            serviciosSeleccionados.reduce((sum, s) => sum + Number(s.precio_base), 0)
+          )}`
+        : '';
+
+    return `${header}\n\n${cuerpo}${total}`;
   };
 
   const fetchMarcas = async (value: string) => {
