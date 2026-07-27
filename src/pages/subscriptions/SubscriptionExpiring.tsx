@@ -162,12 +162,12 @@ export default function SubscriptionExpiring() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-4">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <CardTitle className="text-base">{filtered.length} resultado(s)</CardTitle>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Plan:</span>
             <Select value={planFilter} onValueChange={setPlanFilter}>
-              <SelectTrigger className="w-56">
+              <SelectTrigger className="w-full sm:w-56">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
