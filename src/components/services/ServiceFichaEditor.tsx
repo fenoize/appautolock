@@ -7,6 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -24,15 +25,18 @@ interface ServiceFichaEditorProps {
   serviceId: string;
   initialFichaHtml: string;
   initialCategoria: string;
+  initialFichaResumen: string;
 }
 
 export default function ServiceFichaEditor({
   serviceId,
   initialFichaHtml,
   initialCategoria,
+  initialFichaResumen,
 }: ServiceFichaEditorProps) {
   const { toast } = useToast();
   const [categoria, setCategoria] = useState(initialCategoria);
+  const [fichaResumen, setFichaResumen] = useState(initialFichaResumen);
   const [categoriaOptions, setCategoriaOptions] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
