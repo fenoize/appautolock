@@ -1,25 +1,23 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ADMIN_EMAIL = "renovaciones@autolock.cl";
-const FROM_EMAIL = "notificaciones@autolock.cl";
 
-async function sendEmail(to: string, subject: string, text: string): Promise<void> {
+async function sendEmail(
+  to: string,
+  subject: string,
+  text: string,
+  apiKey: string,
+  from: string
+): Promise<void> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from: `AutoLock <${FROM_EMAIL}>`,
-      to: [to],
-      subject,
-      text,
-    }),
+    body: JSON.stringify({ from, to: [to], subject, text }),
   });
   if (!res.ok) {
     const err = await res.text();
@@ -33,6 +31,27 @@ function renderTemplate(text: string, vars: Record<string, string>): string {
 
 serve(async (_req) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+  const { data: settingsRows } = await supabase
+    .from("settings")
+    .select("clave, valor")
+    .in("clave", ["resend_api_key", "resend_from_email", "resend_from_name", "resend_admin_email"]);
+
+  const getSetting = (key: string) =>
+    settingsRows?.find((r: any) => r.clave === key)?.valor ?? "";
+
+  const resendApiKey = getSetting("resend_api_key") || Deno.env.get("RESEND_API_KEY") || "";
+  const fromEmail = getSetting("resend_from_email") || "notificaciones@autolock.cl";
+  const fromName = getSetting("resend_from_name") || "AutoLock";
+  const adminEmail = getSetting("resend_admin_email") || "renovaciones@autolock.cl";
+  const fromFull = `${fromName} <${fromEmail}>`;
+
+  if (!resendApiKey) {
+    return new Response(JSON.stringify({ error: "RESEND_API_KEY no configurada" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
   const results: { sent: number; errors: number; log: unknown[] } = {
     sent: 0,
     errors: 0,
@@ -119,11 +138,11 @@ serve(async (_req) => {
 
       try {
         if (clientEmail) {
-          await sendEmail(clientEmail, subject, body);
+          await sendEmail(clientEmail, subject, body, resendApiKey, fromFull);
         }
 
         const adminSubject = `[Admin GPS] ${subject} — ${clientName}`;
-        await sendEmail(ADMIN_EMAIL, adminSubject, body);
+        await sendEmail(adminEmail, adminSubject, body, resendApiKey, fromFull);
 
         await supabase
           .from("subscriptions")
