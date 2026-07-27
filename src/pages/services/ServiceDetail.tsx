@@ -17,13 +17,16 @@ import { ServiceChecklistEditor } from "@/components/services/ServiceChecklistEd
 import ServiceFichaEditor from "@/components/services/ServiceFichaEditor";
 import { SubscriptionPlanSelector } from "@/components/shared/SubscriptionPlanSelector";
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ServiceDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: service, isLoading } = useServiceComplete(id!);
   const updateService = useUpdateService();
-  
+  const { toast } = useToast();
+
+  const [editNombre, setEditNombre] = useState("");
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
   const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
 
@@ -102,6 +105,7 @@ export default function ServiceDetail() {
 
   useEffect(() => {
     if (service) {
+      setEditNombre(service.nombre ?? "");
       setRequiereSuscripcion(service.requiere_suscripcion || false);
       setPlanesSeleccionados(
         Array.isArray(service.tipos_suscripcion_disponibles) 
@@ -163,10 +167,32 @@ export default function ServiceDetail() {
     handleUpdateSuscripcion(requiereSuscripcion, planes);
   };
 
+  const handleNombreBlur = async () => {
+    const trimmed = editNombre.trim();
+    if (!trimmed || trimmed === service.nombre) return;
+    const { error } = await supabase
+      .from("services")
+      .update({ nombre: trimmed })
+      .eq("id", service.id);
+    if (error) {
+      toast({ title: "Error al actualizar nombre", variant: "destructive" });
+      setEditNombre(service.nombre);
+    } else {
+      toast({ title: "Nombre actualizado" });
+    }
+  };
+
   return (
     <PageContainer>
       <PageHeader
-        title={service.nombre}
+        title={
+          <input
+            value={editNombre}
+            onChange={e => setEditNombre(e.target.value)}
+            onBlur={handleNombreBlur}
+            className="text-2xl font-bold bg-transparent border-none outline-none focus:ring-1 focus:ring-ring rounded px-1 w-full"
+          />
+        }
         description={service.descripcion}
         action={
           <div className="flex gap-2">

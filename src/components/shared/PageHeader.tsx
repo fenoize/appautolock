@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 interface PageHeaderProps {
-  title: string;
+  title: ReactNode;
   description?: string;
   action?: ReactNode;
   backButton?: boolean;
