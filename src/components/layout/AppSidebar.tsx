@@ -35,6 +35,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function AppSidebar() {
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ export function AppSidebar() {
   const { data: stats } = useDashboardStats();
   const { data: expiring10 } = useExpiringSubscriptions(10);
   const expiringCount = expiring10?.length ?? 0;
-  const { can, isAdmin } = usePermissions();
+  const { can, isAdmin, isLoading } = usePermissions();
   const { isTablet } = useResponsiveLayout();
   const { isMobile, setOpenMobile } = useSidebar();
 
@@ -178,6 +179,27 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
   const isGroupActive = (items?: { path: string }[]) =>
     items?.some(item => location.pathname.startsWith(item.path));
+
+  if (isLoading) {
+    return (
+      <Sidebar
+        collapsible={isTablet ? "offcanvas" : "icon"}
+        style={{
+          top: 'var(--header-h)',
+          height: 'calc(100vh - var(--header-h))',
+          zIndex: 'var(--z-sidebar)'
+        } as any}
+      >
+        <SidebarContent>
+          <div className="p-3 space-y-2 mt-2">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-8 w-full rounded-md" />
+            ))}
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    );
+  }
 
   return (
     <Sidebar
