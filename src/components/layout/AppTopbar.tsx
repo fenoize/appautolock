@@ -60,7 +60,11 @@ export function AppTopbar() {
   return (
     <header
       className="fixed top-0 left-0 right-0 w-full border-b border-border bg-card shadow-sm"
-      style={{ height: 'var(--header-h)', zIndex: 'var(--z-header)' }}
+      style={{
+        height: 'calc(var(--header-h) + env(safe-area-inset-top, 0px))',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        zIndex: 'var(--z-header)',
+      }}
     >
       <div className="flex h-full items-center px-4 gap-3">
         {/* LEFT: Logo + collapse trigger */}

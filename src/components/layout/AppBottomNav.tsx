@@ -56,7 +56,8 @@ export function AppBottomNav() {
     <div
       className="fixed bottom-0 left-0 right-0 border-t bg-card shadow-lg md:hidden"
       style={{
-        height: 'var(--bottom-nav-h)',
+        height: 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px))',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         zIndex: 'var(--z-header)',
       }}
     >
@@ -86,7 +87,7 @@ export function AppBottomNav() {
             <SheetHeader className="shrink-0">
               <SheetTitle>Menú</SheetTitle>
             </SheetHeader>
-            <div className="mt-4 grid grid-cols-3 gap-3 pb-6 overflow-y-auto">
+            <div className="mt-4 grid grid-cols-3 gap-3 pb-6 overflow-y-auto flex-1 min-h-0">
               {visibleMoreItems.map((item) => (
                 <button
                   key={item.path}

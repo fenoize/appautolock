@@ -18,7 +18,9 @@ function AppLayoutContent({ children }: AppLayoutProps) {
     ? (state === 'collapsed' ? 'var(--sidebar-w-collapsed)' : 'var(--sidebar-w)')
     : '0px';
 
-  const mainPaddingBottom = isMobile ? 'var(--bottom-nav-h)' : '0px';
+  const mainPaddingBottom = isMobile
+    ? 'calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px))'
+    : '0px';
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,7 +35,7 @@ function AppLayoutContent({ children }: AppLayoutProps) {
       <main 
         className="min-h-screen overflow-y-auto transition-all duration-200 ease-linear"
         style={{
-          paddingTop: 'var(--header-h)',
+          paddingTop: 'calc(var(--header-h) + env(safe-area-inset-top, 0px))',
           marginLeft: mainMarginLeft,
           width: `calc(100vw - ${mainMarginLeft})`,
           paddingBottom: mainPaddingBottom
