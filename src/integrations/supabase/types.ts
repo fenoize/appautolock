@@ -1470,6 +1470,7 @@ export type Database = {
           created_at: string | null
           descripcion: string | null
           ficha_html: string | null
+          ficha_resumen: string | null
           id: string
           nombre: string
           porcentaje_utilidad: number
@@ -1490,6 +1491,7 @@ export type Database = {
           created_at?: string | null
           descripcion?: string | null
           ficha_html?: string | null
+          ficha_resumen?: string | null
           id?: string
           nombre: string
           porcentaje_utilidad?: number
@@ -1510,6 +1512,7 @@ export type Database = {
           created_at?: string | null
           descripcion?: string | null
           ficha_html?: string | null
+          ficha_resumen?: string | null
           id?: string
           nombre?: string
           porcentaje_utilidad?: number
