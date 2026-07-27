@@ -24,7 +24,9 @@ export default function ServiceDetail() {
   const navigate = useNavigate();
   const { data: service, isLoading } = useServiceComplete(id!);
   const updateService = useUpdateService();
-  
+  const { toast } = useToast();
+
+  const [editNombre, setEditNombre] = useState("");
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
   const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
 
