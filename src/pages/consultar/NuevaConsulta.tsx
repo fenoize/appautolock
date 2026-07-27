@@ -283,6 +283,7 @@ export default function NuevaConsulta() {
         precio_base: service.precio_base,
         categoria: service.categoria ?? null,
         ficha_html: service.ficha_html ?? null,
+        ficha_resumen: service.ficha_resumen ?? null,
       };
 
       if (allProducts.length === 0) return { ...base, estado: 'sin_datos' as CompatEstado };
