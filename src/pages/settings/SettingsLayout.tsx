@@ -16,27 +16,27 @@ const navigation = [
 export default function SettingsLayout() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
+      <div className="container mx-auto p-4 md:p-6 max-w-7xl">
+        <div className="flex gap-6">
+          {/* Sidebar fijo */}
+          <aside className="hidden md:block w-52 shrink-0">
             <div className="sticky top-6">
-              <h2 className="text-2xl font-bold mb-4">Configuración</h2>
-              <nav className="space-y-1">
+              <h2 className="text-lg font-bold mb-3 px-3">Configuración</h2>
+              <nav className="space-y-0.5">
                 {navigation.map((item) => (
                   <NavLink
                     key={item.name}
                     to={item.href}
                     end={item.end}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                      `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                         isActive
-                          ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-muted'
+                          ? 'bg-primary text-primary-foreground font-medium'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       }`
                     }
                   >
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className="h-4 w-4 shrink-0" />
                     <span>{item.name}</span>
                   </NavLink>
                 ))}
@@ -44,8 +44,8 @@ export default function SettingsLayout() {
             </div>
           </aside>
 
-          {/* Content */}
-          <main className="lg:col-span-3">
+          {/* Contenido — ocupa el resto del ancho */}
+          <main className="flex-1 min-w-0">
             <Outlet />
           </main>
         </div>
