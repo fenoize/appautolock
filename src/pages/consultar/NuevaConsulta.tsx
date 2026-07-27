@@ -156,6 +156,38 @@ export default function NuevaConsulta() {
   const [filterCategoria, setFilterCategoria] = useState('');
   const [showIncompatibles, setShowIncompatibles] = useState(false);
   const [fichaServicio, setFichaServicio] = useState<CompatResult | null>(null);
+  const [showResumen, setShowResumen] = useState(false);
+  const [incluirPrecio, setIncluirPrecio] = useState(true);
+  const [resumenCopiado, setResumenCopiado] = useState(false);
+
+  const generarTextoResumen = () => {
+    const hoy = new Date().toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const header = `Resultados de la consulta:\n${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio} | ${lead.nombre} | ${hoy}`;
+
+    const serviciosSeleccionados = compatResults.filter(
+      s => selectedServices.has(s.id) && s.estado !== 'incompatible'
+    );
+
+    const cuerpo = serviciosSeleccionados
+      .map(svc => {
+        const precio = incluirPrecio
+          ? `\nPrecio de venta: ${clp.format(Number(svc.precio_base))}`
+          : '';
+        const resumen = svc.ficha_resumen
+          ? `\n${svc.ficha_resumen}`
+          : '\n(Sin resumen configurado)';
+        return `- ${svc.nombre}${precio}${resumen}`;
+      })
+      .join('\n\n');
+
+    return `${header}\n\n${cuerpo}`;
+  };
 
   const fetchMarcas = async (value: string) => {
     const q = value.trim();
