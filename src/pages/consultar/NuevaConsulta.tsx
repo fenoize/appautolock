@@ -594,9 +594,9 @@ export default function NuevaConsulta() {
                       selectModelo(modeloOptions[0]);
                     }
                   }}
-                  placeholder="Escribe al menos 3 caracteres..."
+                  placeholder="Buscar modelo..."
                   onBlur={() => setTimeout(() => setShowModeloDropdown(false), 150)}
-                  onFocus={() => modeloOptions.length > 0 && setShowModeloDropdown(true)}
+                  onFocus={() => fetchModelos(vehiculo.modelo)}
                   autoComplete="off"
                 />
                 {showModeloDropdown && (
