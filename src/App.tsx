@@ -80,6 +80,9 @@ const App = () => (
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/reset-password-confirm" element={<ResetPasswordConfirm />} />
           <Route path="/renovar" element={<RenovarPage />} />
+          <Route path="/renovar/success" element={<RenovarPage />} />
+          <Route path="/renovar/failure" element={<RenovarPage />} />
+          <Route path="/renovar/pending" element={<RenovarPage />} />
 
           
           {/* Rutas protegidas con Layout */}

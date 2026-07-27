@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSettings, useBulkUpdateSettings } from "@/hooks/useSettings";
-import { Loader2, CheckCircle2, XCircle, Map, Bell, MessageSquare, Mail } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Map, Bell, MessageSquare, Mail, CreditCard } from "lucide-react";
 
 function StatusBadge({ configured }: { configured: boolean }) {
   return configured ? (
@@ -121,6 +121,35 @@ export default function IntegrationsSettings() {
 
   const integrations = [
     {
+      value: 'mercadopago',
+      label: 'MercadoPago',
+      icon: CreditCard,
+      title: 'MercadoPago',
+      description: 'Checkout Pro para cobros en línea de renovaciones GPS',
+      keys: ['mp_access_token', 'mp_public_key'],
+      fields: [
+        {
+          name: 'mp_access_token',
+          label: 'Access Token',
+          placeholder: 'APP_USR-...',
+          type: 'password',
+          help: 'MercadoPago → Tu negocio → Credenciales → Access Token de producción',
+        },
+        {
+          name: 'mp_public_key',
+          label: 'Public Key',
+          placeholder: 'APP_USR-...',
+          help: 'Clave pública (no secreta) para el SDK cliente',
+        },
+        {
+          name: 'mp_environment',
+          label: 'Ambiente',
+          placeholder: 'sandbox',
+          help: 'Usa "sandbox" para pruebas con credenciales TEST-, y "production" para cobros reales',
+        },
+      ],
+    },
+    {
       value: 'mapbox',
       label: 'Mapbox',
       icon: Map,
@@ -177,7 +206,7 @@ export default function IntegrationsSettings() {
         description="Configura las conexiones con servicios externos"
       />
 
-      <Tabs defaultValue="resend" orientation="vertical" className="flex gap-6">
+      <Tabs defaultValue="mercadopago" orientation="vertical" className="flex gap-6">
         <TabsList className="flex-col h-auto w-40 shrink-0 justify-start bg-muted/50 p-1">
           {integrations.map(i => (
             <TabsTrigger key={i.value} value={i.value} className="w-full justify-start gap-2">
