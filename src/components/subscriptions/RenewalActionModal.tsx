@@ -314,9 +314,17 @@ export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'r
                 <Input id="renewal-email-subject" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="renewal-email-body">Mensaje</Label>
-                <Textarea id="renewal-email-body" rows={10} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} />
+                <Label>Vista previa del correo</Label>
+                <div className="rounded-md border overflow-hidden" style={{ height: '320px' }}>
+                  <iframe
+                    srcDoc={emailBody}
+                    title="Preview del correo"
+                    className="w-full h-full"
+                    sandbox="allow-same-origin"
+                  />
+                </div>
               </div>
+
             </div>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <Button variant="outline" onClick={() => setShowEmailCompose(false)}>Cancelar</Button>
