@@ -17,6 +17,7 @@ import { ServiceChecklistEditor } from "@/components/services/ServiceChecklistEd
 import ServiceFichaEditor from "@/components/services/ServiceFichaEditor";
 import { SubscriptionPlanSelector } from "@/components/shared/SubscriptionPlanSelector";
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ServiceDetail() {
   const { id } = useParams<{ id: string }>();
