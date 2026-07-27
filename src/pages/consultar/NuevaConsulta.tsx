@@ -145,24 +145,24 @@ export default function NuevaConsulta() {
   const [showIncompatibles, setShowIncompatibles] = useState(false);
   const [fichaServicio, setFichaServicio] = useState<CompatResult | null>(null);
 
+  const fetchMarcas = async (value: string) => {
+    const q = value.trim();
+    const { data } = await supabase
+      .from('vehicle_catalog')
+      .select('marca')
+      .ilike('marca', q ? `%${q}%` : '%')
+      .order('marca')
+      .limit(100);
+    const unique = [...new Set((data ?? []).map((r: any) => r.marca))] as string[];
+    setMarcaOptions(unique);
+    setShowMarcaDropdown(unique.length > 0);
+  };
+
   const handleMarcaChange = async (value: string) => {
     setVehiculo(prev => ({ ...prev, marca: value, modelo: '', anio: '' }));
     setShowModeloDropdown(false);
     setShowAnioDropdown(false);
-    if (value.trim().length < 3) {
-      setMarcaOptions([]);
-      setShowMarcaDropdown(false);
-      return;
-    }
-    const { data } = await supabase
-      .from('vehicle_catalog')
-      .select('marca')
-      .ilike('marca', `${value.trim()}%`)
-      .order('marca')
-      .limit(30);
-    const unique = [...new Set((data ?? []).map((r: any) => r.marca))] as string[];
-    setMarcaOptions(unique);
-    setShowMarcaDropdown(unique.length > 0);
+    await fetchMarcas(value);
   };
 
   const selectMarca = (value: string) => {
@@ -171,25 +171,25 @@ export default function NuevaConsulta() {
     setShowMarcaDropdown(false);
   };
 
-  const handleModeloChange = async (value: string) => {
-    setVehiculo(prev => ({ ...prev, modelo: value, anio: '' }));
-    setShowAnioDropdown(false);
-    if (value.trim().length < 3) {
-      setModeloOptions([]);
-      setShowModeloDropdown(false);
-      return;
-    }
-    let query = supabase
+  const fetchModelos = async (value: string) => {
+    if (!vehiculo.marca) return;
+    const q = value.trim();
+    const { data } = await supabase
       .from('vehicle_catalog')
       .select('modelo')
-      .ilike('modelo', `${value.trim()}%`)
+      .eq('marca', vehiculo.marca)
+      .ilike('modelo', q ? `%${q}%` : '%')
       .order('modelo')
-      .limit(30);
-    if (vehiculo.marca) query = (query as any).eq('marca', vehiculo.marca);
-    const { data } = await query;
+      .limit(50);
     const unique = [...new Set((data ?? []).map((r: any) => r.modelo))] as string[];
     setModeloOptions(unique);
     setShowModeloDropdown(unique.length > 0);
+  };
+
+  const handleModeloChange = async (value: string) => {
+    setVehiculo(prev => ({ ...prev, modelo: value, anio: '' }));
+    setShowAnioDropdown(false);
+    await fetchModelos(value);
   };
 
   const selectModelo = (value: string) => {
@@ -198,13 +198,9 @@ export default function NuevaConsulta() {
     setShowModeloDropdown(false);
   };
 
-  const handleAnioChange = async (value: string) => {
-    setVehiculo(prev => ({ ...prev, anio: value }));
-    if (value.trim().length < 3) {
-      setAnioOptions([]);
-      setShowAnioDropdown(false);
-      return;
-    }
+  const fetchAnios = async (value: string) => {
+    if (!vehiculo.marca || !vehiculo.modelo) return;
+    const q = value.trim();
     const { data } = await supabase
       .from('vehicle_catalog')
       .select('anio_desde, anio_hasta')
@@ -218,11 +214,17 @@ export default function NuevaConsulta() {
       for (let y = desde; y <= hasta; y++) years.add(y);
     });
     const filteredYears = [...years]
-      .filter(y => String(y).startsWith(value.trim()))
+      .filter(y => (q ? String(y).startsWith(q) : true))
       .sort((a, b) => b - a);
     setAnioOptions(filteredYears);
     setShowAnioDropdown(filteredYears.length > 0);
   };
+
+  const handleAnioChange = async (value: string) => {
+    setVehiculo(prev => ({ ...prev, anio: value }));
+    await fetchAnios(value);
+  };
+
 
   const selectAnio = (value: number) => {
     setVehiculo(prev => ({ ...prev, anio: String(value) }));
