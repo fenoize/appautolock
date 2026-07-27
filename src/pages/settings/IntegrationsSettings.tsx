@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSettings, useBulkUpdateSettings } from "@/hooks/useSettings";
-import { Loader2, CheckCircle2, XCircle, Map, Bell, MessageSquare, Mail } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Map, Bell, MessageSquare, Mail, CreditCard } from "lucide-react";
 
 function StatusBadge({ configured }: { configured: boolean }) {
   return configured ? (
