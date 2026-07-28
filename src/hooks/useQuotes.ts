@@ -252,14 +252,28 @@ export function useGenerateQuotePDF() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (quoteId: string) => {
-      const { data, error } = await supabase.functions.invoke('generate-quote-pdf', {
-        body: { quote_id: quoteId }
-      });
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-quote-pdf', {
+          body: { quote_id: quoteId }
+        });
 
-      if (error) throw error;
-      await logQuoteEvent(quoteId, 'pdf_generado');
-      return data as { success: boolean; pdf_url: string };
+        if (error) {
+          const detail = (error as any)?.context?.body ?? (error as any)?.message;
+          throw new Error(
+            typeof detail === 'string' && detail ? `Error al generar PDF: ${detail}` : error.message
+          );
+        }
+        if ((data as any)?.error) throw new Error((data as any).error);
+        if (!(data as any)?.pdf_url) throw new Error('La función no devolvió una URL de PDF');
+
+        await logQuoteEvent(quoteId, 'pdf_generado');
+        return data as { success: boolean; pdf_url: string };
+      } catch (e: any) {
+        console.error('generate-quote-pdf failed', e);
+        throw e;
+      }
     },
+
     onSuccess: (data, quoteId) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
       queryClient.invalidateQueries({ queryKey: ['quote', quoteId] });
