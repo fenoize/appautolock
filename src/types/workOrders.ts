@@ -10,7 +10,9 @@ export type WOStatus =
   | 'pausada' 
   | 'reprogramada' 
   | 'completada' 
-  | 'cancelada';
+  | 'cancelada'
+  | 'archivado';
+
 
 export interface WorkOrder {
   id: string;
