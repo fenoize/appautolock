@@ -121,20 +121,19 @@ export function useDeleteClient() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Soft delete: cambiar estado a suspendido
       const { error } = await supabase
         .from('clients')
-        .update({ estado: 'suspendido' })
+        .update({ estado: 'archivado' as any })
         .eq('id', id);
-
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
-      toast.success('Cliente eliminado exitosamente');
+      toast.success('Cliente archivado correctamente');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Error al eliminar cliente');
+      toast.error(error.message || 'Error al archivar cliente');
     }
   });
 }
+
