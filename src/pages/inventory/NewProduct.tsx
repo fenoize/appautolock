@@ -154,17 +154,87 @@ export default function NewProduct() {
                   )}
                 />
 
+                {/* Bloque de precios */}
+                <div className="col-span-2 border rounded-lg p-4 space-y-3 bg-muted/30">
+                  <p className="text-sm font-medium">Precio y Utilidad</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="precio_costo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Precio Compra</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              {...field}
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="porcentaje_utilidad"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Utilidad %</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="30"
+                              {...field}
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="precio_venta"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Precio Venta</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              value={field.value ?? ''}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  {precioCostoValue && porcentajeValue ? (
+                    <p className="text-xs text-muted-foreground">
+                      Margen: ${Math.round((form.watch('precio_venta') || 0) - precioCostoValue).toLocaleString('es-CL')} sobre el costo
+                    </p>
+                  ) : null}
+                </div>
+
                 <FormField
                   control={form.control}
-                  name="precio_venta"
+                  name="costo_neto"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Precio Venta</FormLabel>
+                      <FormLabel>Costo Neto (sin IVA)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
+                          placeholder="0"
                           {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                          value={field.value ?? ''}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -172,23 +242,6 @@ export default function NewProduct() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="precio_costo"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Precio Costo (opcional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <FormField
                   control={form.control}
