@@ -12,6 +12,9 @@ export function useClients(filters?: ClientFilters) {
         .select('*')
         .order('created_at', { ascending: false });
 
+      query = query.neq('estado', 'archivado' as any);
+
+
       if (filters?.search) {
         const { data: searchResults } = await supabase
           .rpc('search_clients', { search_term: filters.search });
