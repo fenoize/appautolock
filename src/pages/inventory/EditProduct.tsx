@@ -17,9 +17,11 @@ import { toast } from "sonner";
 const productSchema = z.object({
   sku: z.string().min(1, "SKU es requerido"),
   nombre: z.string().min(1, "Nombre es requerido"),
-  precio_venta: z.number().min(0, "Precio debe ser mayor a 0"),
-  precio_costo: z.number().optional(),
-  stock_minimo: z.number().min(0, "Stock mínimo debe ser mayor o igual a 0"),
+  precio_venta: z.number().min(0),
+  precio_costo: z.number().min(0).optional(),
+  porcentaje_utilidad: z.number().min(0).max(100).default(30),
+  costo_neto: z.number().min(0).default(0),
+  stock_minimo: z.number().min(0),
   unidad_medida: z.string().default("UND"),
   serializable: z.boolean().default(false),
   aplica_iva: z.boolean().default(true),
@@ -41,6 +43,8 @@ export default function EditProduct() {
       nombre: "",
       precio_venta: 0,
       precio_costo: 0,
+      porcentaje_utilidad: 30,
+      costo_neto: 0,
       stock_minimo: 0,
       unidad_medida: "UND",
       serializable: false,
@@ -49,13 +53,32 @@ export default function EditProduct() {
     },
   });
 
+  const precioCostoValue = form.watch("precio_costo");
+  const porcentajeValue = form.watch("porcentaje_utilidad") ?? 30;
+
+  // Calcular precio venta cuando cambia precio_costo o porcentaje_utilidad
+  useEffect(() => {
+    if (precioCostoValue && porcentajeValue >= 0) {
+      const precioVenta = Math.round(precioCostoValue * (1 + porcentajeValue / 100));
+      form.setValue("precio_venta", precioVenta);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [precioCostoValue, porcentajeValue]);
+
+  // Cargar datos del producto existente
   useEffect(() => {
     if (product) {
+      const pCosto = product.precio_costo || 0;
+      const pVenta = product.precio_venta || 0;
+      const utilidad = pCosto > 0 ? Math.round(((pVenta - pCosto) / pCosto) * 100) : 30;
+
       form.reset({
         sku: product.sku,
         nombre: product.nombre,
-        precio_venta: product.precio_venta,
-        precio_costo: product.precio_costo || 0,
+        precio_venta: pVenta,
+        precio_costo: pCosto,
+        porcentaje_utilidad: Math.min(Math.max(utilidad, 0), 100),
+        costo_neto: (product as any).costo_neto || 0,
         stock_minimo: product.stock_minimo,
         unidad_medida: product.unidad_medida,
         serializable: product.serializable,
@@ -67,10 +90,7 @@ export default function EditProduct() {
 
   const onSubmit = async (data: ProductFormValues) => {
     try {
-      await updateProduct.mutateAsync({
-        id: id!,
-        ...data,
-      });
+      await updateProduct.mutateAsync({ id: id!, ...data } as any);
       toast.success("Producto actualizado exitosamente");
       navigate(`/inventory/products/${id}`);
     } catch (error: any) {
@@ -78,21 +98,8 @@ export default function EditProduct() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <div className="text-center py-12">Cargando...</div>
-      </PageContainer>
-    );
-  }
-
-  if (!product) {
-    return (
-      <PageContainer>
-        <div className="text-center py-12">Producto no encontrado</div>
-      </PageContainer>
-    );
-  }
+  if (isLoading) return <PageContainer><div className="text-center py-12">Cargando...</div></PageContainer>;
+  if (!product) return <PageContainer><div className="text-center py-12">Producto no encontrado</div></PageContainer>;
 
   return (
     <PageContainer>
@@ -121,9 +128,7 @@ export default function EditProduct() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>SKU *</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Ej: PROD-001" />
-                      </FormControl>
+                      <FormControl><Input {...field} placeholder="Ej: PROD-001" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -135,47 +140,93 @@ export default function EditProduct() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Nombre *</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Nombre del producto" />
-                      </FormControl>
+                      <FormControl><Input {...field} placeholder="Nombre del producto" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="precio_venta"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Precio Venta *</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                          placeholder="0.00"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Bloque de precios */}
+                <div className="col-span-1 md:col-span-2 border rounded-lg p-4 space-y-3 bg-muted/30">
+                  <p className="text-sm font-medium">Precio y Utilidad</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <FormField
+                      control={form.control}
+                      name="precio_costo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Precio Compra</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="porcentaje_utilidad"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Utilidad %</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="30"
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="precio_venta"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Precio Venta</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  {precioCostoValue && porcentajeValue ? (
+                    <p className="text-xs text-muted-foreground">
+                      Margen: ${Math.round((form.watch("precio_venta") || 0) - precioCostoValue).toLocaleString("es-CL")} sobre el costo
+                    </p>
+                  ) : null}
+                </div>
 
                 <FormField
                   control={form.control}
-                  name="precio_costo"
+                  name="costo_neto"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Precio Costo</FormLabel>
+                      <FormLabel>Costo Neto (sin IVA)</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
-                          step="0.01"
+                          placeholder="0"
                           {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                          placeholder="0.00"
+                          value={field.value ?? ""}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -208,9 +259,7 @@ export default function EditProduct() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Unidad de Medida</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="UND" />
-                      </FormControl>
+                      <FormControl><Input {...field} placeholder="UND" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -225,17 +274,12 @@ export default function EditProduct() {
                     <FormItem className="flex items-center justify-between">
                       <div>
                         <FormLabel>Serializable</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Producto requiere número de serie único
-                        </p>
+                        <p className="text-sm text-muted-foreground">Producto requiere número de serie único</p>
                       </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
+                      <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="aplica_iva"
@@ -243,17 +287,12 @@ export default function EditProduct() {
                     <FormItem className="flex items-center justify-between">
                       <div>
                         <FormLabel>Aplica IVA</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Producto está afecto a IVA (19%)
-                        </p>
+                        <p className="text-sm text-muted-foreground">Producto está afecto a IVA (19%)</p>
                       </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
+                      <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                     </FormItem>
                   )}
                 />
-
                 <FormField
                   control={form.control}
                   name="activo"
@@ -261,13 +300,9 @@ export default function EditProduct() {
                     <FormItem className="flex items-center justify-between">
                       <div>
                         <FormLabel>Estado</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          Producto activo y disponible
-                        </p>
+                        <p className="text-sm text-muted-foreground">Producto activo y disponible</p>
                       </div>
-                      <FormControl>
-                        <Switch checked={field.value} onCheckedChange={field.onChange} />
-                      </FormControl>
+                      <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                     </FormItem>
                   )}
                 />
