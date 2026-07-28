@@ -14,7 +14,9 @@ const statusConfig: Record<WOStatus, { label: string; variant: "default" | "seco
   pausada: { label: "Pausada", variant: "outline" },
   reprogramada: { label: "Reprogramada", variant: "outline" },
   completada: { label: "Completada", variant: "default" },
-  cancelada: { label: "Cancelada", variant: "destructive" }
+  cancelada: { label: "Cancelada", variant: "destructive" },
+  archivado: { label: "Archivado", variant: "outline" }
+
 };
 
 export const WOStatusBadge = ({ status }: WOStatusBadgeProps) => {

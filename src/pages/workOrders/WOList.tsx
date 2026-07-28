@@ -23,6 +23,8 @@ const ESTADOS = [
   { value: 'en_proceso', label: 'En Proceso' },
   { value: 'completada', label: 'Completada' },
   { value: 'cancelada', label: 'Cancelada' },
+  { value: 'archivado', label: 'Archivado' },
+
 ];
 
 export default function WOList() {
