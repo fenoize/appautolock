@@ -19,19 +19,17 @@ interface RichTemplateEditorProps {
 }
 
 function isHtml(s: string) {
-  const t = (s || '').trimStart();
-  return t.startsWith('<!DOCTYPE') || t.startsWith('<html') || t.startsWith('<HTML');
+  const t = (s || "").trimStart();
+  return t.startsWith("<!DOCTYPE") || t.startsWith("<html") || t.startsWith("<HTML");
 }
 
 export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
   const updateTemplate = useUpdateNotificationTemplate();
   const [asunto, setAsunto] = useState(template.asunto || "");
-  const [htmlContent, setHtmlContent] = useState(
-    template.html_content || template.cuerpo || ''
-  );
+  const [htmlContent, setHtmlContent] = useState(template.html_content || template.cuerpo || "");
   const [activa, setActiva] = useState(template.activa);
-
-  const [tab, setTab] = useState<'visual' | 'html'>('visual');
+  const [tab, setTab] = useState<"visual" | "html">("visual");
+  const [sending, setSending] = useState(false);
 
   const htmlTextareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,15 +60,30 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
   };
 
   const handleTestSend = async () => {
-    const testEmail = prompt('Ingresa el email para enviar prueba:');
+    const testEmail = prompt("Ingresa el email para enviar prueba:");
     if (!testEmail) return;
+
+    // Renderizar variables localmente igual que la preview
+    const processedSubject = processTemplate(asunto, defaultSampleData);
+    const processedBody = processTemplate(htmlContent, defaultSampleData);
+
+    setSending(true);
     try {
-      await supabase.functions.invoke('send-notification', {
-        body: { evento: template.evento, data: defaultSampleData, recipient: testEmail }
+      const { error } = await supabase.functions.invoke("send-notification", {
+        body: {
+          recipient: testEmail,
+          data: {
+            subject: processedSubject || `[Prueba] ${template.evento}`,
+            body: processedBody,
+          },
+        },
       });
-      toast.success('Email de prueba enviado correctamente');
+      if (error) throw error;
+      toast.success(`Email de prueba enviado a ${testEmail}`);
     } catch (error: any) {
-      toast.error(error.message || 'Error al enviar email de prueba');
+      toast.error(error.message || "Error al enviar email de prueba");
+    } finally {
+      setSending(false);
     }
   };
 
@@ -82,9 +95,7 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="font-mono text-base">{template.evento}</CardTitle>
-          {template.descripcion && (
-            <CardDescription>{template.descripcion}</CardDescription>
-          )}
+          {template.descripcion && <CardDescription>{template.descripcion}</CardDescription>}
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Asunto */}
@@ -106,11 +117,9 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
               <div className="flex rounded-lg border overflow-hidden">
                 <button
                   type="button"
-                  onClick={() => setTab('visual')}
+                  onClick={() => setTab("visual")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-sm transition-colors ${
-                    tab === 'visual'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-muted-foreground'
+                    tab === "visual" ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground"
                   }`}
                 >
                   <Monitor className="h-3.5 w-3.5" />
@@ -118,11 +127,9 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTab('html')}
+                  onClick={() => setTab("html")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-sm border-l transition-colors ${
-                    tab === 'html'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-muted-foreground'
+                    tab === "html" ? "bg-primary text-primary-foreground" : "hover:bg-muted text-muted-foreground"
                   }`}
                 >
                   <Code className="h-3.5 w-3.5" />
@@ -131,8 +138,8 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
               </div>
             </div>
 
-            {tab === 'visual' && (
-              <div className="rounded-md border overflow-hidden bg-white" style={{ height: '600px' }}>
+            {tab === "visual" && (
+              <div className="rounded-md border overflow-hidden bg-white" style={{ height: "600px" }}>
                 <div className="bg-muted/60 border-b px-3 py-1.5 flex items-center gap-2">
                   <span className="text-xs text-muted-foreground font-medium">Vista previa con datos de ejemplo</span>
                   <span className="text-xs text-muted-foreground">·</span>
@@ -143,13 +150,13 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
                   srcDoc={processedHtml}
                   title="Vista previa del correo"
                   className="w-full"
-                  style={{ height: 'calc(600px - 36px)' }}
+                  style={{ height: "calc(600px - 36px)" }}
                   sandbox="allow-same-origin"
                 />
               </div>
             )}
 
-            {tab === 'html' && (
+            {tab === "html" && (
               <Textarea
                 ref={htmlTextareaRef}
                 value={htmlContent}
@@ -170,9 +177,9 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
 
           {/* Acciones */}
           <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" onClick={handleTestSend} className="gap-2">
-              <Send className="h-4 w-4" />
-              Enviar Prueba
+            <Button variant="outline" onClick={handleTestSend} disabled={sending} className="gap-2">
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {sending ? "Enviando..." : "Enviar Prueba"}
             </Button>
             <Button onClick={handleSave} disabled={updateTemplate.isPending}>
               {updateTemplate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -186,9 +193,7 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Variables</CardTitle>
-          <CardDescription className="text-xs">
-            Clic para insertar en el cursor (pestaña HTML)
-          </CardDescription>
+          <CardDescription className="text-xs">Clic para insertar en el cursor (pestaña HTML)</CardDescription>
         </CardHeader>
         <CardContent>
           <VariablePicker onInsert={handleInsertVariable} />
