@@ -29,6 +29,7 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
   const [htmlContent, setHtmlContent] = useState(template.html_content || template.cuerpo || "");
   const [activa, setActiva] = useState(template.activa);
   const [tab, setTab] = useState<"visual" | "html">("visual");
+  const [testEmail, setTestEmail] = useState("");
   const [sending, setSending] = useState(false);
 
   const htmlTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -60,10 +61,12 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
   };
 
   const handleTestSend = async () => {
-    const testEmail = prompt("Ingresa el email para enviar prueba:");
-    if (!testEmail) return;
+    const email = testEmail.trim();
+    if (!email) {
+      toast.error("Ingresa un email de destino para la prueba");
+      return;
+    }
 
-    // Renderizar variables localmente igual que la preview
     const processedSubject = processTemplate(asunto, defaultSampleData);
     const processedBody = processTemplate(htmlContent, defaultSampleData);
 
@@ -71,7 +74,7 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
     try {
       const { error } = await supabase.functions.invoke("send-notification", {
         body: {
-          recipient: testEmail,
+          recipient: email,
           data: {
             subject: processedSubject || `[Prueba] ${template.evento}`,
             body: processedBody,
@@ -79,7 +82,7 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
         },
       });
       if (error) throw error;
-      toast.success(`Email de prueba enviado a ${testEmail}`);
+      toast.success(`Email de prueba enviado a ${email}`);
     } catch (error: any) {
       toast.error(error.message || "Error al enviar email de prueba");
     } finally {
@@ -175,17 +178,30 @@ export const RichTemplateEditor = ({ template }: RichTemplateEditorProps) => {
             <Label htmlFor="activa">Plantilla activa</Label>
           </div>
 
-          {/* Acciones */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" onClick={handleTestSend} disabled={sending} className="gap-2">
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              {sending ? "Enviando..." : "Enviar Prueba"}
-            </Button>
-            <Button onClick={handleSave} disabled={updateTemplate.isPending}>
-              {updateTemplate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Guardar
-            </Button>
+          {/* Enviar prueba — input inline */}
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Email de prueba</Label>
+            <div className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="correo@ejemplo.cl"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleTestSend()}
+                className="flex-1"
+              />
+              <Button variant="outline" onClick={handleTestSend} disabled={sending} className="gap-2 shrink-0">
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sending ? "Enviando..." : "Enviar Prueba"}
+              </Button>
+            </div>
           </div>
+
+          {/* Guardar */}
+          <Button onClick={handleSave} disabled={updateTemplate.isPending} className="w-full">
+            {updateTemplate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Guardar
+          </Button>
         </CardContent>
       </Card>
 
