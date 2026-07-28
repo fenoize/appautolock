@@ -215,10 +215,18 @@ export default function WODetail() {
             Reanudar
           </Button>
         );
+      case 'completada':
+      case 'cancelada':
+        return (
+          <Button variant="outline" onClick={() => handleChangeStatus('archivado')}>
+            Archivar
+          </Button>
+        );
       default:
         return null;
     }
   };
+
 
   return (
     <div className="container mx-auto py-6 space-y-6">
