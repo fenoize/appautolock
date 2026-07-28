@@ -40,6 +40,8 @@ const statusColors: Record<WOStatus, string> = {
   reprogramada: '#ec4899',
   completada: '#22c55e',
   cancelada: '#ef4444',
+  archivado: '#64748b',
+
 };
 
 export default function WOCalendar() {
