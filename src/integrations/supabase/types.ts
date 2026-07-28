@@ -911,9 +911,11 @@ export type Database = {
         Row: {
           activo: boolean | null
           aplica_iva: boolean | null
+          costo_neto: number | null
           created_at: string | null
           id: string
           nombre: string
+          porcentaje_utilidad: number | null
           precio_costo: number | null
           precio_venta: number | null
           requiere_suscripcion: boolean | null
@@ -929,9 +931,11 @@ export type Database = {
         Insert: {
           activo?: boolean | null
           aplica_iva?: boolean | null
+          costo_neto?: number | null
           created_at?: string | null
           id?: string
           nombre: string
+          porcentaje_utilidad?: number | null
           precio_costo?: number | null
           precio_venta?: number | null
           requiere_suscripcion?: boolean | null
@@ -947,9 +951,11 @@ export type Database = {
         Update: {
           activo?: boolean | null
           aplica_iva?: boolean | null
+          costo_neto?: number | null
           created_at?: string | null
           id?: string
           nombre?: string
+          porcentaje_utilidad?: number | null
           precio_costo?: number | null
           precio_venta?: number | null
           requiere_suscripcion?: boolean | null
@@ -2980,7 +2986,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "operador" | "tecnico" | "vendedor" | "cliente"
-      client_status: "prospecto" | "activo" | "mora" | "suspendido"
+      client_status:
+        | "prospecto"
+        | "activo"
+        | "mora"
+        | "suspendido"
+        | "archivado"
       client_type: "empresa" | "persona"
       combustible_type:
         | "bencina"
@@ -3020,6 +3031,7 @@ export type Database = {
         | "asignada"
         | "pausada"
         | "reprogramada"
+        | "archivado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3148,7 +3160,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "operador", "tecnico", "vendedor", "cliente"],
-      client_status: ["prospecto", "activo", "mora", "suspendido"],
+      client_status: ["prospecto", "activo", "mora", "suspendido", "archivado"],
       client_type: ["empresa", "persona"],
       combustible_type: [
         "bencina",
@@ -3191,6 +3203,7 @@ export const Constants = {
         "asignada",
         "pausada",
         "reprogramada",
+        "archivado",
       ],
     },
   },
