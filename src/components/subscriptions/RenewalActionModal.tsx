@@ -65,93 +65,112 @@ export function RenewalActionModal({ open, onOpenChange, subscription, mode = 'r
 
   const openEmailCompose = () => {
     const planNombre = selectedPlan?.nombre ?? '-';
-    const planPrecio = selectedPlan?.precio != null ? selectedPlan.precio.toLocaleString('es-CL') : '-';
+    const planPrecio = selectedPlan?.precio != null
+      ? `$${selectedPlan.precio.toLocaleString('es-CL')}`
+      : '-';
+    const fechaVenc = format(vencimiento, 'dd/MM/yyyy');
+    const LOGO = 'https://autolock.cl/wp-content/uploads/2026/07/autolock_hw.png';
 
-    const header = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
-<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
-  <tr><td align="center">
-    <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;width:100%;">
-      <tr><td style="background:#f97316;padding:30px 40px;text-align:center;">
-        <h1 style="color:#ffffff;margin:0;font-size:24px;font-weight:bold;letter-spacing:1px;">AutoLock GPS</h1>
-        <p style="color:#fed7aa;margin:8px 0 0;font-size:13px;">Sistema de Electroseguridad Automotriz</p>
-      </td></tr>`;
+    const makeHeader = (statusBg: string, statusColor: string, title: string, subtitle: string) =>
+      `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>` +
+      `<body style="margin:0;padding:0;background:#f0f0f0;font-family:Arial,Helvetica,sans-serif;">` +
+      `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:20px 10px;">` +
+      `<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">` +
+      `<tr><td style="background:#0f0f0f;border-radius:12px 12px 0 0;padding:24px 32px;text-align:center;">` +
+      `<img src="${LOGO}" alt="AutoLock GPS" height="40" style="display:block;margin:0 auto;">` +
+      `</td></tr>` +
+      `<tr><td style="background:${statusBg};padding:20px 32px;text-align:center;">` +
+      `<p style="margin:0;color:${statusColor};font-size:18px;font-weight:700;">${title}</p>` +
+      `<p style="margin:8px 0 0;color:${statusColor};font-size:14px;opacity:0.85;">${subtitle}</p>` +
+      `</td></tr>`;
 
-    const footer = `
-      <tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center;">
-        <p style="color:#9ca3af;font-size:12px;margin:0;">© 2025 AutoLock GPS · Electroseguridad Automotriz</p>
-        <p style="color:#9ca3af;font-size:12px;margin:4px 0 0;">contacto@autolock.cl · +56 9 2178 3957</p>
-      </td></tr>
-    </table>
-  </td></tr>
-</table>
-</body>
-</html>`;
+    const infoCard = (rows: [string, string][]) => {
+      const cells = rows.map(([label, val], i) =>
+        `<tr><td style="padding:6px 0;${i < rows.length - 1 ? 'border-bottom:1px solid #e5e7eb;' : ''}">` +
+        `<span style="color:#6b7280;font-size:13px;">${label}</span></td>` +
+        `<td style="padding:6px 0;${i < rows.length - 1 ? 'border-bottom:1px solid #e5e7eb;' : ''}text-align:right;">` +
+        `<strong style="color:#1a1a1a;font-size:13px;">${val}</strong></td></tr>`
+      ).join('');
+      return `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:24px;">` +
+        `<tr><td style="padding:16px 20px;"><table width="100%" cellpadding="0" cellspacing="0">${cells}</table></td></tr></table>`;
+    };
+
+    const contactAndFooter =
+      `<table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e5e7eb;margin-top:20px;padding-top:20px;">` +
+      `<tr><td align="center">` +
+      `<p style="margin:0 0 12px;color:#6b7280;font-size:13px;">¿Tienes dudas? Contáctanos</p>` +
+      `<a href="https://wa.me/56921783957" style="display:inline-block;background:#25d366;color:#ffffff;font-size:13px;font-weight:600;text-decoration:none;padding:10px 20px;border-radius:6px;margin:0 4px;">WhatsApp</a>` +
+      `<a href="mailto:contacto@autolock.cl" style="display:inline-block;background:#f3f4f6;color:#374151;font-size:13px;font-weight:600;text-decoration:none;padding:10px 20px;border-radius:6px;margin:0 4px;">Correo</a>` +
+      `</td></tr></table>` +
+      `</td></tr>` +
+      `<tr><td style="background:#0f0f0f;border-radius:0 0 12px 12px;padding:20px 32px;text-align:center;">` +
+      `<p style="margin:0;color:#9ca3af;font-size:12px;">AutoLock GPS &mdash; <a href="https://autolock.cl" style="color:#f97316;text-decoration:none;">autolock.cl</a></p>` +
+      `<p style="margin:4px 0 0;color:#6b7280;font-size:11px;">Correo generado automáticamente. No responder a este mensaje.</p>` +
+      `</td></tr>` +
+      `</table></td></tr></table></body></html>`;
 
     setEmailTo(email || '');
 
     if (planChanged) {
+      const header = makeHeader('#d1fae5', '#065f46', 'Plan Actualizado', `${subscription.folio} · ${planNombre}`);
+      const card = infoCard([
+        ['Folio', subscription.folio],
+        ['Nuevo plan', planNombre],
+        ['Valor', planPrecio],
+        ['Vehículo', subscription.vehicle?.patente || '-'],
+      ]);
+      const cta =
+        `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:24px;">` +
+        `<a href="${url}" style="display:inline-block;background:#f97316;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:8px;">Pagar y renovar ahora</a>` +
+        `</td></tr></table>` +
+        `<p style="color:#6b7280;font-size:12px;margin:0 0 20px;text-align:center;word-break:break-all;">Si el botón no funciona, copia este enlace: <a href="${url}" style="color:#f97316;">${url}</a></p>`;
+
       setEmailSubject(`Tu suscripción GPS ha sido actualizada — ${subscription.folio}`);
-      setEmailBody(`${header}
-      <tr><td style="padding:40px;">
-        <p style="color:#374151;font-size:15px;margin:0 0 20px;">Estimado/a <strong>${clientName}</strong>,</p>
-        <p style="color:#374151;font-size:15px;margin:0 0 24px;">Hemos actualizado tu suscripción GPS con el siguiente plan:</p>
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:6px;margin:0 0 24px;">
-          <tr><td style="padding:20px;">
-            <p style="margin:0 0 8px;color:#9a3412;font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Detalle de la actualización</p>
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Folio</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${subscription.folio}</td></tr>
-              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Plan</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${planNombre}</td></tr>
-              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Valor</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">$${planPrecio}</td></tr>
-            </table>
-          </td></tr>
-        </table>
-        <p style="color:#374151;font-size:15px;margin:0 0 24px;">Para completar el pago y activar tu suscripción, haz clic en el siguiente botón:</p>
-        <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
-          <tr><td align="center" style="background:#f97316;border-radius:6px;padding:14px 32px;">
-            <a href="${url}" style="color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;">Pagar y renovar ahora</a>
-          </td></tr>
-        </table>
-        <p style="color:#6b7280;font-size:13px;margin:0 0 4px;">Si el botón no funciona, copia este enlace:</p>
-        <p style="color:#f97316;font-size:12px;margin:0 0 28px;word-break:break-all;">${url}</p>
-        <p style="color:#374151;font-size:14px;margin:0;">Si tienes consultas, contáctanos por WhatsApp o al <strong>+56 9 2178 3957</strong>.</p>
-      </td></tr>${footer}`);
+      setEmailBody(
+        header +
+        `<tr><td style="background:#ffffff;padding:32px;">` +
+        `<p style="margin:0 0 16px;color:#1a1a1a;font-size:15px;">Estimado/a <strong>${clientName}</strong>,</p>` +
+        `<p style="margin:0 0 20px;color:#374151;font-size:14px;line-height:1.7;">Hemos actualizado tu suscripción GPS con el siguiente plan:</p>` +
+        card +
+        `<p style="margin:0 0 20px;color:#374151;font-size:14px;line-height:1.7;">Para completar el pago y activar tu suscripción, haz clic en el botón de abajo.</p>` +
+        cta +
+        contactAndFooter
+      );
     } else {
-      const boxBg = diasRestantes <= 1 ? '#fee2e2' : diasRestantes <= 7 ? '#fefce8' : '#fff7ed';
-      const boxBorder = diasRestantes <= 1 ? '#fca5a5' : diasRestantes <= 7 ? '#fde68a' : '#fed7aa';
-      const fechaVenc = format(vencimiento, 'dd/MM/yyyy');
+      const statusBg = diasRestantes <= 1 ? '#fee2e2' : diasRestantes <= 7 ? '#ffedd5' : '#dbeafe';
+      const statusColor = diasRestantes <= 1 ? '#dc2626' : diasRestantes <= 7 ? '#c2410c' : '#1e40af';
+      const title = diasRestantes <= 1 ? 'URGENTE: Vencimiento Mañana' : diasRestantes <= 7 ? 'Vencimiento Próximo' : 'Recordatorio de Renovación';
+      const subtitle = `${subscription.folio} · Vence el ${fechaVenc}`;
+
+      const header = makeHeader(statusBg, statusColor, title, subtitle);
+      const card = infoCard([
+        ['Folio', subscription.folio],
+        ['Plan', planNombre],
+        ['Valor', planPrecio],
+        ['Vencimiento', fechaVenc],
+        ['Días restantes', `${diasRestantes} días`],
+        ['Vehículo', subscription.vehicle?.patente || '-'],
+      ]);
+      const cta =
+        `<table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding-bottom:24px;">` +
+        `<a href="${url}" style="display:inline-block;background:#f97316;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 36px;border-radius:8px;">Renovar mi suscripción</a>` +
+        `</td></tr></table>` +
+        `<p style="color:#6b7280;font-size:12px;margin:0 0 20px;text-align:center;word-break:break-all;">Si el botón no funciona, copia este enlace: <a href="${url}" style="color:#f97316;">${url}</a></p>`;
 
       setEmailSubject(`Recordatorio: vencimiento de suscripción GPS ${subscription.folio}`);
-      setEmailBody(`${header}
-      <tr><td style="padding:40px;">
-        <p style="color:#374151;font-size:15px;margin:0 0 20px;">Estimado/a <strong>${clientName}</strong>,</p>
-        <p style="color:#374151;font-size:15px;margin:0 0 24px;">Le recordamos que su suscripción GPS (folio: <strong>${subscription.folio}</strong>) del plan "<strong>${planNombre}</strong>" vencerá el <strong>${fechaVenc}</strong>, en <strong>${diasRestantes} días</strong>.</p>
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:${boxBg};border:1px solid ${boxBorder};border-radius:6px;margin:0 0 24px;">
-          <tr><td style="padding:20px;">
-            <p style="margin:0 0 8px;color:#9a3412;font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:0.5px;">Detalle de la suscripción</p>
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Folio</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${subscription.folio}</td></tr>
-              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Plan</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${planNombre}</td></tr>
-              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Vencimiento</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${fechaVenc}</td></tr>
-              <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Días restantes</td><td style="padding:4px 0;color:#111827;font-size:14px;font-weight:600;text-align:right;">${diasRestantes} días</td></tr>
-            </table>
-          </td></tr>
-        </table>
-        <p style="color:#374151;font-size:15px;margin:0 0 24px;">Para renovar en línea, haz clic en el siguiente botón:</p>
-        <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
-          <tr><td align="center" style="background:#f97316;border-radius:6px;padding:14px 32px;">
-            <a href="${url}" style="color:#ffffff;font-size:15px;font-weight:bold;text-decoration:none;">Renovar mi suscripción</a>
-          </td></tr>
-        </table>
-        <p style="color:#6b7280;font-size:13px;margin:0 0 4px;">Si el botón no funciona, copia este enlace:</p>
-        <p style="color:#f97316;font-size:12px;margin:0 0 28px;word-break:break-all;">${url}</p>
-        <p style="color:#374151;font-size:14px;margin:0;">Si tiene consultas, contáctenos por WhatsApp o al <strong>+56 9 2178 3957</strong>.</p>
-      </td></tr>${footer}`);
+      setEmailBody(
+        header +
+        `<tr><td style="background:#ffffff;padding:32px;">` +
+        `<p style="margin:0 0 16px;color:#1a1a1a;font-size:15px;">Estimado/a <strong>${clientName}</strong>,</p>` +
+        `<p style="margin:0 0 20px;color:#374151;font-size:14px;line-height:1.7;">Te recordamos que tu suscripción GPS vence el <strong>${fechaVenc}</strong> (en <strong>${diasRestantes} días</strong>). Renueva antes de la fecha límite para evitar la interrupción del servicio.</p>` +
+        card +
+        cta +
+        contactAndFooter
+      );
     }
     setShowEmailCompose(true);
   };
+
 
 
   const handleSendEmail = async () => {
