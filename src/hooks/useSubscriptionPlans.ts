@@ -62,6 +62,36 @@ export function useUpdateSubscriptionPlan() {
   });
 }
 
+export function useDeleteSubscriptionPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Verificar si el plan está en uso por alguna suscripción
+      const { count, error: countError } = await supabase
+        .from('subscriptions')
+        .select('id', { count: 'exact', head: true })
+        .eq('plan_id', id);
+      if (countError) throw countError;
+
+      if ((count ?? 0) > 0) {
+        throw new Error(
+          `No se puede eliminar: el plan está asociado a ${count} suscripción(es). Desactívalo en su lugar.`
+        );
+      }
+
+      const { error } = await supabase.from('subscription_plans').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['subscription-plans'] });
+      toast.success('Plan eliminado');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Error al eliminar plan');
+    }
+  });
+}
+
 export function usePlanDetail(id: string) {
   return useQuery({
     queryKey: ['subscription-plan', id],
