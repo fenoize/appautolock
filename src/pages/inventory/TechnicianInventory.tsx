@@ -516,13 +516,13 @@ function AssignDialog({
 
   return (
     <Dialog open={!!tech} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent>
+      <DialogContent className="flex flex-col">
         <DialogHeader>
           <DialogTitle>Asignar ítem a {tech ? fullName(tech.nombre, tech.apellido) : ''}</DialogTitle>
           <DialogDescription>El ítem se traslada desde bodega a la camioneta del técnico.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           <div className="space-y-2">
             <Label>Producto</Label>
             <Select value={productId} onValueChange={setProductId}>
@@ -617,7 +617,7 @@ function ReturnDialog({
 
   return (
     <Dialog open={!!ctx} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent>
+      <DialogContent className="flex flex-col">
         <DialogHeader>
           <DialogTitle>Devolver a bodega</DialogTitle>
           <DialogDescription>
@@ -626,7 +626,7 @@ function ReturnDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           <div className="space-y-2">
             <Label>Devolver a</Label>
             <Select value={bodegaId} onValueChange={setBodegaId}>
