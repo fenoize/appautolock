@@ -402,38 +402,40 @@ export default function TechnicianInventory() {
                   </p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Serial</TableHead>
-                      <TableHead>Producto</TableHead>
-                      <TableHead>Técnico actual</TableHead>
-                      <TableHead>Ubicación</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Última actualización</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSerials.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="font-mono text-xs">{s.serial_number}</TableCell>
-                        <TableCell>{s.products?.nombre ?? '—'}</TableCell>
-                        <TableCell>
-                          {s.stock_locations?.profiles
-                            ? fullName(s.stock_locations.profiles.nombre, s.stock_locations.profiles.apellido)
-                            : 'Sin asignar'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{s.stock_locations?.codigo ?? '—'}</Badge>
-                        </TableCell>
-                        <TableCell className="capitalize">{s.estado ?? '—'}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {s.updated_at ? new Date(s.updated_at).toLocaleString('es-CL') : '—'}
-                        </TableCell>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Serial</TableHead>
+                        <TableHead>Producto</TableHead>
+                        <TableHead>Técnico actual</TableHead>
+                        <TableHead>Ubicación</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead>Última actualización</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredSerials.map((s) => (
+                        <TableRow key={s.id}>
+                          <TableCell className="font-mono text-xs">{s.serial_number}</TableCell>
+                          <TableCell>{s.products?.nombre ?? '—'}</TableCell>
+                          <TableCell>
+                            {s.stock_locations?.profiles
+                              ? fullName(s.stock_locations.profiles.nombre, s.stock_locations.profiles.apellido)
+                              : 'Sin asignar'}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{s.stock_locations?.codigo ?? '—'}</Badge>
+                          </TableCell>
+                          <TableCell className="capitalize">{s.estado ?? '—'}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {s.updated_at ? new Date(s.updated_at).toLocaleString('es-CL') : '—'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -514,13 +516,13 @@ function AssignDialog({
 
   return (
     <Dialog open={!!tech} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent>
+      <DialogContent className="flex flex-col">
         <DialogHeader>
           <DialogTitle>Asignar ítem a {tech ? fullName(tech.nombre, tech.apellido) : ''}</DialogTitle>
           <DialogDescription>El ítem se traslada desde bodega a la camioneta del técnico.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           <div className="space-y-2">
             <Label>Producto</Label>
             <Select value={productId} onValueChange={setProductId}>
@@ -615,7 +617,7 @@ function ReturnDialog({
 
   return (
     <Dialog open={!!ctx} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent>
+      <DialogContent className="flex flex-col">
         <DialogHeader>
           <DialogTitle>Devolver a bodega</DialogTitle>
           <DialogDescription>
@@ -624,7 +626,7 @@ function ReturnDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           <div className="space-y-2">
             <Label>Devolver a</Label>
             <Select value={bodegaId} onValueChange={setBodegaId}>
