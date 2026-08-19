@@ -63,6 +63,20 @@ export type Database = {
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
           },
+          {
+            foreignKeyName: "attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
+          },
         ]
       }
       audit_log: {
@@ -110,6 +124,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "audit_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
           },
         ]
       }
@@ -388,6 +416,20 @@ export type Database = {
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
           },
+          {
+            foreignKeyName: "clients_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "clients_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
+          },
         ]
       }
       commission_config: {
@@ -438,6 +480,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "commission_config_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "commission_config_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
           },
         ]
       }
@@ -559,6 +615,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "invitations_invitado_por_fkey"
+            columns: ["invitado_por"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "invitations_invitado_por_fkey"
+            columns: ["invitado_por"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
           },
         ]
       }
@@ -771,6 +841,20 @@ export type Database = {
             referencedColumns: ["product_id"]
           },
           {
+            foreignKeyName: "product_compatibility_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_compatibility_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["product_id"]
+          },
+          {
             foreignKeyName: "product_compatibility_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
@@ -783,6 +867,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "product_compatibility_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "product_compatibility_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
           },
           {
             foreignKeyName: "product_compatibility_vehicle_catalog_id_fkey"
@@ -885,6 +983,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "product_serials_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["location_id"]
+          },
+          {
+            foreignKeyName: "product_serials_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["location_id"]
+          },
+          {
             foreignKeyName: "product_serials_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -903,6 +1015,20 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "stock_by_location"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_serials_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_serials_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
             referencedColumns: ["product_id"]
           },
         ]
@@ -1110,6 +1236,20 @@ export type Database = {
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
           },
+          {
+            foreignKeyName: "quote_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "quote_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
+          },
         ]
       }
       quote_items: {
@@ -1265,6 +1405,20 @@ export type Database = {
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
           },
+          {
+            foreignKeyName: "quotes_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "quotes_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
+          },
         ]
       }
       reminder_settings: {
@@ -1348,6 +1502,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "seller_goals_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "seller_goals_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
           },
         ]
       }
@@ -1593,6 +1761,20 @@ export type Database = {
             referencedColumns: ["product_id"]
           },
           {
+            foreignKeyName: "services_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "services_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["product_id"]
+          },
+          {
             foreignKeyName: "services_products_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
@@ -1681,6 +1863,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "stock_alerts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["location_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["location_id"]
+          },
+          {
             foreignKeyName: "stock_alerts_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -1702,6 +1898,20 @@ export type Database = {
             referencedColumns: ["product_id"]
           },
           {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["product_id"]
+          },
+          {
             foreignKeyName: "stock_alerts_resuelta_por_fkey"
             columns: ["resuelta_por"]
             isOneToOne: false
@@ -1715,6 +1925,20 @@ export type Database = {
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
           },
+          {
+            foreignKeyName: "stock_alerts_resuelta_por_fkey"
+            columns: ["resuelta_por"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "stock_alerts_resuelta_por_fkey"
+            columns: ["resuelta_por"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
+          },
         ]
       }
       stock_locations: {
@@ -1725,6 +1949,7 @@ export type Database = {
           created_at: string | null
           id: string
           nombre: string
+          profile_id: string | null
           tipo: Database["public"]["Enums"]["stock_location_type"]
         }
         Insert: {
@@ -1734,6 +1959,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           nombre: string
+          profile_id?: string | null
           tipo: Database["public"]["Enums"]["stock_location_type"]
         }
         Update: {
@@ -1743,6 +1969,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           nombre?: string
+          profile_id?: string | null
           tipo?: Database["public"]["Enums"]["stock_location_type"]
         }
         Relationships: [
@@ -1752,6 +1979,34 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "branches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_locations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_locations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "seller_performance"
+            referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "stock_locations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "stock_locations_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
           },
         ]
       }
@@ -1814,6 +2069,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "stock_moves_from_location_id_fkey"
+            columns: ["from_location_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["location_id"]
+          },
+          {
+            foreignKeyName: "stock_moves_from_location_id_fkey"
+            columns: ["from_location_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["location_id"]
+          },
+          {
             foreignKeyName: "stock_moves_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -1835,6 +2104,20 @@ export type Database = {
             referencedColumns: ["product_id"]
           },
           {
+            foreignKeyName: "stock_moves_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "stock_moves_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["product_id"]
+          },
+          {
             foreignKeyName: "stock_moves_to_location_id_fkey"
             columns: ["to_location_id"]
             isOneToOne: false
@@ -1849,6 +2132,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "stock_moves_to_location_id_fkey"
+            columns: ["to_location_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["location_id"]
+          },
+          {
+            foreignKeyName: "stock_moves_to_location_id_fkey"
+            columns: ["to_location_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["location_id"]
+          },
+          {
             foreignKeyName: "stock_moves_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -1861,6 +2158,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "stock_moves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "stock_moves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
           },
           {
             foreignKeyName: "stock_moves_wo_id_fkey"
@@ -1917,6 +2228,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "subscription_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "subscription_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
           },
         ]
       }
@@ -2159,6 +2484,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "seller_performance"
             referencedColumns: ["vendedor_id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
           },
         ]
       }
@@ -2428,6 +2767,20 @@ export type Database = {
             referencedColumns: ["vendedor_id"]
           },
           {
+            foreignKeyName: "wo_substitutions_autorizado_por_fkey"
+            columns: ["autorizado_por"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_autorizado_por_fkey"
+            columns: ["autorizado_por"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
             foreignKeyName: "wo_substitutions_producto_original_id_fkey"
             columns: ["producto_original_id"]
             isOneToOne: false
@@ -2449,6 +2802,20 @@ export type Database = {
             referencedColumns: ["product_id"]
           },
           {
+            foreignKeyName: "wo_substitutions_producto_original_id_fkey"
+            columns: ["producto_original_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_producto_original_id_fkey"
+            columns: ["producto_original_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["product_id"]
+          },
+          {
             foreignKeyName: "wo_substitutions_producto_sustituto_id_fkey"
             columns: ["producto_sustituto_id"]
             isOneToOne: false
@@ -2467,6 +2834,20 @@ export type Database = {
             columns: ["producto_sustituto_id"]
             isOneToOne: false
             referencedRelation: "stock_by_location"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_producto_sustituto_id_fkey"
+            columns: ["producto_sustituto_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "wo_substitutions_producto_sustituto_id_fkey"
+            columns: ["producto_sustituto_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
             referencedColumns: ["product_id"]
           },
           {
@@ -2637,6 +3018,20 @@ export type Database = {
             referencedColumns: ["vendedor_id"]
           },
           {
+            foreignKeyName: "work_orders_tecnico_id_fkey"
+            columns: ["tecnico_id"]
+            isOneToOne: false
+            referencedRelation: "v_serial_history"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
+            foreignKeyName: "work_orders_tecnico_id_fkey"
+            columns: ["tecnico_id"]
+            isOneToOne: false
+            referencedRelation: "v_technician_stock"
+            referencedColumns: ["tecnico_id"]
+          },
+          {
             foreignKeyName: "work_orders_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
@@ -2762,6 +3157,41 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_serial_history: {
+        Row: {
+          estado: string | null
+          location_id: string | null
+          notas: string | null
+          product_id: string | null
+          producto: string | null
+          serial_number: string | null
+          sku: string | null
+          tecnico_id: string | null
+          tecnico_nombre: string | null
+          ubicacion_actual: string | null
+          ubicacion_tipo:
+            | Database["public"]["Enums"]["stock_location_type"]
+            | null
+          ultima_actualizacion: string | null
+        }
+        Relationships: []
+      }
+      v_technician_stock: {
+        Row: {
+          cantidad_actual: number | null
+          codigo: string | null
+          location_id: string | null
+          location_nombre: string | null
+          product_id: string | null
+          producto: string | null
+          serializable: boolean | null
+          sku: string | null
+          tecnico_email: string | null
+          tecnico_id: string | null
+          tecnico_nombre: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
