@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
+import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
 
 export default function EditWO() {
   const { id } = useParams<{ id: string }>();
@@ -224,24 +225,13 @@ export default function EditWO() {
                   placeholder="Calle, número, depto, etc."
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="comuna">Comuna</Label>
-                <Input
-                  id="comuna"
-                  value={formData.comuna}
-                  onChange={(e) => setFormData(prev => ({ ...prev, comuna: e.target.value }))}
-                  placeholder="Comuna"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="region">Región</Label>
-                <Input
-                  id="region"
-                  value={formData.region}
-                  onChange={(e) => setFormData(prev => ({ ...prev, region: e.target.value }))}
-                  placeholder="Región"
-                />
-              </div>
+              <ComunaRegionFields
+                region={formData.region}
+                comuna={formData.comuna}
+                onRegionChange={(v) => setFormData(prev => ({ ...prev, region: v, comuna: '' }))}
+                onComunaChange={(v) => setFormData(prev => ({ ...prev, comuna: v }))}
+                className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2"
+              />
             </div>
           </CardContent>
         </Card>

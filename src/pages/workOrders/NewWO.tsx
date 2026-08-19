@@ -22,6 +22,7 @@ import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
 
 const STORAGE_KEY = 'newWOFormData';
 
@@ -529,24 +530,12 @@ export default function NewWO() {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label>Comuna *</Label>
-                  <Input
-                    value={formData.comuna}
-                    onChange={(e) => setFormData({ ...formData, comuna: e.target.value })}
-                    placeholder="Comuna"
-                  />
-                </div>
-                <div>
-                  <Label>Región *</Label>
-                  <Input
-                    value={formData.region}
-                    onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                    placeholder="Región"
-                  />
-                </div>
-              </div>
+              <ComunaRegionFields
+                region={formData.region}
+                comuna={formData.comuna}
+                onRegionChange={(v) => setFormData({ ...formData, region: v, comuna: '' })}
+                onComunaChange={(v) => setFormData({ ...formData, comuna: v })}
+              />
             </CardContent>
           </Card>
 
