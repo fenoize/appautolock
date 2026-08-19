@@ -143,6 +143,7 @@ export function AppSidebar() {
           items: [
             { title: 'Productos', path: '/inventory' },
             { title: 'Compatibilidad', path: '/compatibility' },
+            { title: 'Técnicos', path: '/inventory/technicians' },
             { title: 'Alertas', path: '/inventory/alerts' },
             { title: 'Reportes', path: '/inventory/reports' },
           ],
