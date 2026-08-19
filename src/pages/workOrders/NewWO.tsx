@@ -22,6 +22,7 @@ import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
 
 const STORAGE_KEY = 'newWOFormData';
 

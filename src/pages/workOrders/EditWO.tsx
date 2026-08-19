@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
+import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
 
 export default function EditWO() {
   const { id } = useParams<{ id: string }>();
