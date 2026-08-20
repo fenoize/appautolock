@@ -267,12 +267,26 @@ export default function MobileWODetail({ wo }: Props) {
         )}
 
         {step === 'evidencias' && (
-          <WOEvidenceUploader
-            woId={wo.id}
-            existingUrls={evidencias}
-            onUpdate={setEvidencias}
-          />
+          <div className="space-y-6">
+            <WOEvidenceUploader
+              woId={wo.id}
+              existingUrls={evidenciasPre}
+              onUpdate={setEvidenciasPre}
+              category="pre"
+              title="📷 Antes del servicio"
+              description="Documenta el estado del vehículo antes de comenzar — rayones, daños preexistentes, etc."
+            />
+            <WOEvidenceUploader
+              woId={wo.id}
+              existingUrls={evidenciasPost}
+              onUpdate={setEvidenciasPost}
+              category="post"
+              title="✅ Después del servicio"
+              description="Evidencia de la instalación completada y estado final del vehículo."
+            />
+          </div>
         )}
+
 
         {step === 'firma' && (
           <Card className="p-4">
