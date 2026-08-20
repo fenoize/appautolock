@@ -37,7 +37,7 @@ export default function EditVehicle() {
   const { data: vehicle, isLoading } = useVehicle(id!);
   const updateVehicle = useUpdateVehicle();
 
-  const STORAGE_KEY = `editVehicleFormData_${id}`;
+  
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleSchema),
@@ -56,56 +56,25 @@ export default function EditVehicle() {
     },
   });
 
-  // Cargar datos del vehículo o de localStorage
+  // Cargar datos del vehículo desde el servidor
   useEffect(() => {
     if (vehicle) {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      
-      if (saved) {
-        try {
-          const parsedData = JSON.parse(saved);
-          form.reset(parsedData);
-        } catch {
-          // Si falla el parse, usar datos originales del vehículo
-          form.reset({
-            patente: vehicle.patente,
-            marca: vehicle.marca,
-            modelo: vehicle.modelo,
-            vin: vehicle.vin || '',
-            anio: vehicle.anio || undefined,
-            combustible: vehicle.combustible || '',
-            tipo_encendido: (vehicle.tipo_encendido as any) || 'Desconocido',
-            color: vehicle.color || '',
-            numero_motor: vehicle.numero_motor || '',
-            odometro: vehicle.odometro || undefined,
-            notas: vehicle.notas || '',
-          });
-        }
-      } else {
-        form.reset({
-          patente: vehicle.patente,
-          marca: vehicle.marca,
-          modelo: vehicle.modelo,
-          vin: vehicle.vin || '',
-          anio: vehicle.anio || undefined,
-          combustible: vehicle.combustible || '',
-          tipo_encendido: (vehicle.tipo_encendido as any) || 'Desconocido',
-          color: vehicle.color || '',
-          numero_motor: vehicle.numero_motor || '',
-          odometro: vehicle.odometro || undefined,
-          notas: vehicle.notas || '',
-        });
-      }
+      form.reset({
+        patente: vehicle.patente,
+        marca: vehicle.marca,
+        modelo: vehicle.modelo,
+        vin: vehicle.vin || '',
+        anio: vehicle.anio || undefined,
+        combustible: vehicle.combustible || '',
+        tipo_encendido: (vehicle.tipo_encendido as any) || 'Desconocido',
+        color: vehicle.color || '',
+        numero_motor: vehicle.numero_motor || '',
+        odometro: vehicle.odometro || undefined,
+        notas: vehicle.notas || '',
+      });
     }
-  }, [vehicle, form]);
+  }, [vehicle]);
 
-  // Auto-guardar en localStorage
-  useEffect(() => {
-    const subscription = form.watch((value) => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
-    });
-    return () => subscription.unsubscribe();
-  }, [form.watch, STORAGE_KEY]);
 
   const onSubmit = async (data: VehicleFormData) => {
     try {
@@ -114,8 +83,6 @@ export default function EditVehicle() {
         ...data,
       });
       
-      // Limpiar localStorage después de guardar exitosamente
-      localStorage.removeItem(STORAGE_KEY);
       toast.success('Vehículo actualizado exitosamente');
       navigate(`/vehicles/${id}`);
     } catch (error: any) {
