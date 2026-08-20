@@ -77,7 +77,7 @@ export default function UserDetail() {
     if (!id) return;
     const dataToUpdate = {
       ...formData,
-      branch_id: isGlobalAdmin ? null : formData.branch_id
+      branch_id: isGlobalAdmin || !formData.branch_id ? null : formData.branch_id
     };
     updateUser.mutate({ userId: id, data: dataToUpdate });
   };
