@@ -40,60 +40,26 @@ export default function EditClient() {
   const [emailInput, setEmailInput] = useState('');
   const [telefonoInput, setTelefonoInput] = useState('');
 
-  // Load saved data from localStorage or client data
+  // Load client data from server
   useEffect(() => {
     if (client) {
-      const storageKey = `${STORAGE_KEY}_${id}`;
-      const savedData = localStorage.getItem(storageKey);
-      
-      if (savedData) {
-        try {
-          const parsed = JSON.parse(savedData);
-          setFormData(parsed);
-        } catch (e) {
-          // If parsing fails, use client data
-          setFormData({
-            tipo: client.tipo || 'empresa',
-            rut: client.rut || '',
-            dv: client.dv || '',
-            pasaporte: client.pasaporte || '',
-            razon_social: client.razon_social || '',
-            giro: client.giro || '',
-            nombre_comercial: client.nombre_comercial || '',
-            email_principal: client.email_principal || '',
-            emails: client.emails || [],
-            telefonos: client.telefonos || [],
-            estado: client.estado || 'prospecto',
-            notas: client.notas || ''
-          });
-        }
-      } else {
-        // Load from client data
-        setFormData({
-          tipo: client.tipo || 'empresa',
-          rut: client.rut || '',
-          dv: client.dv || '',
-          pasaporte: client.pasaporte || '',
-          razon_social: client.razon_social || '',
-          giro: client.giro || '',
-          nombre_comercial: client.nombre_comercial || '',
-          email_principal: client.email_principal || '',
-          emails: client.emails || [],
-          telefonos: client.telefonos || [],
-          estado: client.estado || 'prospecto',
-          notas: client.notas || ''
-        });
-      }
+      setFormData({
+        tipo: client.tipo || 'empresa',
+        rut: client.rut || '',
+        dv: client.dv || '',
+        pasaporte: client.pasaporte || '',
+        razon_social: client.razon_social || '',
+        giro: client.giro || '',
+        nombre_comercial: client.nombre_comercial || '',
+        email_principal: client.email_principal || '',
+        emails: client.emails || [],
+        telefonos: client.telefonos || [],
+        estado: client.estado || 'prospecto',
+        notas: client.notas || ''
+      });
     }
-  }, [client, id]);
+  }, [client]);
 
-  // Auto-save to localStorage
-  useEffect(() => {
-    if (id) {
-      const storageKey = `${STORAGE_KEY}_${id}`;
-      localStorage.setItem(storageKey, JSON.stringify(formData));
-    }
-  }, [formData, id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,9 +72,6 @@ export default function EditClient() {
         ...formData
       });
 
-      // Clear localStorage after successful update
-      const storageKey = `${STORAGE_KEY}_${id}`;
-      localStorage.removeItem(storageKey);
 
       toast.success('Cliente actualizado correctamente');
       navigate(`/clients/${id}`);
