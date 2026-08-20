@@ -2872,6 +2872,8 @@ export type Database = {
           direccion_id: string | null
           duracion_minutos: number | null
           estado: Database["public"]["Enums"]["wo_status"] | null
+          evidencias_post_urls: string[] | null
+          evidencias_pre_urls: string[] | null
           evidencias_urls: string[] | null
           fecha_fin_real: string | null
           fecha_inicio_real: string | null
@@ -2910,6 +2912,8 @@ export type Database = {
           direccion_id?: string | null
           duracion_minutos?: number | null
           estado?: Database["public"]["Enums"]["wo_status"] | null
+          evidencias_post_urls?: string[] | null
+          evidencias_pre_urls?: string[] | null
           evidencias_urls?: string[] | null
           fecha_fin_real?: string | null
           fecha_inicio_real?: string | null
@@ -2948,6 +2952,8 @@ export type Database = {
           direccion_id?: string | null
           duracion_minutos?: number | null
           estado?: Database["public"]["Enums"]["wo_status"] | null
+          evidencias_post_urls?: string[] | null
+          evidencias_pre_urls?: string[] | null
           evidencias_urls?: string[] | null
           fecha_fin_real?: string | null
           fecha_inicio_real?: string | null

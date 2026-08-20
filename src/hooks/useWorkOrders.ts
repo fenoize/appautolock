@@ -214,24 +214,33 @@ export const useCloseWorkOrder = () => {
 
 export const useUploadEvidence = () => {
   return useMutation({
-    mutationFn: async ({ woId, file }: { woId: string; file: File }) => {
+    mutationFn: async ({ woId, file, category }: { woId: string; file: File; category: 'pre' | 'post' }) => {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${woId}/${Date.now()}.${fileExt}`;
-      
-      const { data, error } = await supabase.storage
+      const fileName = `${woId}/${category}_${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
         .from('wo-evidencias')
         .upload(fileName, file);
-      
-      if (error) throw error;
-      
+      if (uploadError) throw uploadError;
+
       const { data: { publicUrl } } = supabase.storage
         .from('wo-evidencias')
         .getPublicUrl(fileName);
-      
+
+      const column = category === 'pre' ? 'evidencias_pre_urls' : 'evidencias_post_urls';
+      const { data: current } = await supabase
+        .from('work_orders')
+        .select(column)
+        .eq('id', woId)
+        .single();
+
+      const currentUrls: string[] = (current as any)?.[column] || [];
+      await supabase
+        .from('work_orders')
+        .update({ [column]: [...currentUrls, publicUrl] } as any)
+        .eq('id', woId);
+
       return publicUrl;
-    },
-    onSuccess: () => {
-      toast.success('Evidencia subida');
     },
     onError: (error: Error) => {
       toast.error(`Error al subir evidencia: ${error.message}`);

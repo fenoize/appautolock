@@ -76,7 +76,7 @@ export default function WODetail() {
     setUploading(true);
     try {
       const urls = await Promise.all(
-        Array.from(files).map((file) => uploadEvidence.mutateAsync({ woId: id, file }))
+        Array.from(files).map((file) => uploadEvidence.mutateAsync({ woId: id, file, category: 'post' }))
       );
       const existing = wo?.evidencias_urls ?? [];
       const { error } = await supabase

@@ -10,13 +10,19 @@ interface WOEvidenceUploaderProps {
   existingUrls?: string[];
   onUpdate: (urls: string[]) => void;
   readonly?: boolean;
+  category: 'pre' | 'post';
+  title: string;
+  description?: string;
 }
 
 export const WOEvidenceUploader = ({ 
   woId, 
   existingUrls = [], 
   onUpdate, 
-  readonly = false 
+  readonly = false,
+  category,
+  title,
+  description
 }: WOEvidenceUploaderProps) => {
   const [urls, setUrls] = useState<string[]>(existingUrls);
   const [uploading, setUploading] = useState(false);
@@ -26,8 +32,8 @@ export const WOEvidenceUploader = ({
     const files = Array.from(e.target.files || []);
     
     if (files.length === 0) return;
-    if (urls.length + files.length > 10) {
-      toast.error('Máximo 10 fotos por OT');
+    if (urls.length + files.length > 5) {
+      toast.error('Máximo 5 fotos por sección');
       return;
     }
 
@@ -35,8 +41,9 @@ export const WOEvidenceUploader = ({
 
     try {
       const uploadPromises = files.map(file => 
-        uploadMutation.mutateAsync({ woId, file })
+        uploadMutation.mutateAsync({ woId, file, category })
       );
+      
       
       const newUrls = await Promise.all(uploadPromises);
       const updatedUrls = [...urls, ...newUrls];
@@ -60,9 +67,12 @@ export const WOEvidenceUploader = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Evidencias Fotográficas</CardTitle>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {description && (
+          <p className="text-sm text-muted-foreground mb-3">{description}</p>
+        )}
         {!readonly && (
           <div>
             <input
@@ -71,12 +81,12 @@ export const WOEvidenceUploader = ({
               multiple
               onChange={handleFileChange}
               className="hidden"
-              id="evidence-upload"
-              disabled={uploading || urls.length >= 10}
+              id={`evidence-upload-${category}`}
+              disabled={uploading || urls.length >= 5}
             />
             <Button
-              onClick={() => document.getElementById('evidence-upload')?.click()}
-              disabled={uploading || urls.length >= 10}
+              onClick={() => document.getElementById(`evidence-upload-${category}`)?.click()}
+              disabled={uploading || urls.length >= 5}
               variant="outline"
               className="w-full"
             >
@@ -84,7 +94,7 @@ export const WOEvidenceUploader = ({
               {uploading ? 'Subiendo...' : 'Subir Fotos'}
             </Button>
             <p className="text-xs text-muted-foreground mt-2">
-              {urls.length} / 10 fotos. Máximo 10 por OT.
+              {urls.length} / 5 fotos
             </p>
           </div>
         )}

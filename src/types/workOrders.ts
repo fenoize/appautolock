@@ -33,6 +33,8 @@ export interface WorkOrder {
   notas?: string;
   checklist_data?: ChecklistData;
   evidencias_urls?: string[];
+  evidencias_pre_urls?: string[];
+  evidencias_post_urls?: string[];
   firma_url?: string;
   firma_nombre?: string;
   fecha_inicio_real?: string;
