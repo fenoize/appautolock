@@ -20,8 +20,8 @@ export default function EditWO() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: wo, isLoading } = useWorkOrder(id!);
-  const { data: clients } = useClients();
-  const { data: branches } = useBranches();
+  const { data: clients, isLoading: clientsLoading } = useClients();
+  const { data: branches, isLoading: branchesLoading } = useBranches();
   const updateWO = useUpdateWorkOrder();
 
   const [formData, setFormData] = useState({
@@ -106,7 +106,7 @@ export default function EditWO() {
     }
   }, [clientAddresses]);
 
-  if (isLoading) {
+  if (isLoading || clientsLoading || branchesLoading) {
     return (
       <div className="container mx-auto py-6 max-w-4xl">
         <SkeletonCard />
@@ -152,7 +152,7 @@ export default function EditWO() {
               <div className="space-y-2">
                 <Label htmlFor="client_id">Cliente *</Label>
                 <Select 
-                  value={formData.client_id} 
+                  value={formData.client_id || undefined}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, client_id: value, vehicle_id: '' }))}
                 >
                   <SelectTrigger>
@@ -171,7 +171,7 @@ export default function EditWO() {
               <div className="space-y-2">
                 <Label htmlFor="vehicle_id">Vehículo</Label>
                 <Select 
-                  value={formData.vehicle_id} 
+                  value={formData.vehicle_id || undefined}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, vehicle_id: value }))}
                   disabled={!formData.client_id}
                 >
@@ -191,7 +191,7 @@ export default function EditWO() {
               <div className="space-y-2">
                 <Label htmlFor="branch_id">Sucursal</Label>
                 <Select 
-                  value={formData.branch_id} 
+                  value={formData.branch_id || undefined}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, branch_id: value }))}
                 >
                   <SelectTrigger>
