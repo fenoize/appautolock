@@ -23,6 +23,7 @@ import { ItemSelector } from '@/components/quotes/ItemSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
+import { REGIONES, getComunasByRegion } from '@/lib/chile-locations';
 
 const STORAGE_KEY = 'newWOFormData';
 
@@ -43,6 +44,13 @@ export default function NewWO() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        // Validate region/comuna against our dropdown data — clear if stale free-text values
+        const savedRegion = parsed.region || '';
+        const validRegion = REGIONES.some(r => r.nombre === savedRegion) ? savedRegion : '';
+        const savedComuna = parsed.comuna || '';
+        const validComuna = validRegion && getComunasByRegion(validRegion).includes(savedComuna)
+          ? savedComuna
+          : '';
         return {
           client_id: parsed.client_id || '',
           vehicle_id: parsed.vehicle_id || '',
@@ -51,8 +59,8 @@ export default function NewWO() {
           ventana_inicio: parsed.ventana_inicio || '',
           ventana_fin: parsed.ventana_fin || '',
           direccion: parsed.direccion || '',
-          comuna: parsed.comuna || '',
-          region: parsed.region || '',
+          comuna: validComuna,
+          region: validRegion,
           notas: parsed.notas || '',
         };
       } catch {
