@@ -10,13 +10,19 @@ interface WOEvidenceUploaderProps {
   existingUrls?: string[];
   onUpdate: (urls: string[]) => void;
   readonly?: boolean;
+  category: 'pre' | 'post';
+  title: string;
+  description?: string;
 }
 
 export const WOEvidenceUploader = ({ 
   woId, 
   existingUrls = [], 
   onUpdate, 
-  readonly = false 
+  readonly = false,
+  category,
+  title,
+  description
 }: WOEvidenceUploaderProps) => {
   const [urls, setUrls] = useState<string[]>(existingUrls);
   const [uploading, setUploading] = useState(false);
@@ -26,8 +32,8 @@ export const WOEvidenceUploader = ({
     const files = Array.from(e.target.files || []);
     
     if (files.length === 0) return;
-    if (urls.length + files.length > 10) {
-      toast.error('Máximo 10 fotos por OT');
+    if (urls.length + files.length > 5) {
+      toast.error('Máximo 5 fotos por sección');
       return;
     }
 
@@ -35,8 +41,9 @@ export const WOEvidenceUploader = ({
 
     try {
       const uploadPromises = files.map(file => 
-        uploadMutation.mutateAsync({ woId, file })
+        uploadMutation.mutateAsync({ woId, file, category })
       );
+      
       
       const newUrls = await Promise.all(uploadPromises);
       const updatedUrls = [...urls, ...newUrls];
