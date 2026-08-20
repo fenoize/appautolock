@@ -218,54 +218,36 @@ export function useCreateUser() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (invitation: CreateUserInvitation) => {
-      // Create auth user via Supabase
-      const temporaryPassword = `Temp${Math.random().toString(36).substring(2, 15)}!`;
-      
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: invitation.email,
-        password: temporaryPassword,
-        options: {
-          data: {
-            nombre: invitation.nombre,
-            apellido: invitation.apellido
-          }
-        }
+    mutationFn: async (invitation: CreateUserInvitation & { password?: string; phone?: string; estado?: string }) => {
+      const password = invitation.password || `Temp${Math.random().toString(36).substring(2, 12)}A1!`;
+
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
+          email: invitation.email,
+          password,
+          nombre: invitation.nombre,
+          apellido: invitation.apellido,
+          phone: invitation.phone,
+          branch_id: invitation.branch_id,
+          estado: invitation.estado ?? 'invitado',
+          roles: invitation.roles,
+        },
       });
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('No se pudo crear el usuario');
-
-      // Upsert profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: authData.user.id,
-          email: invitation.email,
-          nombre: invitation.nombre || '',
-          apellido: invitation.apellido || '',
-          branch_id: invitation.branch_id || null,
-          estado: 'invitado'
-        });
-
-      if (profileError) throw profileError;
-
-      // Insert roles
-      if (invitation.roles && invitation.roles.length > 0) {
-        const roleInserts = invitation.roles.map(role => ({
-          user_id: authData.user.id,
-          role
-        }));
-
-        const { error: rolesError } = await supabase
-          .from('user_roles')
-          .insert(roleInserts);
-
-        if (rolesError) throw rolesError;
+      if (error) {
+        const ctx = (error as any).context;
+        let message = error.message;
+        try {
+          const body = await ctx?.json?.();
+          if (body?.error) message = body.error;
+        } catch { /* ignore */ }
+        throw new Error(message);
       }
+      if ((data as any)?.error) throw new Error((data as any).error);
 
-      return authData.user;
+      return data;
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast({
