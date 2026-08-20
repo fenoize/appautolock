@@ -188,12 +188,20 @@ export function useResetUserPassword() {
 
   return useMutation({
     mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
-      const { data, error } = await supabase.auth.admin.updateUserById(
-        userId,
-        { password }
-      );
-      
-      if (error) throw error;
+      const { data, error } = await supabase.functions.invoke('set-user-password', {
+        body: { userId, password }
+      });
+
+      if (error) {
+        const ctx = (error as any).context;
+        let message = error.message;
+        try {
+          const parsed = await ctx?.json?.();
+          if (parsed?.error) message = parsed.error;
+        } catch { /* ignore */ }
+        throw new Error(message);
+      }
+      if ((data as any)?.error) throw new Error((data as any).error);
       return data;
     },
     onSuccess: () => {
