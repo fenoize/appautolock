@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
 import { REGIONES, getComunasByRegion } from '@/lib/chile-locations';
+import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
 
 const STORAGE_KEY = 'newWOFormData';
 
@@ -119,6 +120,8 @@ export default function NewWO() {
   const { data: vehicles } = useVehiclesByClient(formData.client_id);
   const { data: branches } = useBranches();
   const { data: clientAddresses } = useClientAddresses(formData.client_id);
+  const { data: checklistTemplates = [] } = useChecklistTemplates();
+  const [checklistTemplateId, setChecklistTemplateId] = useState<string>('');
 
   // Mutaciones
   const createWO = useCreateWorkOrder();
@@ -231,6 +234,24 @@ export default function NewWO() {
     }
 
     try {
+      let checklistData: any = null;
+      if (checklistTemplateId) {
+        const tpl = checklistTemplates.find(t => t.id === checklistTemplateId);
+        if (tpl) {
+          const sortedItems = [...(tpl.checklist_template_items || [])].sort((a, b) => a.orden - b.orden);
+          checklistData = {
+            template_id: tpl.id,
+            template_nombre: tpl.nombre,
+            items: sortedItems.map(item => ({
+              id: item.id,
+              texto: item.titulo,
+              requerido: item.obligatorio,
+              completado: false,
+            })),
+          };
+        }
+      }
+
       const woData = {
         client_id: formData.client_id,
         vehicle_id: formData.vehicle_id || null,
@@ -242,6 +263,7 @@ export default function NewWO() {
         comuna: formData.comuna || null,
         region: formData.region || null,
         notas: formData.notas || null,
+        checklist_data: checklistData,
         estado: 'pendiente' as const,
       };
 
@@ -504,6 +526,28 @@ export default function NewWO() {
                     onChange={(e) => setFormData({ ...formData, ventana_fin: e.target.value })}
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label>Checklist (opcional)</Label>
+                <Select
+                  value={checklistTemplateId || undefined}
+                  onValueChange={(v) => setChecklistTemplateId(v === 'none' ? '' : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin checklist" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin checklist</SelectItem>
+                    {checklistTemplates
+                      .filter(t => t.activa)
+                      .map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.nombre} ({(t.checklist_template_items || []).length} ítems)
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>

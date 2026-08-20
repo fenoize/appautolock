@@ -15,6 +15,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
+import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
 
 export default function EditWO() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,8 @@ export default function EditWO() {
   const { data: clients, isLoading: clientsLoading } = useClients();
   const { data: branches, isLoading: branchesLoading } = useBranches();
   const updateWO = useUpdateWorkOrder();
+  const { data: checklistTemplates = [] } = useChecklistTemplates();
+  const [checklistTemplateId, setChecklistTemplateId] = useState<string>('');
 
   const [formData, setFormData] = useState({
     client_id: '',
@@ -54,6 +57,9 @@ export default function EditWO() {
         comuna: wo.comuna || '',
         region: wo.region || ''
       });
+      if (wo.checklist_data?.template_id) {
+        setChecklistTemplateId(wo.checklist_data.template_id);
+      }
     }
   }, [wo]);
 
@@ -63,6 +69,29 @@ export default function EditWO() {
     if (!formData.client_id) {
       toast.error('Debe seleccionar un cliente');
       return;
+    }
+
+    let newChecklistData: any = wo?.checklist_data ?? null;
+    if (checklistTemplateId) {
+      const tpl = checklistTemplates.find(t => t.id === checklistTemplateId);
+      if (tpl) {
+        const sortedItems = [...(tpl.checklist_template_items || [])].sort((a, b) => a.orden - b.orden);
+        // Solo rebuildar si la plantilla cambió (o no había checklist_data)
+        if (tpl.id !== wo?.checklist_data?.template_id) {
+          newChecklistData = {
+            template_id: tpl.id,
+            template_nombre: tpl.nombre,
+            items: sortedItems.map(item => ({
+              id: item.id,
+              texto: item.titulo,
+              requerido: item.obligatorio,
+              completado: false,
+            })),
+          };
+        }
+      }
+    } else {
+      newChecklistData = null;
     }
 
     updateWO.mutate(
@@ -77,7 +106,8 @@ export default function EditWO() {
         ventana_fin: formData.ventana_fin || null,
         direccion: formData.direccion || null,
         comuna: formData.comuna || null,
-        region: formData.region || null
+        region: formData.region || null,
+        checklist_data: newChecklistData,
       },
       {
         onSuccess: () => {
@@ -242,6 +272,27 @@ export default function EditWO() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Checklist (opcional)</Label>
+                <Select
+                  value={checklistTemplateId || undefined}
+                  onValueChange={(v) => setChecklistTemplateId(v === 'none' ? '' : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin checklist" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin checklist</SelectItem>
+                    {checklistTemplates
+                      .filter(t => t.activa)
+                      .map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.nombre} ({(t.checklist_template_items || []).length} ítems)
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="fecha_programada">Fecha y Hora Programada</Label>
                 <Input
