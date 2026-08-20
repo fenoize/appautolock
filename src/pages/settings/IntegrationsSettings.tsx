@@ -126,7 +126,7 @@ export default function IntegrationsSettings() {
       icon: CreditCard,
       title: 'MercadoPago',
       description: 'Checkout Pro para cobros en línea de renovaciones GPS',
-      keys: ['mp_access_token', 'mp_public_key'],
+      keys: ['mp_access_token', 'mp_public_key', 'mp_webhook_secret'],
       fields: [
         {
           name: 'mp_access_token',
@@ -140,6 +140,13 @@ export default function IntegrationsSettings() {
           label: 'Public Key',
           placeholder: 'APP_USR-...',
           help: 'Clave pública (no secreta) para el SDK cliente',
+        },
+        {
+          name: 'mp_webhook_secret',
+          label: 'Webhook Secret',
+          placeholder: '••••••••••••',
+          type: 'password',
+          help: 'Encuéntralo en MercadoPago → Tu negocio → Webhooks → Clave secreta',
         },
         {
           name: 'mp_environment',
