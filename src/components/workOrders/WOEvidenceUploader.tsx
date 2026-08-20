@@ -67,9 +67,12 @@ export const WOEvidenceUploader = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Evidencias Fotográficas</CardTitle>
+        <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {description && (
+          <p className="text-sm text-muted-foreground mb-3">{description}</p>
+        )}
         {!readonly && (
           <div>
             <input
@@ -78,12 +81,12 @@ export const WOEvidenceUploader = ({
               multiple
               onChange={handleFileChange}
               className="hidden"
-              id="evidence-upload"
-              disabled={uploading || urls.length >= 10}
+              id={`evidence-upload-${category}`}
+              disabled={uploading || urls.length >= 5}
             />
             <Button
-              onClick={() => document.getElementById('evidence-upload')?.click()}
-              disabled={uploading || urls.length >= 10}
+              onClick={() => document.getElementById(`evidence-upload-${category}`)?.click()}
+              disabled={uploading || urls.length >= 5}
               variant="outline"
               className="w-full"
             >
@@ -91,7 +94,7 @@ export const WOEvidenceUploader = ({
               {uploading ? 'Subiendo...' : 'Subir Fotos'}
             </Button>
             <p className="text-xs text-muted-foreground mt-2">
-              {urls.length} / 10 fotos. Máximo 10 por OT.
+              {urls.length} / 5 fotos
             </p>
           </div>
         )}
