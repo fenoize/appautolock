@@ -326,7 +326,7 @@ export default function MobileWODetail({ wo }: Props) {
       </div>
 
       {/* Sticky footer nav */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-background border-t px-4 py-3 flex items-center gap-2">
+      <div className="fixed bottom-16 left-0 right-0 z-[1050] bg-background border-t px-4 py-3 flex items-center gap-2">
         <Button
           variant="outline"
           onClick={goPrev}
