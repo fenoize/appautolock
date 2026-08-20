@@ -115,7 +115,7 @@ export default function MobileWODetail({ wo }: Props) {
     : null;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-40">
       {/* Top progress bar */}
       <div className="sticky top-0 z-20 bg-background border-b px-4 py-3 space-y-2">
         <div className="flex items-center justify-between">
