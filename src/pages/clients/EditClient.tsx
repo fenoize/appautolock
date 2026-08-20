@@ -14,7 +14,7 @@ import { ClientType, ClientStatus } from '@/types/clients';
 import { toast } from 'sonner';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
 
-const STORAGE_KEY = 'editClientFormData';
+
 
 export default function EditClient() {
   const navigate = useNavigate();

@@ -37,7 +37,7 @@ export default function EditVehicle() {
   const { data: vehicle, isLoading } = useVehicle(id!);
   const updateVehicle = useUpdateVehicle();
 
-  const STORAGE_KEY = `editVehicleFormData_${id}`;
+  
 
   const form = useForm<VehicleFormData>({
     resolver: zodResolver(vehicleSchema),
