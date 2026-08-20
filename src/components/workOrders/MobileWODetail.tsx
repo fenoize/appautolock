@@ -53,7 +53,8 @@ export default function MobileWODetail({ wo }: Props) {
   const canManage = isAdmin || isSupervisor;
   const [step, setStep] = useState<Step>('info');
   const [checklistItems, setChecklistItems] = useState(wo.checklist_data?.items || []);
-  const [evidencias, setEvidencias] = useState<string[]>(wo.evidencias_urls || []);
+  const [evidenciasPre, setEvidenciasPre] = useState<string[]>(wo.evidencias_pre_urls || []);
+  const [evidenciasPost, setEvidenciasPost] = useState<string[]>(wo.evidencias_post_urls || []);
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
