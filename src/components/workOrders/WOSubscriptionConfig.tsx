@@ -148,6 +148,7 @@ export function WOSubscriptionConfig({
       numerosSerietext: seriesjson,
       fechaInicio,
       gpsData,
+      woId,
     });
 
     onOpenChange(false);
