@@ -441,6 +441,9 @@ export default function TechnicianInventory() {
   const [search, setSearch] = useState('');
   const [camionetaDialog, setCamionetaDialog] = useState<{ tecnico: any; camioneta: any | null } | null>(null);
   const [estadoFiltro, setEstadoFiltro] = useState<string>('todos');
+  const [techSearch, setTechSearch] = useState('');
+  const [stockFiltro, setStockFiltro] = useState('todos');
+  const [serialEditing, setSerialEditing] = useState<{ id: string; placeholder: string } | null>(null);
 
   const [assignTech, setAssignTech] = useState<Technician | null>(null);
   const [returnCtx, setReturnCtx] = useState<{
