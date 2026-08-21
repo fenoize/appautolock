@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Settings, Building2, Hash, Bell, FileText, Plug, Database, FileBarChart, ListChecks } from "lucide-react";
+import { Settings, Building2, Hash, Bell, FileText, Plug, Database, FileBarChart, ListChecks, Monitor } from "lucide-react";
 
 const navigation = [
   { name: 'General', href: '/settings', icon: Settings, end: true },
@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Integraciones', href: '/settings/integrations', icon: Plug },
   { name: 'Respaldos', href: '/settings/backups', icon: Database },
   { name: 'Auditoría', href: '/settings/audit', icon: FileBarChart },
+  { name: 'Sistema', href: '/settings/sistema', icon: Monitor },
 ];
 
 export default function SettingsLayout() {
