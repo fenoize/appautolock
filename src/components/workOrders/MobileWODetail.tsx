@@ -57,6 +57,27 @@ interface Props {
 }
 
 export default function MobileWODetail({ wo }: Props) {
+  const productIds = (wo?.items ?? [])
+    .filter((i) => i.item_tipo === 'producto' && i.ref_id)
+    .map((i) => i.ref_id as string);
+
+  const { data: productsSerializable } = useQuery({
+    queryKey: ['products-serializable', productIds],
+    queryFn: async () => {
+      if (!productIds.length) return [];
+      const { data } = await supabase
+        .from('products')
+        .select('id, serializable')
+        .in('id', productIds);
+      return data || [];
+    },
+    enabled: productIds.length > 0,
+  });
+
+  const serializableIds = new Set(
+    (productsSerializable ?? []).filter((p) => p.serializable).map((p) => p.id)
+  );
+
   const navigate = useNavigate();
   const closeWO = useCloseWorkOrder();
   const { isAdmin, hasRole } = usePermissions();
