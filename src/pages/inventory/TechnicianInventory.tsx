@@ -590,6 +590,28 @@ export default function TechnicianInventory() {
           </TabsList>
 
           <TabsContent value="tecnicos" className="mt-6">
+          <div className="flex items-center gap-2 mb-5 flex-wrap">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Buscar técnico..."
+                value={techSearch}
+                onChange={(e) => setTechSearch(e.target.value)}
+              />
+            </div>
+            <Select value={stockFiltro} onValueChange={setStockFiltro}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los estados</SelectItem>
+                <SelectItem value="con_stock">Con stock</SelectItem>
+                <SelectItem value="sin_stock">Sin stock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {loadingTechs ? (
             <p className="text-muted-foreground py-12 text-center">Cargando técnicos...</p>
           ) : !technicians?.length ? (
@@ -604,17 +626,55 @@ export default function TechnicianInventory() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {technicians.map((t) => {
-                const items = t.location_id ? itemsByLocation.get(t.location_id) ?? [] : [];
-                return (
-                  <Card key={t.id} className="border-border/70">
+              {technicians
+                .map((t) => {
+                  const techSerials = t.location_id
+                    ? (serials ?? []).filter((s) => s.location_id === t.location_id)
+                    : [];
+                  const grupoMap = new Map<string, ProductGroupData>();
+                  techSerials.forEach((s) => {
+                    if (!grupoMap.has(s.product_id)) {
+                      grupoMap.set(s.product_id, {
+                        product_id: s.product_id,
+                        nombre: s.products?.nombre ?? 'Producto',
+                        qty: 0,
+                        serials: [],
+                      });
+                    }
+                    const g = grupoMap.get(s.product_id)!;
+                    g.qty += 1;
+                    g.serials.push({
+                      id: s.id,
+                      serial_number: s.serial_number,
+                      estado: s.estado ?? 'disponible',
+                    });
+                  });
+                  const grupos = Array.from(grupoMap.values()).sort((a, b) => a.nombre.localeCompare(b.nombre));
+                  const totalUnidades = grupos.reduce((acc, g) => acc + g.qty, 0);
+                  return { t, grupos, totalUnidades };
+                })
+                .filter(({ t, totalUnidades }) => {
+                  const q = techSearch.trim().toLowerCase();
+                  const matchSearch =
+                    !q ||
+                    t.nombre.toLowerCase().includes(q) ||
+                    (t.apellido ?? '').toLowerCase().includes(q);
+                  const matchStock =
+                    stockFiltro === 'todos' ||
+                    (stockFiltro === 'con_stock' ? totalUnidades > 0 : totalUnidades === 0);
+                  return matchSearch && matchStock;
+                })
+                .map(({ t, grupos, totalUnidades }) => (
+                  <Card key={t.id} className="border-border/70 overflow-hidden">
                     <CardHeader className="pb-3">
                       <div className="flex items-start gap-3">
-                        <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
+                        <div className="h-10 w-10 shrink-0 rounded-full bg-accent/10 text-accent flex items-center justify-center font-medium text-sm">
                           {initials(t.nombre, t.apellido)}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <CardTitle className="text-base truncate">{fullName(t.nombre, t.apellido)}</CardTitle>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-sm font-medium truncate">
+                            {fullName(t.nombre, t.apellido)}
+                          </CardTitle>
                           <p className="text-xs text-muted-foreground truncate">{t.email}</p>
                           {t.camioneta ? (
                             <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
@@ -645,56 +705,67 @@ export default function TechnicianInventory() {
                             </div>
                           )}
                         </div>
-                        {t.codigo && <Badge variant="secondary">{t.codigo}</Badge>}
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      {items.length === 0 ? (
-                        <div className="rounded-lg border border-dashed py-6 text-center">
+
+                    <div className="flex border-y border-border bg-muted/30">
+                      <div className="flex-1 flex flex-col items-center py-2.5">
+                        <span className="text-lg font-medium leading-none">{grupos.length}</span>
+                        <span className="text-[11px] text-muted-foreground mt-1">productos</span>
+                      </div>
+                      <div className="w-px bg-border" />
+                      <div className="flex-1 flex flex-col items-center py-2.5">
+                        <span className="text-lg font-medium leading-none">{totalUnidades}</span>
+                        <span className="text-[11px] text-muted-foreground mt-1">unidades</span>
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-border/60">
+                      {grupos.length === 0 ? (
+                        <div className="py-8 text-center">
                           <Boxes className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">Sin ítems asignados</p>
+                          <p className="text-sm text-muted-foreground">Sin equipos asignados</p>
                         </div>
                       ) : (
-                        <ul className="divide-y">
-                          {items.map((it, i) => (
-                            <li key={`${it.product_id}-${it.serial ?? i}`} className="flex items-center gap-2 py-2">
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium truncate">{it.nombre}</p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {it.cantidad} un.
-                                  {it.serial ? ` · Serie ${it.serial}` : ''}
-                                </p>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  setReturnCtx({
-                                    tech: t,
-                                    product_id: it.product_id,
-                                    nombre: it.nombre,
-                                    cantidad: it.cantidad,
-                                    serial_number: it.serial,
-                                  })
-                                }
-                              >
-                                <Undo2 className="mr-1 h-4 w-4" />
-                                Devolver
-                              </Button>
-                            </li>
-                          ))}
-                        </ul>
+                        grupos.map((g) => (
+                          <ProductGroup
+                            key={g.product_id}
+                            group={g}
+                            onAssignSerial={(s) =>
+                              setSerialEditing({ id: s.id, placeholder: s.serial_number })
+                            }
+                            onReturn={(s) =>
+                              setReturnCtx({
+                                tech: t,
+                                product_id: g.product_id,
+                                nombre: g.nombre,
+                                cantidad: 1,
+                                serial_number: s.serial_number,
+                              })
+                            }
+                          />
+                        ))
                       )}
-                      <Button className="w-full" onClick={() => setAssignTech(t)} disabled={!t.location_id}>
+                    </div>
+
+                    <div className="p-3 border-t border-border">
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => setAssignTech(t)}
+                        disabled={!t.location_id}
+                      >
                         <PackagePlus className="mr-2 h-4 w-4" />
-                        {t.location_id ? 'Asignar ítem' : 'Requiere camioneta'}
+                        {t.location_id ? 'Asignar equipo' : 'Requiere camioneta'}
                       </Button>
-                    </CardContent>
+                    </div>
                   </Card>
-                );
-              })}
+                ))}
             </div>
           )}
+
+          <AsignarSerialTecnicoDialog serialEditing={serialEditing} onClose={() => setSerialEditing(null)} />
+
 
           {camionetaDialog && (
             <CamionetaDialog
