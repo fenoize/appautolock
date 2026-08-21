@@ -236,7 +236,7 @@ function NuevaRecepcionDialog({
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      const total = esSerializable ? seriales.length : cantidadNum;
+      const total = esSerializable && !sinSerial ? seriales.length : cantidadNum;
 
       const { error: moveErr } = await supabase.from('stock_moves').insert({
         tipo: 'compra',
@@ -250,7 +250,20 @@ function NuevaRecepcionDialog({
       } as any);
       if (moveErr) throw moveErr;
 
-      if (esSerializable) {
+      if (esSerializable && sinSerial) {
+        const fecha = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const placeholders = Array.from({ length: cantidadNum }, (_, i) => ({
+          serial_number: `PEND-${fecha}-${String(i + 1).padStart(3, '0')}-${Math.random()
+            .toString(36)
+            .slice(2, 6)
+            .toUpperCase()}`,
+          product_id: productId,
+          location_id: bodegaId,
+          estado: 'sin_serial',
+        }));
+        const { error: insErr } = await supabase.from('product_serials').insert(placeholders as any);
+        if (insErr) throw insErr;
+      } else if (esSerializable) {
         const { data: existing } = await supabase
           .from('product_serials')
           .select('serial_number')
