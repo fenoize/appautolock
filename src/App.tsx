@@ -54,6 +54,7 @@ import AuditSettings from "./pages/settings/AuditSettings";
 import ChecklistTemplatesSettings from "./pages/settings/ChecklistTemplatesSettings";
 import SistemaSettings from "./pages/settings/SistemaSettings";
 import UsersList from "./pages/admin/UsersList";
+import UserDetail from "./pages/admin/UserDetail";
 import InviteUser from "./pages/admin/InviteUser";
 import UserProfile from "./pages/settings/UserProfile";
 import QuotesList from "./pages/quotes/QuotesList";
