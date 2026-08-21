@@ -30,6 +30,16 @@ export default function EditWO() {
   const { data: checklistTemplates = [] } = useChecklistTemplates();
   const [checklistTemplateId, setChecklistTemplateId] = useState<string>('');
 
+  const createWOItem = useCreateWOItem();
+  const deleteWOItem = useDeleteWOItem();
+  const { data: services = [] } = useServices();
+  const { data: products = [] } = useProducts();
+  const [newItemTipo, setNewItemTipo] = useState<'producto' | 'servicio'>('servicio');
+  const [newItemRefId, setNewItemRefId] = useState('');
+  const [newItemNombre, setNewItemNombre] = useState('');
+  const [newItemCantidad, setNewItemCantidad] = useState(1);
+  const [showAddItem, setShowAddItem] = useState(false);
+
   const [formData, setFormData] = useState({
     client_id: '',
     vehicle_id: '',
