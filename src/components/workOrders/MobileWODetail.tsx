@@ -269,6 +269,21 @@ export default function MobileWODetail({ wo }: Props) {
     }
   };
 
+  const handleMarkDefectuoso = async (woItemId: string, rawSerial: string) => {
+    const serial = (rawSerial || '').trim().toUpperCase();
+    if (!serial) return;
+    try {
+      const { error } = await supabase
+        .from('product_serials')
+        .update({ estado: 'defectuoso' })
+        .eq('serial_number', serial);
+      if (error) throw error;
+      toast.success(`Serial ${serial} marcado como defectuoso`);
+    } catch {
+      toast.error('Error al marcar el serial como defectuoso');
+    }
+  };
+
   const handleConfirmManualSerial = async (woItemId: string, itemRefId: string | null | undefined) => {
     const serial = (manualSerials[woItemId] || '').trim().toUpperCase();
     if (!serial) return;
@@ -638,6 +653,40 @@ export default function MobileWODetail({ wo }: Props) {
 
                     return (
                       <Card key={item.id} className="p-4 space-y-3">
+                        {(wo as any).tipo === 'garantia' && (
+                          <Card className="p-4 border-orange-200 bg-orange-50 space-y-3">
+                            <p className="text-sm font-medium text-orange-800">
+                              🔄 OT de Garantía — Reemplazo de equipo
+                            </p>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-orange-700">
+                                Serial del equipo defectuoso a retirar:
+                              </Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="Serial defectuoso..."
+                                  value={serialDefectuoso[item.id] || ''}
+                                  onChange={(e) =>
+                                    setSerialDefectuoso((prev) => ({
+                                      ...prev,
+                                      [item.id]: e.target.value.toUpperCase(),
+                                    }))
+                                  }
+                                  className="font-mono text-sm h-10"
+                                />
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="shrink-0 h-10"
+                                  disabled={!serialDefectuoso[item.id]?.trim()}
+                                  onClick={() => handleMarkDefectuoso(item.id, serialDefectuoso[item.id])}
+                                >
+                                  Marcar defectuoso
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        )}
                         <div>
                           <p className="font-medium text-sm">{item.nombre}</p>
                           <p className="text-xs text-muted-foreground">Cantidad: {item.cantidad}</p>
