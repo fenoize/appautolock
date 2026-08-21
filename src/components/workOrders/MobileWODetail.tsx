@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { WOStatusBadge } from './WOStatusBadge';
+import { WOTipoBadge } from './WOTipoBadge';
 import { WOSignaturePad } from './WOSignaturePad';
 import { AssignTechnicianDialog } from './AssignTechnicianDialog';
 import {
@@ -89,6 +90,7 @@ export default function MobileWODetail({ wo }: Props) {
   );
   const [confirmingSerial, setConfirmingSerial] = useState<string | null>(null);
   const [manualSerials, setManualSerials] = useState<Record<string, string>>({});
+  const [serialDefectuoso, setSerialDefectuoso] = useState<Record<string, string>>({});
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
@@ -267,6 +269,21 @@ export default function MobileWODetail({ wo }: Props) {
     }
   };
 
+  const handleMarkDefectuoso = async (woItemId: string, rawSerial: string) => {
+    const serial = (rawSerial || '').trim().toUpperCase();
+    if (!serial) return;
+    try {
+      const { error } = await supabase
+        .from('product_serials')
+        .update({ estado: 'defectuoso' })
+        .eq('serial_number', serial);
+      if (error) throw error;
+      toast.success(`Serial ${serial} marcado como defectuoso`);
+    } catch {
+      toast.error('Error al marcar el serial como defectuoso');
+    }
+  };
+
   const handleConfirmManualSerial = async (woItemId: string, itemRefId: string | null | undefined) => {
     const serial = (manualSerials[woItemId] || '').trim().toUpperCase();
     if (!serial) return;
@@ -348,7 +365,10 @@ export default function MobileWODetail({ wo }: Props) {
           <Button variant="ghost" size="sm" onClick={() => navigate('/work-orders')} className="-ml-2">
             <ArrowLeft className="h-4 w-4 mr-1" /> OTs
           </Button>
-          <div className="text-sm font-semibold">{wo.folio}</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold">{wo.folio}</span>
+            <WOTipoBadge tipo={(wo as any).tipo} />
+          </div>
           <WOStatusBadge status={wo.estado} />
         </div>
         <Progress value={progress} className="h-1.5" />
@@ -633,6 +653,40 @@ export default function MobileWODetail({ wo }: Props) {
 
                     return (
                       <Card key={item.id} className="p-4 space-y-3">
+                        {(wo as any).tipo === 'garantia' && (
+                          <Card className="p-4 border-orange-200 bg-orange-50 space-y-3">
+                            <p className="text-sm font-medium text-orange-800">
+                              🔄 OT de Garantía — Reemplazo de equipo
+                            </p>
+                            <div className="space-y-2">
+                              <Label className="text-xs text-orange-700">
+                                Serial del equipo defectuoso a retirar:
+                              </Label>
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="Serial defectuoso..."
+                                  value={serialDefectuoso[item.id] || ''}
+                                  onChange={(e) =>
+                                    setSerialDefectuoso((prev) => ({
+                                      ...prev,
+                                      [item.id]: e.target.value.toUpperCase(),
+                                    }))
+                                  }
+                                  className="font-mono text-sm h-10"
+                                />
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="shrink-0 h-10"
+                                  disabled={!serialDefectuoso[item.id]?.trim()}
+                                  onClick={() => handleMarkDefectuoso(item.id, serialDefectuoso[item.id])}
+                                >
+                                  Marcar defectuoso
+                                </Button>
+                              </div>
+                            </div>
+                          </Card>
+                        )}
                         <div>
                           <p className="font-medium text-sm">{item.nombre}</p>
                           <p className="text-xs text-muted-foreground">Cantidad: {item.cantidad}</p>

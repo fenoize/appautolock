@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useWorkOrders } from '@/hooks/useWorkOrders';
 import { supabase } from '@/integrations/supabase/client';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
+import { WOTipoBadge } from '@/components/workOrders/WOTipoBadge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -192,6 +193,7 @@ export default function WOList() {
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold">{wo.folio}</h3>
                       <WOStatusBadge status={wo.estado} />
+                      <WOTipoBadge tipo={(wo as any).tipo} />
                       {pendingGpsWoIds.has(wo.id) && (
                         <TooltipProvider>
                           <Tooltip>

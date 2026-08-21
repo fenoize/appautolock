@@ -1,0 +1,1 @@
+ALTER TABLE public.work_orders ADD COLUMN IF NOT EXISTS tipo text NOT NULL DEFAULT 'instalacion', ADD COLUMN IF NOT EXISTS original_wo_id uuid REFERENCES public.work_orders(id);

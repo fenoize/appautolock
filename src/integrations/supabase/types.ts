@@ -2894,12 +2894,14 @@ export type Database = {
           inventario_reservado: boolean | null
           notas: string | null
           observaciones_cierre: string | null
+          original_wo_id: string | null
           pdf_informe_url: string | null
           puede_editar: boolean | null
           quote_id: string | null
           region: string | null
           revision_data: Json | null
           tecnico_id: string | null
+          tipo: string
           ubicacion_lat: number | null
           ubicacion_lng: number | null
           ubicacion_manual: string | null
@@ -2936,12 +2938,14 @@ export type Database = {
           inventario_reservado?: boolean | null
           notas?: string | null
           observaciones_cierre?: string | null
+          original_wo_id?: string | null
           pdf_informe_url?: string | null
           puede_editar?: boolean | null
           quote_id?: string | null
           region?: string | null
           revision_data?: Json | null
           tecnico_id?: string | null
+          tipo?: string
           ubicacion_lat?: number | null
           ubicacion_lng?: number | null
           ubicacion_manual?: string | null
@@ -2978,12 +2982,14 @@ export type Database = {
           inventario_reservado?: boolean | null
           notas?: string | null
           observaciones_cierre?: string | null
+          original_wo_id?: string | null
           pdf_informe_url?: string | null
           puede_editar?: boolean | null
           quote_id?: string | null
           region?: string | null
           revision_data?: Json | null
           tecnico_id?: string | null
+          tipo?: string
           ubicacion_lat?: number | null
           ubicacion_lng?: number | null
           ubicacion_manual?: string | null
@@ -3012,6 +3018,13 @@ export type Database = {
             columns: ["direccion_id"]
             isOneToOne: false
             referencedRelation: "client_addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_orders_original_wo_id_fkey"
+            columns: ["original_wo_id"]
+            isOneToOne: false
+            referencedRelation: "work_orders"
             referencedColumns: ["id"]
           },
           {

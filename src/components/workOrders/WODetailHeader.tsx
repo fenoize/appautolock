@@ -2,6 +2,7 @@ import { ClipboardList, Calendar, Clock, MapPin } from 'lucide-react';
 import { WorkOrder } from '@/types/workOrders';
 import { Separator } from '@/components/ui/separator';
 import { WOStatusBadge } from './WOStatusBadge';
+import { WOTipoBadge } from './WOTipoBadge';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,6 +24,7 @@ export function WODetailHeader({ workOrder }: WODetailHeaderProps) {
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold text-foreground">OT {workOrder.folio}</h1>
               <WOStatusBadge status={workOrder.estado} />
+              <WOTipoBadge tipo={(workOrder as any).tipo} />
             </div>
             <p className="text-sm text-muted-foreground">Orden de Trabajo</p>
           </div>

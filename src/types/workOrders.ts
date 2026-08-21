@@ -22,6 +22,8 @@ export interface WorkOrder {
   branch_id: string;
   tecnico_id?: string;
   estado: WOStatus;
+  tipo?: string;
+  original_wo_id?: string | null;
   fecha_programada?: string;
   ventana_inicio?: string;
   ventana_fin?: string;

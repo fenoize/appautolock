@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
 import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
 import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
@@ -50,8 +51,13 @@ export default function EditWO() {
     ventana_fin: '',
     direccion: '',
     comuna: '',
-    region: ''
+    region: '',
+    tipo: 'instalacion',
+    original_wo_id: ''
   });
+  const [folioInput, setFolioInput] = useState('');
+  const [folioResults, setFolioResults] = useState<any[]>([]);
+  const [originalWOLabel, setOriginalWOLabel] = useState('');
 
   const { data: vehicles } = useVehiclesByClient(formData.client_id);
   const { data: clientAddresses } = useClientAddresses(formData.client_id);
@@ -68,13 +74,42 @@ export default function EditWO() {
         ventana_fin: wo.ventana_fin || '',
         direccion: wo.direccion || '',
         comuna: wo.comuna || '',
-        region: wo.region || ''
+        region: wo.region || '',
+        tipo: (wo as any).tipo || 'instalacion',
+        original_wo_id: (wo as any).original_wo_id || ''
       });
       if (wo.checklist_data?.template_id) {
         setChecklistTemplateId(wo.checklist_data.template_id);
       }
     }
   }, [wo]);
+
+  useEffect(() => {
+    const origId = (wo as any)?.original_wo_id;
+    if (!origId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('work_orders')
+        .select('folio')
+        .eq('id', origId)
+        .maybeSingle();
+      if (data?.folio) setOriginalWOLabel(data.folio);
+    })();
+  }, [wo]);
+
+  const searchOriginalWO = async () => {
+    const term = folioInput.trim();
+    if (!term) {
+      setFolioResults([]);
+      return;
+    }
+    const { data } = await supabase
+      .from('work_orders')
+      .select('id, folio, clients:client_id(razon_social), vehicles:vehicle_id(patente, marca, modelo)')
+      .ilike('folio', `%${term}%`)
+      .limit(5);
+    setFolioResults((data || []).filter((r: any) => r.id !== id));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +155,8 @@ export default function EditWO() {
         direccion: formData.direccion || null,
         comuna: formData.comuna || null,
         region: formData.region || null,
+        tipo: formData.tipo || 'instalacion',
+        original_wo_id: formData.original_wo_id || null,
         checklist_data: newChecklistData,
       },
       {
@@ -306,6 +343,87 @@ export default function EditWO() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label>Tipo de OT</Label>
+                <Select
+                  value={formData.tipo || 'instalacion'}
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, tipo: v, ...(v !== 'garantia' ? { original_wo_id: '' } : {}) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="instalacion">Instalación</SelectItem>
+                    <SelectItem value="garantia">Garantía</SelectItem>
+                    <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.tipo === 'garantia' && (
+                <div className="space-y-2">
+                  <Label>OT Original (referencia)</Label>
+                  {formData.original_wo_id ? (
+                    <div className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm bg-muted/40">
+                      <span className="truncate font-mono">{originalWOLabel || formData.original_wo_id}</span>
+                      {!(wo as any)?.original_wo_id && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, original_wo_id: '' }));
+                            setOriginalWOLabel('');
+                            setFolioInput('');
+                          }}
+                        >
+                          Cambiar
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <Input
+                        placeholder="Folio de la OT original..."
+                        value={folioInput}
+                        onChange={(e) => setFolioInput(e.target.value)}
+                        onBlur={searchOriginalWO}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            searchOriginalWO();
+                          }
+                        }}
+                      />
+                      {folioResults.length > 0 && (
+                        <div className="rounded-md border divide-y">
+                          {folioResults.map((r: any) => (
+                            <button
+                              key={r.id}
+                              type="button"
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, original_wo_id: r.id }));
+                                setOriginalWOLabel(r.folio);
+                                setFolioResults([]);
+                              }}
+                            >
+                              <span className="font-medium">{r.folio}</span>
+                              {r.vehicles?.patente && (
+                                <span className="text-muted-foreground"> · {r.vehicles.patente} {r.vehicles.marca} {r.vehicles.modelo}</span>
+                              )}
+                              {r.clients?.razon_social && (
+                                <span className="text-muted-foreground"> · {r.clients.razon_social}</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="fecha_programada">Fecha y Hora Programada</Label>
                 <Input
