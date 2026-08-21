@@ -454,6 +454,8 @@ export default function EditWO() {
                     disabled={!newItemRefId || createWOItem.isPending}
                     onClick={async () => {
                       if (!newItemRefId) return;
+
+                      // Crear wo_item del servicio o producto
                       await createWOItem.mutateAsync({
                         wo_id: id!,
                         item_tipo: newItemTipo,
@@ -461,6 +463,27 @@ export default function EditWO() {
                         nombre: newItemNombre,
                         cantidad: newItemCantidad,
                       } as any);
+
+                      // Si es servicio, agregar también sus productos como wo_items separados
+                      if (newItemTipo === 'servicio') {
+                        const svc = services.find((s: any) => s.id === newItemRefId);
+                        const svcProducts: any[] = (svc as any)?.services_products || [];
+                        for (const sp of svcProducts) {
+                          if (sp.product) {
+                            await createWOItem.mutateAsync({
+                              wo_id: id!,
+                              item_tipo: 'producto',
+                              ref_id: sp.product_id || sp.product.id,
+                              nombre: sp.product.nombre,
+                              cantidad: sp.cantidad || 1,
+                            } as any);
+                          }
+                        }
+                        if (svcProducts.length > 0) {
+                          toast.success(`Servicio agregado con ${svcProducts.length} equipo(s) incluido(s)`);
+                        }
+                      }
+
                       setNewItemRefId('');
                       setNewItemNombre('');
                       setNewItemCantidad(1);
