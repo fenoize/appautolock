@@ -723,12 +723,29 @@ export default function MobileWODetail({ wo }: Props) {
                         </div>
 
                         {confirmed ? (
-                          <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-                            <div>
-                              <p className="text-xs font-semibold text-green-700">Serial confirmado</p>
-                              <p className="text-xs font-mono text-green-800">{confirmed}</p>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2">
+                              <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                              <div>
+                                <p className="text-xs font-semibold text-green-700">Serial confirmado</p>
+                                <p className="text-xs font-mono text-green-800">{confirmed}</p>
+                              </div>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground text-xs h-8"
+                              onClick={() => {
+                                setConfirmedSerials((prev) => {
+                                  const next = { ...prev };
+                                  delete next[item.id];
+                                  return next;
+                                });
+                                setManualSerials((prev) => ({ ...prev, [item.id]: '' }));
+                              }}
+                            >
+                              Cambiar serial
+                            </Button>
                           </div>
                         ) : matchingSerials.length === 0 ? (
                           <div className="space-y-2">
