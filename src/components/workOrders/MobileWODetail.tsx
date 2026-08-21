@@ -115,20 +115,26 @@ export default function MobileWODetail({ wo }: Props) {
   const [serialDefectuoso, setSerialDefectuoso] = useState<Record<string, string>>({});
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
+  const [showFirmaModal, setShowFirmaModal] = useState(false);
+  const sigPadRef = useRef<any>(null);
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
-  const [pendingGps, setPendingGps] = useState<string[]>([]);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [gpsConfirmado, setGpsConfirmado] = useState(false);
+  const [selectedSubscriptionItem, setSelectedSubscriptionItem] = useState<any>(null);
 
-  useEffect(() => {
-    if (step === 'cierre') {
-      supabase
+  const { data: subscriptionItems = [] } = useQuery({
+    queryKey: ['wo-subscription-items', wo.id],
+    queryFn: async () => {
+      const { data } = await supabase
         .from('wo_subscription_items')
-        .select('nombre')
-        .eq('wo_id', wo.id)
-        .is('subscription_id', null)
-        .then(({ data }) => setPendingGps((data || []).map((d: any) => d.nombre)));
-    }
-  }, [step, wo.id]);
+        .select('*')
+        .eq('wo_id', wo.id);
+      return data || [];
+    },
+    enabled: !!wo.id,
+  });
+
+  const pendingGPS = (subscriptionItems as any[]).filter((si) => !si.subscription_id);
 
   useEffect(() => {
     if (step !== 'equipos') return;
