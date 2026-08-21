@@ -237,6 +237,34 @@ export default function MobileWODetail({ wo }: Props) {
     }
   };
 
+  const handleConfirmSerial = async (woItemId: string) => {
+    const serial = serialSelections[woItemId];
+    if (!serial || !techLocationId) return;
+    setConfirmingSerial(woItemId);
+    try {
+      const { error: itemErr } = await supabase
+        .from('wo_items')
+        .update({ serial_instalado: serial, serial_verificado: true })
+        .eq('id', woItemId);
+      if (itemErr) throw itemErr;
+
+      const { error: serialErr } = await supabase
+        .from('product_serials')
+        .update({ estado: 'vendido' })
+        .eq('serial_number', serial)
+        .eq('location_id', techLocationId);
+      if (serialErr) throw serialErr;
+
+      setConfirmedSerials((prev) => ({ ...prev, [woItemId]: serial }));
+      setTechSerials((prev) => prev.filter((s) => s.serial_number !== serial));
+      toast.success(`Serial ${serial} confirmado`);
+    } catch {
+      toast.error('Error al confirmar serial');
+    } finally {
+      setConfirmingSerial(null);
+    }
+  };
+
   const handleClose = async () => {
     if (!firmaData || !firmaNombre) {
       toast.error('Falta la firma del cliente');
