@@ -64,6 +64,8 @@ export default function NewWO() {
           comuna: validComuna,
           region: validRegion,
           notas: parsed.notas || '',
+          tipo: parsed.tipo || 'instalacion',
+          original_wo_id: parsed.original_wo_id || '',
         };
       } catch {
         return {
@@ -77,6 +79,8 @@ export default function NewWO() {
           comuna: '',
           region: '',
           notas: '',
+          tipo: 'instalacion',
+          original_wo_id: '',
         };
       }
     }
@@ -91,6 +95,8 @@ export default function NewWO() {
       comuna: '',
       region: '',
       notas: '',
+      tipo: 'instalacion',
+      original_wo_id: '',
     };
   });
 
@@ -115,6 +121,24 @@ export default function NewWO() {
   const [showClientDialog, setShowClientDialog] = useState(false);
   const [showVehicleDialog, setShowVehicleDialog] = useState(false);
   const [showItemSelector, setShowItemSelector] = useState(false);
+  const [folioInput, setFolioInput] = useState('');
+  const [folioResults, setFolioResults] = useState<any[]>([]);
+  const [originalWOLabel, setOriginalWOLabel] = useState('');
+
+  const searchOriginalWO = async () => {
+    const term = folioInput.trim();
+    if (!term) {
+      setFolioResults([]);
+      return;
+    }
+    const { data } = await supabase
+      .from('work_orders')
+      .select('id, folio, clients:client_id(razon_social), vehicles:vehicle_id(patente, marca, modelo)')
+      .ilike('folio', `%${term}%`)
+      .limit(5);
+    setFolioResults(data || []);
+  };
+
 
   // Datos
   const { data: clients } = useClients();
@@ -289,6 +313,8 @@ export default function NewWO() {
         comuna: formData.comuna || null,
         region: formData.region || null,
         notas: formData.notas || null,
+        tipo: formData.tipo || 'instalacion',
+        original_wo_id: formData.original_wo_id || null,
         checklist_data: checklistData,
         estado: 'pendiente' as const,
       };
@@ -526,6 +552,87 @@ export default function NewWO() {
               <CardTitle>Programación</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tipo de OT</Label>
+                <Select
+                  value={formData.tipo || 'instalacion'}
+                  onValueChange={(v) => setFormData(prev => ({ ...prev, tipo: v, ...(v !== 'garantia' ? { original_wo_id: '' } : {}) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="instalacion">Instalación</SelectItem>
+                    <SelectItem value="garantia">Garantía</SelectItem>
+                    <SelectItem value="mantenimiento">Mantenimiento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.tipo === 'garantia' && (
+                <div className="space-y-2">
+                  <Label>OT Original (referencia)</Label>
+                  {formData.original_wo_id ? (
+                    <div className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm">
+                      <span className="truncate">{originalWOLabel}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setFormData(prev => ({ ...prev, original_wo_id: '' }));
+                          setOriginalWOLabel('');
+                          setFolioInput('');
+                        }}
+                      >
+                        Cambiar
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Input
+                        placeholder="Folio de la OT original..."
+                        value={folioInput}
+                        onChange={(e) => setFolioInput(e.target.value)}
+                        onBlur={searchOriginalWO}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            searchOriginalWO();
+                          }
+                        }}
+                      />
+                      {folioResults.length > 0 && (
+                        <div className="rounded-md border divide-y">
+                          {folioResults.map((r: any) => (
+                            <button
+                              key={r.id}
+                              type="button"
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, original_wo_id: r.id }));
+                                setOriginalWOLabel(
+                                  `${r.folio}${r.vehicles?.patente ? ` · ${r.vehicles.patente}` : ''}${r.clients?.razon_social ? ` · ${r.clients.razon_social}` : ''}`
+                                );
+                                setFolioResults([]);
+                              }}
+                            >
+                              <span className="font-medium">{r.folio}</span>
+                              {r.vehicles?.patente && (
+                                <span className="text-muted-foreground"> · {r.vehicles.patente} {r.vehicles.marca} {r.vehicles.modelo}</span>
+                              )}
+                              {r.clients?.razon_social && (
+                                <span className="text-muted-foreground"> · {r.clients.razon_social}</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
               <div>
                 <Label>Fecha Programada</Label>
                 <Input
