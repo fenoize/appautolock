@@ -1094,19 +1094,14 @@ export default function MobileWODetail({ wo }: Props) {
             </Button>
           </div>
 
-          <div className="flex-1 relative bg-white" style={{ minHeight: 0 }}>
+          <div className="flex-1 bg-white overflow-hidden" style={{ height: 'calc(100dvh - 120px)' }}>
             <SignaturePad
               ref={sigPadRef}
               onBegin={() => setHasSigned(true)}
               canvasProps={{
-                style: {
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  touchAction: 'none',
-                },
+                width: typeof window !== 'undefined' ? window.innerWidth : 400,
+                height: typeof window !== 'undefined' ? window.innerHeight - 120 : 400,
+                style: { touchAction: 'none', display: 'block' },
               }}
               backgroundColor="white"
             />
