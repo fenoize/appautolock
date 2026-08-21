@@ -23,7 +23,7 @@ export interface ProveedorComboboxProps {
 
 interface ProveedorOption {
   id: string;
-  nombre: string;
+  razon_social: string;
   rut: string | null;
 }
 
@@ -33,9 +33,9 @@ export function useProveedoresActivos() {
     queryFn: async (): Promise<ProveedorOption[]> => {
       const { data, error } = await supabase
         .from('proveedores')
-        .select('id, nombre, rut')
+        .select('id, razon_social, rut')
         .eq('activo', true)
-        .order('nombre');
+        .order('razon_social');
       if (error) throw error;
       return (data ?? []) as ProveedorOption[];
     },
@@ -53,9 +53,9 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
   const selected = list.find((p) => p.id === value);
   const term = search.trim();
   const filtered = term
-    ? list.filter((p) => p.nombre.toLowerCase().includes(term.toLowerCase()))
+    ? list.filter((p) => p.razon_social.toLowerCase().includes(term.toLowerCase()))
     : list;
-  const exactMatch = list.some((p) => p.nombre.toLowerCase() === term.toLowerCase());
+  const exactMatch = list.some((p) => p.razon_social.toLowerCase() === term.toLowerCase());
 
   const handleCreate = async () => {
     if (!term || creating) return;
@@ -63,15 +63,15 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
     try {
       const { data, error } = await supabase
         .from('proveedores')
-        .insert({ nombre: term } as any)
-        .select('id, nombre, rut')
+        .insert({ razon_social: term } as any)
+        .select('id, razon_social, rut')
         .single();
       if (error) throw error;
       await queryClient.invalidateQueries({ queryKey: ['proveedores'] });
-      onChange(data.id, data.nombre);
+      onChange(data.id, data.razon_social);
       setSearch('');
       setOpen(false);
-      toast({ title: 'Proveedor creado', description: data.nombre });
+      toast({ title: 'Proveedor creado', description: data.razon_social });
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
     } finally {
@@ -90,7 +90,7 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
             className="w-full justify-between font-normal"
           >
             <span className={cn(!selected && 'text-muted-foreground')}>
-              {selected ? selected.nombre : placeholder}
+              {selected ? selected.razon_social : placeholder}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -111,7 +111,7 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
                       key={p.id}
                       value={p.id}
                       onSelect={() => {
-                        onChange(p.id, p.nombre);
+                        onChange(p.id, p.razon_social);
                         setSearch('');
                         setOpen(false);
                       }}
@@ -119,7 +119,7 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
                       <Check
                         className={cn('mr-2 h-4 w-4', value === p.id ? 'opacity-100' : 'opacity-0')}
                       />
-                      <span className="flex-1">{p.nombre}</span>
+                      <span className="flex-1">{p.razon_social}</span>
                       {p.rut && <span className="text-xs text-muted-foreground">{p.rut}</span>}
                     </CommandItem>
                   ))}
