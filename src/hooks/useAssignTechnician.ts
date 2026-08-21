@@ -77,8 +77,11 @@ export function useAssignTechnician() {
       
       return { emailWarning };
     },
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['work-order', variables.woId] });
+      queryClient.invalidateQueries({ queryKey: ['wo-stats'] });
+      
       
       if (result?.emailWarning) {
         toast.success('Técnico asignado correctamente', {

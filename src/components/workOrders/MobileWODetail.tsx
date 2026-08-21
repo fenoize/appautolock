@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import SignaturePad from 'react-signature-canvas';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { WorkOrder } from '@/types/workOrders';
@@ -11,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import {
   Select,
@@ -22,7 +22,8 @@ import {
 } from '@/components/ui/select';
 import { WOStatusBadge } from './WOStatusBadge';
 import { WOTipoBadge } from './WOTipoBadge';
-import { WOSignaturePad } from './WOSignaturePad';
+import { WOSubscriptionConfig } from './WOSubscriptionConfig';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AssignTechnicianDialog } from './AssignTechnicianDialog';
 import {
   ArrowLeft,
@@ -115,20 +116,26 @@ export default function MobileWODetail({ wo }: Props) {
   const [serialDefectuoso, setSerialDefectuoso] = useState<Record<string, string>>({});
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
+  const [showFirmaModal, setShowFirmaModal] = useState(false);
+  const sigPadRef = useRef<any>(null);
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
-  const [pendingGps, setPendingGps] = useState<string[]>([]);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [gpsConfirmado, setGpsConfirmado] = useState(false);
+  const [selectedSubscriptionItem, setSelectedSubscriptionItem] = useState<any>(null);
 
-  useEffect(() => {
-    if (step === 'cierre') {
-      supabase
+  const { data: subscriptionItems = [] } = useQuery({
+    queryKey: ['wo-subscription-items', wo.id],
+    queryFn: async () => {
+      const { data } = await supabase
         .from('wo_subscription_items')
-        .select('nombre')
-        .eq('wo_id', wo.id)
-        .is('subscription_id', null)
-        .then(({ data }) => setPendingGps((data || []).map((d: any) => d.nombre)));
-    }
-  }, [step, wo.id]);
+        .select('*')
+        .eq('wo_id', wo.id);
+      return data || [];
+    },
+    enabled: !!wo.id,
+  });
+
+  const pendingGPS = (subscriptionItems as any[]).filter((si) => !si.subscription_id);
 
   useEffect(() => {
     if (step !== 'equipos') return;
@@ -539,7 +546,7 @@ export default function MobileWODetail({ wo }: Props) {
 
             {/* Inspección Externa */}
             <Card className="p-4 space-y-3">
-              <h3 className="font-semibold text-sm flex items-center gap-2">🔍 Inspección Externa</h3>
+              <h3 className="font-semibold text-sm flex items-center gap-2">Inspección Externa</h3>
               <p className="text-xs text-muted-foreground">
                 Fotografía el estado del vehículo por fuera — rayones, abollones, daños preexistentes.
               </p>
@@ -596,7 +603,7 @@ export default function MobileWODetail({ wo }: Props) {
 
             {/* Inspección Interna */}
             <Card className="p-4 space-y-3">
-              <h3 className="font-semibold text-sm flex items-center gap-2">🎛️ Inspección Interna</h3>
+              <h3 className="font-semibold text-sm flex items-center gap-2">Inspección Interna</h3>
               <p className="text-xs text-muted-foreground">
                 Fotografía el panel con el motor encendido — testigos activos, estado del interior.
               </p>
@@ -678,7 +685,7 @@ export default function MobileWODetail({ wo }: Props) {
                         {(wo as any).tipo === 'garantia' && (
                           <Card className="p-4 border-orange-200 bg-orange-50 space-y-3">
                             <p className="text-sm font-medium text-orange-800">
-                              🔄 OT de Garantía — Reemplazo de equipo
+                              OT de Garantía — Reemplazo de equipo
                             </p>
                             <div className="space-y-2">
                               <Label className="text-xs text-orange-700">
@@ -725,7 +732,7 @@ export default function MobileWODetail({ wo }: Props) {
                         ) : matchingSerials.length === 0 ? (
                           <div className="space-y-2">
                             <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
-                              ⚠️ No tienes seriales disponibles para este producto en tu camioneta.
+                              No tienes seriales disponibles para este producto en tu camioneta.
                             </p>
                             <Button
                               variant="outline"
@@ -842,7 +849,7 @@ export default function MobileWODetail({ wo }: Props) {
 
             {/* Fotos post-instalación */}
             <Card className="p-4 space-y-3">
-              <h3 className="font-semibold text-sm">📸 Fotos Post-Instalación</h3>
+              <h3 className="font-semibold text-sm">Fotos Post-Instalación</h3>
               <p className="text-xs text-muted-foreground">
                 Documenta el trabajo finalizado y el estado del vehículo al entregar.
               </p>
@@ -897,34 +904,98 @@ export default function MobileWODetail({ wo }: Props) {
         )}
 
         {step === 'firma' && (
-          <Card className="p-4">
-            <WOSignaturePad
-              onSave={(data, nombre) => {
-                setFirmaData(data);
-                setFirmaNombre(nombre);
-                toast.success('Firma guardada');
-              }}
-              savedSignature={firmaData}
-              savedNombre={firmaNombre}
-            />
-          </Card>
+          <div className="space-y-6">
+            <Card className="p-6 space-y-4">
+              <h3 className="font-semibold text-lg">Firma del cliente</h3>
+
+              <div className="space-y-2">
+                <Label>Nombre de quien recepciona</Label>
+                <Input
+                  placeholder="Nombre completo..."
+                  value={firmaNombre}
+                  onChange={(e) => setFirmaNombre(e.target.value)}
+                  className="h-11 text-base"
+                />
+              </div>
+
+              {firmaData ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">Firma capturada:</p>
+                  <img
+                    src={firmaData}
+                    alt="Firma"
+                    className="border rounded-lg w-full max-h-48 object-contain bg-white"
+                  />
+                  <Button variant="outline" className="w-full" onClick={() => setFirmaData('')}>
+                    Volver a firmar
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  className="w-full h-14 text-base"
+                  disabled={!firmaNombre.trim()}
+                  onClick={() => setShowFirmaModal(true)}
+                >
+                  Ingresar Firma
+                </Button>
+              )}
+
+              {!firmaNombre.trim() && !firmaData && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Ingresa el nombre del receptor para habilitar la firma
+                </p>
+              )}
+            </Card>
+
+            <Button
+              className="w-full h-14 text-base"
+              disabled={!firmaData || !firmaNombre.trim()}
+              onClick={() => setStep('cierre')}
+            >
+              Continuar
+            </Button>
+          </div>
         )}
 
         {step === 'cierre' && (
           <>
-            {pendingGps.length > 0 && (
-              <Alert className="border-yellow-500/40 bg-yellow-500/10">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription>
-                  <p className="font-semibold mb-1">GPS sin configurar:</p>
-                  <ul className="list-disc list-inside text-sm">
-                    {pendingGps.map((n, i) => (
-                      <li key={i}>{n}</li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
+            {pendingGPS.length > 0 && (
+              <Card className="p-4 border-orange-200 bg-orange-50 space-y-3">
+                <p className="text-sm font-semibold text-orange-800 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" /> Configuración de GPS pendiente
+                </p>
+                {pendingGPS.map((si: any) => (
+                  <div key={si.id} className="flex items-center justify-between gap-2">
+                    <span className="text-sm text-orange-700">{si.nombre}</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-orange-400 text-orange-700"
+                      onClick={() => setSelectedSubscriptionItem(si)}
+                    >
+                      Configurar
+                    </Button>
+                  </div>
+                ))}
+                <p className="text-xs text-orange-600">Configura el GPS antes de cerrar la OT</p>
+              </Card>
             )}
+
+            {subscriptionItems.length > 0 && pendingGPS.length === 0 && (
+              <Card className="p-4 border-green-200 bg-green-50 space-y-3">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="gps-activo"
+                    checked={gpsConfirmado}
+                    onCheckedChange={(v) => setGpsConfirmado(!!v)}
+                  />
+                  <Label htmlFor="gps-activo" className="text-sm text-green-800 cursor-pointer">
+                    Confirmo que el GPS quedó activo y funcionando correctamente
+                  </Label>
+                </div>
+              </Card>
+            )}
+
             <div>
               <Label htmlFor="obs">Observaciones finales</Label>
               <Textarea
@@ -938,7 +1009,12 @@ export default function MobileWODetail({ wo }: Props) {
             </div>
             <Button
               onClick={handleClose}
-              disabled={closeWO.isPending}
+              disabled={
+                closeWO.isPending ||
+                !observaciones.trim() ||
+                pendingGPS.length > 0 ||
+                (subscriptionItems.length > 0 && !gpsConfirmado)
+              }
               className="w-full h-14 text-base"
             >
               <CheckCircle2 className="mr-2 h-5 w-5" />
@@ -980,6 +1056,62 @@ export default function MobileWODetail({ wo }: Props) {
           branchId={wo.branch_id}
         />
       )}
+
+      {selectedSubscriptionItem && (
+        <WOSubscriptionConfig
+          open={!!selectedSubscriptionItem}
+          onOpenChange={(open) => !open && setSelectedSubscriptionItem(null)}
+          item={selectedSubscriptionItem}
+          woId={wo.id}
+        />
+      )}
+
+      {/* Modal de firma fullscreen */}
+      <Dialog open={showFirmaModal} onOpenChange={setShowFirmaModal}>
+        <DialogContent className="w-screen h-screen max-w-none max-h-none m-0 p-0 rounded-none flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="font-semibold text-lg">Firma aquí</h2>
+            <Button variant="ghost" size="sm" onClick={() => setShowFirmaModal(false)}>
+              Cancelar
+            </Button>
+          </div>
+
+          <div className="flex-1 relative bg-white">
+            <SignaturePad
+              ref={sigPadRef}
+              canvasProps={{
+                className: 'w-full h-full',
+                style: { touchAction: 'none' },
+              }}
+              backgroundColor="white"
+            />
+          </div>
+
+          <div className="flex gap-3 p-4 border-t">
+            <Button
+              variant="outline"
+              className="flex-1 h-14 text-base"
+              onClick={() => sigPadRef.current?.clear()}
+            >
+              Limpiar
+            </Button>
+            <Button
+              className="flex-1 h-14 text-base"
+              onClick={() => {
+                if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
+                  const dataUrl = sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
+                  setFirmaData(dataUrl);
+                  setShowFirmaModal(false);
+                } else {
+                  toast.error('Dibuja la firma antes de aceptar');
+                }
+              }}
+            >
+              Aceptar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

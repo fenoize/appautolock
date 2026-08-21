@@ -203,8 +203,10 @@ export const useCloseWorkOrder = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['work-order', variables.wo_id] });
+      queryClient.invalidateQueries({ queryKey: ['wo-stats'] });
       toast.success('OT cerrada exitosamente');
     },
     onError: (error: Error) => {
