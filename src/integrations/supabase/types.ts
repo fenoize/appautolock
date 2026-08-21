@@ -2637,6 +2637,8 @@ export type Database = {
           nombre: string
           precio_unitario: number | null
           ref_id: string | null
+          serial_instalado: string | null
+          serial_verificado: boolean | null
           wo_id: string
         }
         Insert: {
@@ -2647,6 +2649,8 @@ export type Database = {
           nombre: string
           precio_unitario?: number | null
           ref_id?: string | null
+          serial_instalado?: string | null
+          serial_verificado?: boolean | null
           wo_id: string
         }
         Update: {
@@ -2657,6 +2661,8 @@ export type Database = {
           nombre?: string
           precio_unitario?: number | null
           ref_id?: string | null
+          serial_instalado?: string | null
+          serial_verificado?: boolean | null
           wo_id?: string
         }
         Relationships: [
@@ -2867,6 +2873,7 @@ export type Database = {
           client_id: string
           cliente_recordatorio_enviado: boolean | null
           comuna: string | null
+          confirmacion_data: Json | null
           created_at: string | null
           direccion: string | null
           direccion_id: string | null
@@ -2891,6 +2898,7 @@ export type Database = {
           puede_editar: boolean | null
           quote_id: string | null
           region: string | null
+          revision_data: Json | null
           tecnico_id: string | null
           ubicacion_lat: number | null
           ubicacion_lng: number | null
@@ -2907,6 +2915,7 @@ export type Database = {
           client_id: string
           cliente_recordatorio_enviado?: boolean | null
           comuna?: string | null
+          confirmacion_data?: Json | null
           created_at?: string | null
           direccion?: string | null
           direccion_id?: string | null
@@ -2931,6 +2940,7 @@ export type Database = {
           puede_editar?: boolean | null
           quote_id?: string | null
           region?: string | null
+          revision_data?: Json | null
           tecnico_id?: string | null
           ubicacion_lat?: number | null
           ubicacion_lng?: number | null
@@ -2947,6 +2957,7 @@ export type Database = {
           client_id?: string
           cliente_recordatorio_enviado?: boolean | null
           comuna?: string | null
+          confirmacion_data?: Json | null
           created_at?: string | null
           direccion?: string | null
           direccion_id?: string | null
@@ -2971,6 +2982,7 @@ export type Database = {
           puede_editar?: boolean | null
           quote_id?: string | null
           region?: string | null
+          revision_data?: Json | null
           tecnico_id?: string | null
           ubicacion_lat?: number | null
           ubicacion_lng?: number | null

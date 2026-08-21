@@ -35,6 +35,14 @@ export interface WorkOrder {
   evidencias_urls?: string[];
   evidencias_pre_urls?: string[];
   evidencias_post_urls?: string[];
+  revision_data?: {
+    externa: { urls: string[]; comentario: string };
+    interna: { urls: string[]; comentario: string };
+  } | null;
+  confirmacion_data?: {
+    urls: string[];
+    comentario: string;
+  } | null;
   firma_url?: string;
   firma_nombre?: string;
   fecha_inicio_real?: string;
@@ -77,6 +85,8 @@ export interface WOItem {
   nombre: string;
   cantidad: number;
   precio_unitario?: number;
+  serial_instalado?: string | null;
+  serial_verificado?: boolean;
   created_at: string;
 }
 
