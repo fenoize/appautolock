@@ -52,7 +52,7 @@ import IntegrationsSettings from "./pages/settings/IntegrationsSettings";
 import BackupsSettings from "./pages/settings/BackupsSettings";
 import AuditSettings from "./pages/settings/AuditSettings";
 import ChecklistTemplatesSettings from "./pages/settings/ChecklistTemplatesSettings";
-import UsersList from "./pages/admin/UsersList";
+import SistemaSettings from "./pages/settings/SistemaSettings";
 import UserDetail from "./pages/admin/UserDetail";
 import InviteUser from "./pages/admin/InviteUser";
 import UserProfile from "./pages/settings/UserProfile";
@@ -156,7 +156,7 @@ const App = () => (
             <Route path="backups" element={<BackupsSettings />} />
             <Route path="audit" element={<AuditSettings />} />
             <Route path="checklist-templates" element={<ChecklistTemplatesSettings />} />
-          </Route>
+            <Route path="sistema" element={<SistemaSettings />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>
