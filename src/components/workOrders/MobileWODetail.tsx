@@ -567,30 +567,84 @@ export default function MobileWODetail({ wo }: Props) {
         {step === 'equipos' && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Equipos a Instalar</h2>
+
             {productos.length === 0 ? (
-              <Card className="p-6 text-center text-muted-foreground">No hay productos en esta OT</Card>
+              <Card className="p-6 text-center text-muted-foreground">
+                No hay productos en esta OT
+              </Card>
             ) : (
-              productos.map((item) => (
-                <Card key={item.id} className="p-4">
-                  <div className="flex items-start justify-between gap-3">
+              productos.map((item) => {
+                const confirmed = confirmedSerials[item.id];
+                const matchingSerials = techSerials.filter((s) => s.product_id === item.ref_id);
+                const selectedSerial = serialSelections[item.id] || '';
+
+                return (
+                  <Card key={item.id} className="p-4 space-y-3">
                     <div>
                       <p className="font-medium text-sm">{item.nombre}</p>
                       <p className="text-xs text-muted-foreground">Cantidad: {item.cantidad}</p>
-                      {item.serial_instalado ? (
-                        <p className="text-xs text-green-600 font-mono mt-1">
-                          ✅ Serie: {item.serial_instalado}
-                        </p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground mt-1">Serial pendiente de confirmar</p>
-                      )}
                     </div>
-                  </div>
-                </Card>
-              ))
+
+                    {confirmed ? (
+                      <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                        <div>
+                          <p className="text-xs font-semibold text-green-700">Serial confirmado</p>
+                          <p className="text-xs font-mono text-green-800">{confirmed}</p>
+                        </div>
+                      </div>
+                    ) : matchingSerials.length === 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
+                          ⚠️ No tienes seriales disponibles para este producto en tu camioneta.
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-xs"
+                          onClick={() => toast.info('Comunícate con administración para solicitar el equipo.')}
+                        >
+                          Solicitar equipo a administración
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Select
+                          value={selectedSerial || undefined}
+                          onValueChange={(v) =>
+                            setSerialSelections((prev) => ({ ...prev, [item.id]: v }))
+                          }
+                        >
+                          <SelectTrigger className="h-11">
+                            <SelectValue placeholder="Selecciona el serial a instalar" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {matchingSerials.map((s) => (
+                              <SelectItem key={s.id} value={s.serial_number}>
+                                {s.serial_number}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          className="w-full h-11"
+                          disabled={!selectedSerial || confirmingSerial === item.id}
+                          onClick={() => handleConfirmSerial(item.id)}
+                        >
+                          {confirmingSerial === item.id ? 'Confirmando...' : 'Confirmar serial instalado'}
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })
             )}
-            <p className="text-xs text-center text-muted-foreground">
-              La confirmación de seriales se habilitará próximamente.
-            </p>
+
+            {productos.length > 0 && (
+              <p className="text-xs text-center text-muted-foreground">
+                Confirma el serial de cada equipo antes de continuar.
+              </p>
+            )}
           </div>
         )}
 
