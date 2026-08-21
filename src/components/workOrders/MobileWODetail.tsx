@@ -1150,34 +1150,29 @@ export default function MobileWODetail({ wo }: Props) {
       {/* Modal de firma fullscreen */}
       <Dialog open={showFirmaModal} onOpenChange={setShowFirmaModal}>
         <DialogContent className="w-screen h-screen max-w-none max-h-none m-0 p-0 rounded-none flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center justify-between p-4 border-b shrink-0">
             <h2 className="font-semibold text-lg">Firma aquí</h2>
             <Button variant="ghost" size="sm" onClick={() => setShowFirmaModal(false)}>
               Cancelar
             </Button>
           </div>
-
-          <div className="flex-1 bg-white overflow-hidden" style={{ height: 'calc(100dvh - 120px)' }}>
-            <SignaturePad
-              ref={sigPadRef}
-              onBegin={() => setHasSigned(true)}
-              canvasProps={{
-                width: typeof window !== 'undefined' ? window.innerWidth : 400,
-                height: typeof window !== 'undefined' ? window.innerHeight - 120 : 400,
-                style: { touchAction: 'none', display: 'block' },
-              }}
-              backgroundColor="white"
+          <div className="flex-1 bg-white min-h-0">
+            <canvas
+              ref={firmaCanvasRef}
+              className="w-full h-full block"
+              style={{ touchAction: 'none', cursor: 'crosshair' }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             />
           </div>
-
-          <div className="flex gap-3 p-4 border-t">
+          <div className="flex gap-3 p-4 border-t shrink-0">
             <Button
               variant="outline"
               className="flex-1 h-14 text-base"
-              onClick={() => {
-                sigPadRef.current?.clear();
-                setHasSigned(false);
-              }}
+              onClick={clearFirmaCanvas}
             >
               Limpiar
             </Button>
@@ -1185,12 +1180,12 @@ export default function MobileWODetail({ wo }: Props) {
               className="flex-1 h-14 text-base"
               disabled={!hasSigned}
               onClick={() => {
-                if (sigPadRef.current && hasSigned) {
-                  const dataUrl = sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
-                  setFirmaData(dataUrl);
-                  setHasSigned(false);
-                  setShowFirmaModal(false);
-                }
+                const canvas = firmaCanvasRef.current;
+                if (!canvas || !hasSigned) return;
+                const dataUrl = canvas.toDataURL('image/png');
+                setFirmaData(dataUrl);
+                setHasSigned(false);
+                setShowFirmaModal(false);
               }}
             >
               Aceptar
