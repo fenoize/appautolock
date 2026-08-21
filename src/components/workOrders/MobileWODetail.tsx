@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import SignaturePad from 'react-signature-canvas';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { WorkOrder } from '@/types/workOrders';
@@ -118,7 +117,9 @@ export default function MobileWODetail({ wo }: Props) {
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [showFirmaModal, setShowFirmaModal] = useState(false);
   const [hasSigned, setHasSigned] = useState(false);
-  const sigPadRef = useRef<any>(null);
+  const firmaCanvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef(false);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
   const [assignOpen, setAssignOpen] = useState(false);
   const [gpsConfirmado, setGpsConfirmado] = useState(false);
@@ -164,6 +165,27 @@ export default function MobileWODetail({ wo }: Props) {
     };
     load();
   }, [step]);
+
+  useEffect(() => {
+    if (!showFirmaModal) return;
+    const timer = setTimeout(() => {
+      const canvas = firmaCanvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width || window.innerWidth;
+      canvas.height = rect.height || window.innerHeight - 130;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [showFirmaModal]);
 
   const stepIdx = STEPS.indexOf(step);
   const progress = ((stepIdx + 1) / STEPS.length) * 100;
@@ -357,6 +379,47 @@ export default function MobileWODetail({ wo }: Props) {
     } finally {
       setConfirmingSerial(null);
     }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const canvas = firmaCanvasRef.current;
+    if (!canvas) return;
+    (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);
+    isDrawingRef.current = true;
+    const rect = canvas.getBoundingClientRect();
+    lastPosRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    setHasSigned(true);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!isDrawingRef.current || !firmaCanvasRef.current || !lastPosRef.current) return;
+    const canvas = firmaCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    ctx.beginPath();
+    ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    lastPosRef.current = pos;
+  };
+
+  const handlePointerUp = () => {
+    isDrawingRef.current = false;
+    lastPosRef.current = null;
+  };
+
+  const clearFirmaCanvas = () => {
+    const canvas = firmaCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    setHasSigned(false);
   };
 
   const handleClose = async () => {
@@ -1087,34 +1150,29 @@ export default function MobileWODetail({ wo }: Props) {
       {/* Modal de firma fullscreen */}
       <Dialog open={showFirmaModal} onOpenChange={setShowFirmaModal}>
         <DialogContent className="w-screen h-screen max-w-none max-h-none m-0 p-0 rounded-none flex flex-col">
-          <div className="flex items-center justify-between p-4 border-b">
+          <div className="flex items-center justify-between p-4 border-b shrink-0">
             <h2 className="font-semibold text-lg">Firma aquí</h2>
             <Button variant="ghost" size="sm" onClick={() => setShowFirmaModal(false)}>
               Cancelar
             </Button>
           </div>
-
-          <div className="flex-1 bg-white overflow-hidden" style={{ height: 'calc(100dvh - 120px)' }}>
-            <SignaturePad
-              ref={sigPadRef}
-              onBegin={() => setHasSigned(true)}
-              canvasProps={{
-                width: typeof window !== 'undefined' ? window.innerWidth : 400,
-                height: typeof window !== 'undefined' ? window.innerHeight - 120 : 400,
-                style: { touchAction: 'none', display: 'block' },
-              }}
-              backgroundColor="white"
+          <div className="flex-1 bg-white min-h-0">
+            <canvas
+              ref={firmaCanvasRef}
+              className="w-full h-full block"
+              style={{ touchAction: 'none', cursor: 'crosshair' }}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+              onPointerCancel={handlePointerUp}
             />
           </div>
-
-          <div className="flex gap-3 p-4 border-t">
+          <div className="flex gap-3 p-4 border-t shrink-0">
             <Button
               variant="outline"
               className="flex-1 h-14 text-base"
-              onClick={() => {
-                sigPadRef.current?.clear();
-                setHasSigned(false);
-              }}
+              onClick={clearFirmaCanvas}
             >
               Limpiar
             </Button>
@@ -1122,12 +1180,12 @@ export default function MobileWODetail({ wo }: Props) {
               className="flex-1 h-14 text-base"
               disabled={!hasSigned}
               onClick={() => {
-                if (sigPadRef.current && hasSigned) {
-                  const dataUrl = sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
-                  setFirmaData(dataUrl);
-                  setHasSigned(false);
-                  setShowFirmaModal(false);
-                }
+                const canvas = firmaCanvasRef.current;
+                if (!canvas || !hasSigned) return;
+                const dataUrl = canvas.toDataURL('image/png');
+                setFirmaData(dataUrl);
+                setHasSigned(false);
+                setShowFirmaModal(false);
               }}
             >
               Aceptar
