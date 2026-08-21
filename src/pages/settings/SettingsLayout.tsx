@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Integraciones', href: '/settings/integrations', icon: Plug },
   { name: 'Respaldos', href: '/settings/backups', icon: Database },
   { name: 'Auditoría', href: '/settings/audit', icon: FileBarChart },
+  { name: 'Sistema', href: '/settings/sistema', icon: Monitor },
 ];
 
 export default function SettingsLayout() {
