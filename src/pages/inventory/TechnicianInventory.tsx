@@ -16,7 +16,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { HardHat, PackagePlus, Undo2, Boxes, Barcode, Pencil, Truck } from 'lucide-react';
+import { HardHat, PackagePlus, Undo2, Boxes, Barcode, Pencil, Truck, ChevronDown, Search, Hash } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 
 interface Technician {
@@ -60,6 +61,156 @@ const initials = (nombre: string, apellido?: string | null) =>
   `${nombre?.[0] ?? ''}${apellido?.[0] ?? ''}`.toUpperCase() || '?';
 
 const fullName = (nombre: string, apellido?: string | null) => `${nombre} ${apellido ?? ''}`.trim();
+
+interface SerialItem {
+  id: string;
+  serial_number: string;
+  estado: string;
+}
+
+interface ProductGroupData {
+  product_id: string;
+  nombre: string;
+  qty: number;
+  serials: SerialItem[];
+}
+
+function ProductGroup({
+  group,
+  onReturn,
+  onAssignSerial,
+}: {
+  group: ProductGroupData;
+  onReturn: (serial: SerialItem) => void;
+  onAssignSerial: (serial: SerialItem) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const hasSinSerial = group.serials.some((s) => s.estado === 'sin_serial');
+
+  return (
+    <div>
+      <button
+        type="button"
+        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="flex items-center gap-2 text-sm font-medium truncate">
+          {hasSinSerial ? (
+            <Badge variant="outline" className="border-amber-500 text-amber-600 text-[10px] px-1.5">
+              Sin serie
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="text-xs px-1.5">
+              {group.qty}
+            </Badge>
+          )}
+          <span className="truncate">{group.nombre}</span>
+        </span>
+        <ChevronDown
+          className={cn('h-4 w-4 text-muted-foreground shrink-0 transition-transform', open && 'rotate-180')}
+        />
+      </button>
+
+      {open && (
+        <div className="pb-2 px-4 space-y-0.5">
+          {group.serials.map((s) => (
+            <div key={s.id} className="flex items-center justify-between gap-2 py-1">
+              {s.estado === 'sin_serial' ? (
+                <span className="text-xs text-muted-foreground italic">Sin serial registrado</span>
+              ) : (
+                <span className="text-xs font-mono text-muted-foreground truncate">{s.serial_number}</span>
+              )}
+              <div className="flex gap-1 shrink-0">
+                {s.estado === 'sin_serial' && (
+                  <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => onAssignSerial(s)}>
+                    <Hash className="mr-1 h-3 w-3" /> Asignar
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => onReturn(s)}>
+                  <Undo2 className="mr-1 h-3 w-3" /> Devolver
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AsignarSerialTecnicoDialog({
+  serialEditing,
+  onClose,
+}: {
+  serialEditing: { id: string; placeholder: string } | null;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [serial, setSerial] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleConfirm = async () => {
+    const nuevoSerial = serial.trim().toUpperCase();
+    if (!nuevoSerial || !serialEditing) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('product_serials')
+        .update({ serial_number: nuevoSerial, estado: 'disponible' } as any)
+        .eq('id', serialEditing.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['technician-inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['bodegas-page'] });
+      toast({ title: 'Serial asignado', description: nuevoSerial });
+      setSerial('');
+      onClose();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={!!serialEditing}
+      onOpenChange={(v) => {
+        if (!v) {
+          setSerial('');
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Asignar serial real</DialogTitle>
+          <DialogDescription>
+            Reemplaza el registro provisorio {serialEditing?.placeholder} por el número de serie real.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label>Número de serie *</Label>
+          <Input
+            value={serial}
+            onChange={(e) => setSerial(e.target.value)}
+            placeholder="SN-000123"
+            className="font-mono"
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirm} disabled={!serial.trim() || saving}>
+            {saving ? 'Guardando...' : 'Confirmar'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
 
 function useTechnicianProfiles() {
   return useQuery({
@@ -290,6 +441,9 @@ export default function TechnicianInventory() {
   const [search, setSearch] = useState('');
   const [camionetaDialog, setCamionetaDialog] = useState<{ tecnico: any; camioneta: any | null } | null>(null);
   const [estadoFiltro, setEstadoFiltro] = useState<string>('todos');
+  const [techSearch, setTechSearch] = useState('');
+  const [stockFiltro, setStockFiltro] = useState('todos');
+  const [serialEditing, setSerialEditing] = useState<{ id: string; placeholder: string } | null>(null);
 
   const [assignTech, setAssignTech] = useState<Technician | null>(null);
   const [returnCtx, setReturnCtx] = useState<{
@@ -436,6 +590,28 @@ export default function TechnicianInventory() {
           </TabsList>
 
           <TabsContent value="tecnicos" className="mt-6">
+          <div className="flex items-center gap-2 mb-5 flex-wrap">
+            <div className="relative flex-1 min-w-[180px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Buscar técnico..."
+                value={techSearch}
+                onChange={(e) => setTechSearch(e.target.value)}
+              />
+            </div>
+            <Select value={stockFiltro} onValueChange={setStockFiltro}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los estados</SelectItem>
+                <SelectItem value="con_stock">Con stock</SelectItem>
+                <SelectItem value="sin_stock">Sin stock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {loadingTechs ? (
             <p className="text-muted-foreground py-12 text-center">Cargando técnicos...</p>
           ) : !technicians?.length ? (
@@ -450,17 +626,55 @@ export default function TechnicianInventory() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {technicians.map((t) => {
-                const items = t.location_id ? itemsByLocation.get(t.location_id) ?? [] : [];
-                return (
-                  <Card key={t.id} className="border-border/70">
+              {technicians
+                .map((t) => {
+                  const techSerials = t.location_id
+                    ? (serials ?? []).filter((s) => s.location_id === t.location_id)
+                    : [];
+                  const grupoMap = new Map<string, ProductGroupData>();
+                  techSerials.forEach((s) => {
+                    if (!grupoMap.has(s.product_id)) {
+                      grupoMap.set(s.product_id, {
+                        product_id: s.product_id,
+                        nombre: s.products?.nombre ?? 'Producto',
+                        qty: 0,
+                        serials: [],
+                      });
+                    }
+                    const g = grupoMap.get(s.product_id)!;
+                    g.qty += 1;
+                    g.serials.push({
+                      id: s.id,
+                      serial_number: s.serial_number,
+                      estado: s.estado ?? 'disponible',
+                    });
+                  });
+                  const grupos = Array.from(grupoMap.values()).sort((a, b) => a.nombre.localeCompare(b.nombre));
+                  const totalUnidades = grupos.reduce((acc, g) => acc + g.qty, 0);
+                  return { t, grupos, totalUnidades };
+                })
+                .filter(({ t, totalUnidades }) => {
+                  const q = techSearch.trim().toLowerCase();
+                  const matchSearch =
+                    !q ||
+                    t.nombre.toLowerCase().includes(q) ||
+                    (t.apellido ?? '').toLowerCase().includes(q);
+                  const matchStock =
+                    stockFiltro === 'todos' ||
+                    (stockFiltro === 'con_stock' ? totalUnidades > 0 : totalUnidades === 0);
+                  return matchSearch && matchStock;
+                })
+                .map(({ t, grupos, totalUnidades }) => (
+                  <Card key={t.id} className="border-border/70 overflow-hidden">
                     <CardHeader className="pb-3">
                       <div className="flex items-start gap-3">
-                        <div className="h-10 w-10 shrink-0 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold">
+                        <div className="h-10 w-10 shrink-0 rounded-full bg-accent/10 text-accent flex items-center justify-center font-medium text-sm">
                           {initials(t.nombre, t.apellido)}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <CardTitle className="text-base truncate">{fullName(t.nombre, t.apellido)}</CardTitle>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-sm font-medium truncate">
+                            {fullName(t.nombre, t.apellido)}
+                          </CardTitle>
                           <p className="text-xs text-muted-foreground truncate">{t.email}</p>
                           {t.camioneta ? (
                             <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
@@ -491,56 +705,67 @@ export default function TechnicianInventory() {
                             </div>
                           )}
                         </div>
-                        {t.codigo && <Badge variant="secondary">{t.codigo}</Badge>}
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      {items.length === 0 ? (
-                        <div className="rounded-lg border border-dashed py-6 text-center">
+
+                    <div className="flex border-y border-border bg-muted/30">
+                      <div className="flex-1 flex flex-col items-center py-2.5">
+                        <span className="text-lg font-medium leading-none">{grupos.length}</span>
+                        <span className="text-[11px] text-muted-foreground mt-1">productos</span>
+                      </div>
+                      <div className="w-px bg-border" />
+                      <div className="flex-1 flex flex-col items-center py-2.5">
+                        <span className="text-lg font-medium leading-none">{totalUnidades}</span>
+                        <span className="text-[11px] text-muted-foreground mt-1">unidades</span>
+                      </div>
+                    </div>
+
+                    <div className="divide-y divide-border/60">
+                      {grupos.length === 0 ? (
+                        <div className="py-8 text-center">
                           <Boxes className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground">Sin ítems asignados</p>
+                          <p className="text-sm text-muted-foreground">Sin equipos asignados</p>
                         </div>
                       ) : (
-                        <ul className="divide-y">
-                          {items.map((it, i) => (
-                            <li key={`${it.product_id}-${it.serial ?? i}`} className="flex items-center gap-2 py-2">
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium truncate">{it.nombre}</p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {it.cantidad} un.
-                                  {it.serial ? ` · Serie ${it.serial}` : ''}
-                                </p>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  setReturnCtx({
-                                    tech: t,
-                                    product_id: it.product_id,
-                                    nombre: it.nombre,
-                                    cantidad: it.cantidad,
-                                    serial_number: it.serial,
-                                  })
-                                }
-                              >
-                                <Undo2 className="mr-1 h-4 w-4" />
-                                Devolver
-                              </Button>
-                            </li>
-                          ))}
-                        </ul>
+                        grupos.map((g) => (
+                          <ProductGroup
+                            key={g.product_id}
+                            group={g}
+                            onAssignSerial={(s) =>
+                              setSerialEditing({ id: s.id, placeholder: s.serial_number })
+                            }
+                            onReturn={(s) =>
+                              setReturnCtx({
+                                tech: t,
+                                product_id: g.product_id,
+                                nombre: g.nombre,
+                                cantidad: 1,
+                                serial_number: s.serial_number,
+                              })
+                            }
+                          />
+                        ))
                       )}
-                      <Button className="w-full" onClick={() => setAssignTech(t)} disabled={!t.location_id}>
+                    </div>
+
+                    <div className="p-3 border-t border-border">
+                      <Button
+                        className="w-full"
+                        variant="outline"
+                        onClick={() => setAssignTech(t)}
+                        disabled={!t.location_id}
+                      >
                         <PackagePlus className="mr-2 h-4 w-4" />
-                        {t.location_id ? 'Asignar ítem' : 'Requiere camioneta'}
+                        {t.location_id ? 'Asignar equipo' : 'Requiere camioneta'}
                       </Button>
-                    </CardContent>
+                    </div>
                   </Card>
-                );
-              })}
+                ))}
             </div>
           )}
+
+          <AsignarSerialTecnicoDialog serialEditing={serialEditing} onClose={() => setSerialEditing(null)} />
+
 
           {camionetaDialog && (
             <CamionetaDialog
