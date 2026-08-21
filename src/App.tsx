@@ -68,6 +68,7 @@ import NewService from "./pages/services/NewService";
 import ServiceDetail from "./pages/services/ServiceDetail";
 import NuevaConsulta from "./pages/consultar/NuevaConsulta";
 import RenovarPage from "./pages/public/RenovarPage";
+import ProveedoresPage from "./pages/proveedores/ProveedoresPage";
 
 const queryClient = new QueryClient();
 
@@ -133,6 +134,9 @@ const App = () => (
           <Route path="/inventory/recepciones" element={<ProtectedRoute><AppLayout><RecepcionesPage /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/technicians" element={<ProtectedRoute><AppLayout><TechnicianInventory /></AppLayout></ProtectedRoute>} />
           <Route path="/compatibility" element={<ProtectedRoute><AppLayout><CompatibilityMatrix /></AppLayout></ProtectedRoute>} />
+
+          {/* Proveedores */}
+          <Route path="/proveedores" element={<ProtectedRoute><AppLayout><ProveedoresPage /></AppLayout></ProtectedRoute>} />
           
           {/* Analytics */}
           <Route path="/analytics" element={<ProtectedRoute><AppLayout><AnalyticsDashboard /></AppLayout></ProtectedRoute>} />

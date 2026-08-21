@@ -1148,6 +1148,48 @@ export type Database = {
           },
         ]
       }
+      proveedores: {
+        Row: {
+          activo: boolean
+          contacto: string | null
+          created_at: string
+          direccion: string | null
+          email: string | null
+          id: string
+          nombre: string
+          notas: string | null
+          rut: string | null
+          telefono: string | null
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          contacto?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          nombre: string
+          notas?: string | null
+          rut?: string | null
+          telefono?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          contacto?: string | null
+          created_at?: string
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          nombre?: string
+          notas?: string | null
+          rut?: string | null
+          telefono?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       quote_approval_tokens: {
         Row: {
           created_at: string | null
@@ -2019,6 +2061,7 @@ export type Database = {
           id: string
           notas: string | null
           product_id: string
+          proveedor_id: string | null
           referencia: string | null
           tipo: Database["public"]["Enums"]["stock_move_type"]
           to_location_id: string | null
@@ -2033,6 +2076,7 @@ export type Database = {
           id?: string
           notas?: string | null
           product_id: string
+          proveedor_id?: string | null
           referencia?: string | null
           tipo: Database["public"]["Enums"]["stock_move_type"]
           to_location_id?: string | null
@@ -2047,6 +2091,7 @@ export type Database = {
           id?: string
           notas?: string | null
           product_id?: string
+          proveedor_id?: string | null
           referencia?: string | null
           tipo?: Database["public"]["Enums"]["stock_move_type"]
           to_location_id?: string | null
@@ -2116,6 +2161,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_technician_stock"
             referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "stock_moves_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "stock_moves_to_location_id_fkey"

@@ -27,6 +27,7 @@ import {
   Settings,
   ChevronRight,
   SearchCheck,
+  Truck,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -149,6 +150,12 @@ export function AppSidebar() {
             { title: 'Alertas', path: '/inventory/alerts' },
             { title: 'Reportes', path: '/inventory/reports' },
           ],
+        },
+        {
+          title: 'Proveedores',
+          icon: Truck,
+          path: '/proveedores',
+          show: isAdmin || can('view', 'inventory'),
         },
       ],
     },
