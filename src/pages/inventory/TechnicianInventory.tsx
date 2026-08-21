@@ -259,7 +259,28 @@ function useActiveProducts() {
 
 export default function TechnicianInventory() {
   const queryClient = useQueryClient();
-  const { data: technicians, isLoading: loadingTechs } = useTechnicians();
+  const { data: tecnicos, isLoading: loadingTechs } = useTechnicianProfiles();
+  const { data: camionetas } = useCamionetas();
+
+  const technicians: (Technician & { camioneta: any | null })[] = useMemo(() => {
+    return (tecnicos ?? [])
+      .filter((t: any) => t.profiles)
+      .map((t: any) => {
+        const cam = (camionetas ?? []).find((c: any) => c.profile_id === t.user_id) ?? null;
+        return {
+          id: t.profiles.id,
+          nombre: t.profiles.nombre,
+          apellido: t.profiles.apellido,
+          email: t.profiles.email,
+          location_id: cam?.id ?? '',
+          codigo: cam?.codigo ?? '',
+          location_nombre: cam?.nombre ?? '',
+          camioneta: cam,
+        };
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [tecnicos, camionetas]);
+
   const { data: stock } = useTechnicianStock();
   const { data: serials } = useAllSerials();
   const { data: bodegaData } = useBodegaStock();
