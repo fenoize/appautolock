@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Dialog,
   DialogContent,
@@ -20,13 +21,16 @@ import {
 } from '@/components/ui/select';
 import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 import { useCreateSubscriptionFromWOItem, WOSubscriptionItem } from '@/hooks/useWOSubscriptionItems';
+import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { CheckCircle } from 'lucide-react';
 
 interface WOSubscriptionConfigProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: WOSubscriptionItem;
+  woId: string;
   woFechaFin?: string;
 }
 
