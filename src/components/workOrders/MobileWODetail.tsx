@@ -6,14 +6,12 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { WOStatusBadge } from './WOStatusBadge';
-import { WOEvidenceUploader } from './WOEvidenceUploader';
 import { WOSignaturePad } from './WOSignaturePad';
 import { AssignTechnicianDialog } from './AssignTechnicianDialog';
 import {
@@ -27,15 +25,19 @@ import {
   CheckCircle2,
   Pencil,
   UserPlus,
+  Upload,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-type Step = 'info' | 'checklist' | 'evidencias' | 'firma' | 'cierre';
-const STEPS: Step[] = ['info', 'checklist', 'evidencias', 'firma', 'cierre'];
+type Step = 'info' | 'checklist' | 'revision' | 'equipos' | 'confirmacion' | 'firma' | 'cierre';
+const STEPS: Step[] = ['info', 'checklist', 'revision', 'equipos', 'confirmacion', 'firma', 'cierre'];
 const LABELS: Record<Step, string> = {
   info: 'Información',
   checklist: 'Checklist',
-  evidencias: 'Evidencias',
+  revision: 'Revisión',
+  equipos: 'Equipos',
+  confirmacion: 'Confirmación',
   firma: 'Firma',
   cierre: 'Cierre',
 };
@@ -53,8 +55,20 @@ export default function MobileWODetail({ wo }: Props) {
   const canManage = isAdmin || isSupervisor;
   const [step, setStep] = useState<Step>('info');
   const [checklistItems, setChecklistItems] = useState(wo.checklist_data?.items || []);
-  const [evidenciasPre, setEvidenciasPre] = useState<string[]>(wo.evidencias_pre_urls || []);
-  const [evidenciasPost, setEvidenciasPost] = useState<string[]>(wo.evidencias_post_urls || []);
+  const [revisionData, setRevisionData] = useState<{
+    externa: { urls: string[]; comentario: string };
+    interna: { urls: string[]; comentario: string };
+  }>(
+    wo.revision_data ?? {
+      externa: { urls: [], comentario: '' },
+      interna: { urls: [], comentario: '' },
+    },
+  );
+  const [confirmacionData, setConfirmacionData] = useState<{
+    urls: string[];
+    comentario: string;
+  }>(wo.confirmacion_data ?? { urls: [], comentario: '' });
+  const [uploadingSection, setUploadingSection] = useState<string | null>(null);
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
@@ -89,6 +103,95 @@ export default function MobileWODetail({ wo }: Props) {
     );
   };
 
+  const handlePhotoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    section: 'externa' | 'interna' | 'confirmacion',
+  ) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploadingSection(section);
+    try {
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const ext = file.name.split('.').pop();
+        const path = `${wo.id}/${section}_${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('wo-evidencias').upload(path, file);
+        if (upErr) throw upErr;
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('wo-evidencias').getPublicUrl(path);
+        uploaded.push(publicUrl);
+      }
+
+      if (section === 'confirmacion') {
+        const updated = { ...confirmacionData, urls: [...confirmacionData.urls, ...uploaded] };
+        setConfirmacionData(updated);
+        await supabase
+          .from('work_orders')
+          .update({ confirmacion_data: updated } as any)
+          .eq('id', wo.id);
+      } else {
+        const updated = {
+          ...revisionData,
+          [section]: { ...revisionData[section], urls: [...revisionData[section].urls, ...uploaded] },
+        };
+        setRevisionData(updated);
+        await supabase
+          .from('work_orders')
+          .update({ revision_data: updated } as any)
+          .eq('id', wo.id);
+      }
+      toast.success(`${uploaded.length} foto(s) subida(s)`);
+    } catch {
+      toast.error('Error al subir foto');
+    } finally {
+      setUploadingSection(null);
+      e.target.value = '';
+    }
+  };
+
+  const saveRevisionComment = async (section: 'externa' | 'interna', comentario: string) => {
+    const updated = { ...revisionData, [section]: { ...revisionData[section], comentario } };
+    setRevisionData(updated);
+    await supabase
+      .from('work_orders')
+      .update({ revision_data: updated } as any)
+      .eq('id', wo.id);
+  };
+
+  const saveConfirmacionComment = async (comentario: string) => {
+    const updated = { ...confirmacionData, comentario };
+    setConfirmacionData(updated);
+    await supabase
+      .from('work_orders')
+      .update({ confirmacion_data: updated } as any)
+      .eq('id', wo.id);
+  };
+
+  const removePhoto = async (section: 'externa' | 'interna' | 'confirmacion', url: string) => {
+    if (section === 'confirmacion') {
+      const updated = { ...confirmacionData, urls: confirmacionData.urls.filter((u) => u !== url) };
+      setConfirmacionData(updated);
+      await supabase
+        .from('work_orders')
+        .update({ confirmacion_data: updated } as any)
+        .eq('id', wo.id);
+    } else {
+      const updated = {
+        ...revisionData,
+        [section]: {
+          ...revisionData[section],
+          urls: revisionData[section].urls.filter((u) => u !== url),
+        },
+      };
+      setRevisionData(updated);
+      await supabase
+        .from('work_orders')
+        .update({ revision_data: updated } as any)
+        .eq('id', wo.id);
+    }
+  };
+
   const handleClose = async () => {
     if (!firmaData || !firmaNombre) {
       toast.error('Falta la firma del cliente');
@@ -114,6 +217,8 @@ export default function MobileWODetail({ wo }: Props) {
         [wo.direccion, wo.comuna, wo.region].filter(Boolean).join(', '),
       )}`
     : null;
+
+  const productos = (wo.items ?? []).filter((i) => i.item_tipo === 'producto');
 
   return (
     <div className="min-h-screen bg-background pb-40">
@@ -266,27 +371,242 @@ export default function MobileWODetail({ wo }: Props) {
           </>
         )}
 
-        {step === 'evidencias' && (
+        {step === 'revision' && (
           <div className="space-y-6">
-            <WOEvidenceUploader
-              woId={wo.id}
-              existingUrls={evidenciasPre}
-              onUpdate={setEvidenciasPre}
-              category="pre"
-              title="📷 Antes del servicio"
-              description="Documenta el estado del vehículo antes de comenzar — rayones, daños preexistentes, etc."
-            />
-            <WOEvidenceUploader
-              woId={wo.id}
-              existingUrls={evidenciasPost}
-              onUpdate={setEvidenciasPost}
-              category="post"
-              title="✅ Después del servicio"
-              description="Evidencia de la instalación completada y estado final del vehículo."
-            />
+            <h2 className="text-lg font-semibold">Revisión Pre-Servicio</h2>
+
+            {/* Inspección Externa */}
+            <Card className="p-4 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">🔍 Inspección Externa</h3>
+              <p className="text-xs text-muted-foreground">
+                Fotografía el estado del vehículo por fuera — rayones, abollones, daños preexistentes.
+              </p>
+
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                id="foto-externa"
+                className="hidden"
+                onChange={(e) => handlePhotoUpload(e, 'externa')}
+              />
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled={uploadingSection === 'externa'}
+                onClick={() => document.getElementById('foto-externa')?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {uploadingSection === 'externa' ? 'Subiendo...' : 'Subir fotos externas'}
+              </Button>
+
+              {revisionData.externa.urls.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  {revisionData.externa.urls.map((url, i) => (
+                    <div key={i} className="relative">
+                      <img src={url} alt="" className="w-full h-32 object-cover rounded border" />
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-1 right-1 h-6 w-6"
+                        onClick={() => removePhoto('externa', url)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Textarea
+                placeholder="Observaciones externas (opcional)"
+                value={revisionData.externa.comentario}
+                rows={2}
+                onChange={(e) =>
+                  setRevisionData((prev) => ({
+                    ...prev,
+                    externa: { ...prev.externa, comentario: e.target.value },
+                  }))
+                }
+                onBlur={(e) => saveRevisionComment('externa', e.target.value)}
+              />
+            </Card>
+
+            {/* Inspección Interna */}
+            <Card className="p-4 space-y-3">
+              <h3 className="font-semibold text-sm flex items-center gap-2">🎛️ Inspección Interna</h3>
+              <p className="text-xs text-muted-foreground">
+                Fotografía el panel con el motor encendido — testigos activos, estado del interior.
+              </p>
+
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                id="foto-interna"
+                className="hidden"
+                onChange={(e) => handlePhotoUpload(e, 'interna')}
+              />
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled={uploadingSection === 'interna'}
+                onClick={() => document.getElementById('foto-interna')?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {uploadingSection === 'interna' ? 'Subiendo...' : 'Subir fotos internas'}
+              </Button>
+
+              {revisionData.interna.urls.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  {revisionData.interna.urls.map((url, i) => (
+                    <div key={i} className="relative">
+                      <img src={url} alt="" className="w-full h-32 object-cover rounded border" />
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-1 right-1 h-6 w-6"
+                        onClick={() => removePhoto('interna', url)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Textarea
+                placeholder="Observaciones internas (opcional)"
+                value={revisionData.interna.comentario}
+                rows={2}
+                onChange={(e) =>
+                  setRevisionData((prev) => ({
+                    ...prev,
+                    interna: { ...prev.interna, comentario: e.target.value },
+                  }))
+                }
+                onBlur={(e) => saveRevisionComment('interna', e.target.value)}
+              />
+            </Card>
           </div>
         )}
 
+        {step === 'equipos' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Equipos a Instalar</h2>
+            {productos.length === 0 ? (
+              <Card className="p-6 text-center text-muted-foreground">No hay productos en esta OT</Card>
+            ) : (
+              productos.map((item) => (
+                <Card key={item.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-sm">{item.nombre}</p>
+                      <p className="text-xs text-muted-foreground">Cantidad: {item.cantidad}</p>
+                      {item.serial_instalado ? (
+                        <p className="text-xs text-green-600 font-mono mt-1">
+                          ✅ Serie: {item.serial_instalado}
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground mt-1">Serial pendiente de confirmar</p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+            <p className="text-xs text-center text-muted-foreground">
+              La confirmación de seriales se habilitará próximamente.
+            </p>
+          </div>
+        )}
+
+        {step === 'confirmacion' && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Confirmación del Servicio</h2>
+
+            {/* Resumen */}
+            <Card className="p-4 space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Resumen</p>
+              <p className="text-sm">
+                <span className="text-muted-foreground">Cliente:</span> {wo.client?.razon_social || '—'}
+              </p>
+              {wo.vehicle && (
+                <p className="text-sm">
+                  <span className="text-muted-foreground">Vehículo:</span> {wo.vehicle.patente} ·{' '}
+                  {wo.vehicle.marca} {wo.vehicle.modelo}
+                </p>
+              )}
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">Trabajos realizados:</p>
+                {(wo.items ?? []).map((it) => (
+                  <p key={it.id} className="text-sm">
+                    • {it.nombre} × {it.cantidad}
+                    {it.serial_instalado ? (
+                      <span className="font-mono text-xs ml-2 text-muted-foreground">
+                        [{it.serial_instalado}]
+                      </span>
+                    ) : null}
+                  </p>
+                ))}
+              </div>
+            </Card>
+
+            {/* Fotos post-instalación */}
+            <Card className="p-4 space-y-3">
+              <h3 className="font-semibold text-sm">📸 Fotos Post-Instalación</h3>
+              <p className="text-xs text-muted-foreground">
+                Documenta el trabajo finalizado y el estado del vehículo al entregar.
+              </p>
+
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                id="foto-confirmacion"
+                className="hidden"
+                onChange={(e) => handlePhotoUpload(e, 'confirmacion')}
+              />
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled={uploadingSection === 'confirmacion'}
+                onClick={() => document.getElementById('foto-confirmacion')?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                {uploadingSection === 'confirmacion' ? 'Subiendo...' : 'Subir fotos finales'}
+              </Button>
+
+              {confirmacionData.urls.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  {confirmacionData.urls.map((url, i) => (
+                    <div key={i} className="relative">
+                      <img src={url} alt="" className="w-full h-32 object-cover rounded border" />
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        className="absolute top-1 right-1 h-6 w-6"
+                        onClick={() => removePhoto('confirmacion', url)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <Textarea
+                placeholder="Comentario sobre el trabajo realizado (opcional)"
+                value={confirmacionData.comentario}
+                rows={3}
+                onChange={(e) =>
+                  setConfirmacionData((prev) => ({ ...prev, comentario: e.target.value }))
+                }
+                onBlur={(e) => saveConfirmacionComment(e.target.value)}
+              />
+            </Card>
+          </div>
+        )}
 
         {step === 'firma' && (
           <Card className="p-4">
