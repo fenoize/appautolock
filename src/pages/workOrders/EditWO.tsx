@@ -351,6 +351,130 @@ export default function EditWO() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle>Trabajos a Realizar</CardTitle>
+            <Button type="button" size="sm" variant="outline" onClick={() => setShowAddItem(v => !v)}>
+              <Plus className="h-4 w-4 mr-1" /> Agregar
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(wo.items ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Sin items en esta OT</p>
+            ) : (
+              <div className="space-y-2">
+                {(wo.items ?? []).map(item => (
+                  <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Badge variant={item.item_tipo === 'producto' ? 'default' : 'secondary'} className="shrink-0">
+                        {item.item_tipo}
+                      </Badge>
+                      <span className="text-sm truncate">{item.nombre}</span>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-2">
+                      <span className="text-xs text-muted-foreground">×{item.cantidad}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-destructive hover:text-destructive"
+                        disabled={deleteWOItem.isPending}
+                        onClick={() => deleteWOItem.mutate({ id: item.id, wo_id: id! })}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {showAddItem && (
+              <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                <p className="text-sm font-semibold">Nuevo item</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Tipo</Label>
+                    <Select
+                      value={newItemTipo}
+                      onValueChange={(v: 'producto' | 'servicio') => {
+                        setNewItemTipo(v);
+                        setNewItemRefId('');
+                        setNewItemNombre('');
+                      }}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="servicio">Servicio</SelectItem>
+                        <SelectItem value="producto">Producto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Cantidad</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={newItemCantidad}
+                      onChange={e => setNewItemCantidad(Math.max(1, Number(e.target.value)))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{newItemTipo === 'servicio' ? 'Servicio' : 'Producto'}</Label>
+                  <Select
+                    value={newItemRefId || undefined}
+                    onValueChange={(v) => {
+                      setNewItemRefId(v);
+                      if (newItemTipo === 'servicio') {
+                        const svc = services.find((s: any) => s.id === v);
+                        setNewItemNombre(svc?.nombre || '');
+                      } else {
+                        const prod = products.find((p: any) => p.id === v);
+                        setNewItemNombre(prod?.nombre || '');
+                      }
+                    }}
+                  >
+                    <SelectTrigger><SelectValue placeholder={`Seleccionar ${newItemTipo}`} /></SelectTrigger>
+                    <SelectContent>
+                      {newItemTipo === 'servicio'
+                        ? services.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.nombre}</SelectItem>)
+                        : products.map((p: any) => <SelectItem key={p.id} value={p.id}>{p.nombre}</SelectItem>)
+                      }
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button type="button" variant="outline" size="sm" onClick={() => { setShowAddItem(false); setNewItemRefId(''); setNewItemNombre(''); setNewItemCantidad(1); }}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={!newItemRefId || createWOItem.isPending}
+                    onClick={async () => {
+                      if (!newItemRefId) return;
+                      await createWOItem.mutateAsync({
+                        wo_id: id!,
+                        item_tipo: newItemTipo,
+                        ref_id: newItemRefId,
+                        nombre: newItemNombre,
+                        cantidad: newItemCantidad,
+                      } as any);
+                      setNewItemRefId('');
+                      setNewItemNombre('');
+                      setNewItemCantidad(1);
+                      setShowAddItem(false);
+                    }}
+                  >
+                    {createWOItem.isPending ? 'Agregando...' : 'Agregar item'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" onClick={() => navigate(`/work-orders/${id}`)}>
             Cancelar
