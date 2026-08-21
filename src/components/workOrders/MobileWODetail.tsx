@@ -659,9 +659,7 @@ export default function MobileWODetail({ wo }: Props) {
 
             {(() => {
               const equiposAInstalar = (wo.items ?? []).filter(
-                (i) =>
-                  i.item_tipo === 'producto' &&
-                  (i as any).product?.serializable !== false
+                (i) => i.item_tipo === 'producto' && serializableIds.has(i.ref_id ?? '')
               );
 
               return equiposAInstalar.length === 0 ? (
