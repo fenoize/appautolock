@@ -113,12 +113,14 @@ export function useCreateSubscriptionFromWOItem() {
       numerosSerietext,
       fechaInicio,
       gpsData,
+      woId,
     }: {
       woSubscriptionItemId: string;
       planId: string;
       numerosSerietext: any[];
       fechaInicio?: string;
       gpsData?: GPSData;
+      woId?: string;
     }) => {
       // Create subscription via RPC
       const { data: subscriptionId, error } = await supabase.rpc('create_subscription_from_wo_item', {
@@ -130,26 +132,30 @@ export function useCreateSubscriptionFromWOItem() {
 
       if (error) throw error;
 
-      // Update subscription with GPS data if provided
-      if (subscriptionId && gpsData) {
-        const gpsFields: Record<string, string | undefined> = {};
-        if (gpsData.modelo_gps) gpsFields.modelo_gps = gpsData.modelo_gps;
-        if (gpsData.imei_gps) gpsFields.imei_gps = gpsData.imei_gps;
-        if (gpsData.imei_pcs) gpsFields.imei_pcs = gpsData.imei_pcs;
-        if (gpsData.numero_pcs) gpsFields.numero_pcs = gpsData.numero_pcs;
-        if (gpsData.compania) gpsFields.compania = gpsData.compania;
-        if (gpsData.correo_usuario) gpsFields.correo_usuario = gpsData.correo_usuario;
-        if (gpsData.app_alojada) gpsFields.app_alojada = gpsData.app_alojada;
-        if (gpsData.instalador) gpsFields.instalador = gpsData.instalador;
+      // Update subscription with wo_id and GPS data if provided
+      if (subscriptionId) {
+        const updateFields: Record<string, any> = {};
+        if (woId) updateFields.wo_id = woId;
 
-        if (Object.keys(gpsFields).length > 0) {
+        if (gpsData) {
+          if (gpsData.modelo_gps) updateFields.modelo_gps = gpsData.modelo_gps;
+          if (gpsData.imei_gps) updateFields.imei_gps = gpsData.imei_gps;
+          if (gpsData.imei_pcs) updateFields.imei_pcs = gpsData.imei_pcs;
+          if (gpsData.numero_pcs) updateFields.numero_pcs = gpsData.numero_pcs;
+          if (gpsData.compania) updateFields.compania = gpsData.compania;
+          if (gpsData.correo_usuario) updateFields.correo_usuario = gpsData.correo_usuario;
+          if (gpsData.app_alojada) updateFields.app_alojada = gpsData.app_alojada;
+          if (gpsData.instalador) updateFields.instalador = gpsData.instalador;
+        }
+
+        if (Object.keys(updateFields).length > 0) {
           const { error: updateError } = await supabase
             .from('subscriptions')
-            .update(gpsFields as any)
+            .update(updateFields as any)
             .eq('id', subscriptionId);
 
           if (updateError) {
-            console.error('Error updating GPS data:', updateError);
+            console.error('Error updating subscription fields:', updateError);
           }
         }
       }

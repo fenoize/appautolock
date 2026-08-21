@@ -187,6 +187,7 @@ export function WOSubscriptionsTab({ woId, woStatus }: WOSubscriptionsTabProps) 
       {selectedItem && (
         <WOSubscriptionConfig
           item={selectedItem}
+          woId={woId}
           open={!!selectedItem}
           onOpenChange={(open) => !open && setSelectedItem(null)}
         />

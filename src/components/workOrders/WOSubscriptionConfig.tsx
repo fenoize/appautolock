@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Dialog,
   DialogContent,
@@ -20,13 +21,16 @@ import {
 } from '@/components/ui/select';
 import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 import { useCreateSubscriptionFromWOItem, WOSubscriptionItem } from '@/hooks/useWOSubscriptionItems';
+import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { CheckCircle } from 'lucide-react';
 
 interface WOSubscriptionConfigProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: WOSubscriptionItem;
+  woId: string;
   woFechaFin?: string;
 }
 
@@ -45,6 +49,7 @@ export function WOSubscriptionConfig({
   open,
   onOpenChange,
   item,
+  woId,
   woFechaFin,
 }: WOSubscriptionConfigProps) {
   const [planId, setPlanId] = useState<string>('');
@@ -54,6 +59,7 @@ export function WOSubscriptionConfig({
   ]);
   const [fechaInicio, setFechaInicio] = useState(woFechaFin || new Date().toISOString().split('T')[0]);
   const [notas, setNotas] = useState('');
+  const [imeiPrePoblado, setImeiPrePoblado] = useState(false);
   
   // GPS Data
   const [gpsData, setGpsData] = useState<GPSData>({
@@ -69,6 +75,36 @@ export function WOSubscriptionConfig({
 
   const { data: allPlans } = useSubscriptionPlans();
   const createMutation = useCreateSubscriptionFromWOItem();
+
+  // Buscar serial verificado del paso Equipos para pre-poblar IMEI GPS
+  const { data: verifiedSerialItems } = useQuery({
+    queryKey: ['wo-verified-serials', woId, item.ref_id],
+    queryFn: async () => {
+      if (!woId || !item.ref_id) return [];
+      const { data, error } = await supabase
+        .from('wo_items')
+        .select('serial_instalado')
+        .eq('wo_id', woId)
+        .eq('ref_id', item.ref_id)
+        .eq('serial_verificado', true)
+        .not('serial_instalado', 'is', null)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!woId && !!item.ref_id,
+  });
+
+  useEffect(() => {
+    if (verifiedSerialItems && verifiedSerialItems.length > 0 && !gpsData.imei_gps) {
+      const firstSerial = verifiedSerialItems[0].serial_instalado;
+      if (firstSerial) {
+        setGpsData(prev => ({ ...prev, imei_gps: firstSerial }));
+        setImeiPrePoblado(true);
+      }
+    }
+  }, [verifiedSerialItems]);
 
   // Obtener planes disponibles según el producto/servicio
   const tiposDisponibles = item.product?.tipos_suscripcion_disponibles || 
@@ -112,6 +148,7 @@ export function WOSubscriptionConfig({
       numerosSerietext: seriesjson,
       fechaInicio,
       gpsData,
+      woId,
     });
 
     onOpenChange(false);
@@ -169,6 +206,12 @@ export function WOSubscriptionConfig({
                   onChange={(e) => handleGpsDataChange('imei_gps', e.target.value)}
                   placeholder="Ej: 123456789012345"
                 />
+                {gpsData.imei_gps && imeiPrePoblado && (
+                  <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Serial obtenido del paso Equipos
+                  </p>
+                )}
               </div>
             </div>
 
