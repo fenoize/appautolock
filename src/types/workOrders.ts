@@ -85,6 +85,8 @@ export interface WOItem {
   nombre: string;
   cantidad: number;
   precio_unitario?: number;
+  serial_instalado?: string | null;
+  serial_verificado?: boolean;
   created_at: string;
 }
 
