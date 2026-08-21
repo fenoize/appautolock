@@ -329,13 +329,14 @@ export default function TechnicianInventory() {
         description="Controla qué ítems tiene cada técnico en su camioneta"
       />
 
-      <Tabs defaultValue="tecnicos">
-        <TabsList>
-          <TabsTrigger value="tecnicos">Por Técnico</TabsTrigger>
-          <TabsTrigger value="seriales">Por Serial</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="tecnicos">
+          <TabsList>
+            <TabsTrigger value="tecnicos">Por Técnico</TabsTrigger>
+            <TabsTrigger value="bodegas">Bodegas</TabsTrigger>
+            <TabsTrigger value="seriales">Por Serial</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="tecnicos" className="mt-6">
+          <TabsContent value="tecnicos" className="mt-6">
           {loadingTechs ? (
             <p className="text-muted-foreground py-12 text-center">Cargando técnicos...</p>
           ) : !technicians?.length ? (
