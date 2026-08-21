@@ -109,19 +109,40 @@ function useTechnicianStock() {
   });
 }
 
-function useCamionetaSerials() {
+function useAllSerials() {
   return useQuery({
     queryKey: ['technician-inventory', 'serials'],
     queryFn: async (): Promise<SerialRow[]> => {
       const { data, error } = await supabase
         .from('product_serials')
         .select(
-          'id, serial_number, product_id, location_id, estado, updated_at, products(nombre, sku), stock_locations!inner(id, codigo, nombre, tipo, profile_id, profiles(nombre, apellido))'
+          'id, serial_number, product_id, location_id, estado, updated_at, products(nombre, sku), stock_locations(id, codigo, nombre, tipo, profile_id, profiles(nombre, apellido))'
         )
-        .eq('stock_locations.tipo', 'camioneta')
         .order('updated_at', { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as SerialRow[];
+    },
+  });
+}
+
+function useBodegaStock() {
+  return useQuery({
+    queryKey: ['technician-inventory', 'bodega-stock'],
+    queryFn: async () => {
+      const { data: locations, error: lErr } = await supabase
+        .from('stock_locations')
+        .select('id, nombre, codigo')
+        .eq('tipo', 'bodega')
+        .eq('activa', true);
+      if (lErr) throw lErr;
+
+      const { data: serials, error: sErr } = await supabase
+        .from('product_serials')
+        .select('id, serial_number, product_id, location_id, estado, products(nombre, sku)')
+        .in('location_id', (locations ?? []).map((l: any) => l.id));
+      if (sErr) throw sErr;
+
+      return { locations: locations ?? [], serials: serials ?? [] };
     },
   });
 }
