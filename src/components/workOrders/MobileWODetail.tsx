@@ -117,6 +117,7 @@ export default function MobileWODetail({ wo }: Props) {
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [showFirmaModal, setShowFirmaModal] = useState(false);
+  const [hasSigned, setHasSigned] = useState(false);
   const sigPadRef = useRef<any>(null);
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
   const [assignOpen, setAssignOpen] = useState(false);
@@ -722,12 +723,29 @@ export default function MobileWODetail({ wo }: Props) {
                         </div>
 
                         {confirmed ? (
-                          <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2">
-                            <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-                            <div>
-                              <p className="text-xs font-semibold text-green-700">Serial confirmado</p>
-                              <p className="text-xs font-mono text-green-800">{confirmed}</p>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/30 rounded-lg px-3 py-2">
+                              <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                              <div>
+                                <p className="text-xs font-semibold text-green-700">Serial confirmado</p>
+                                <p className="text-xs font-mono text-green-800">{confirmed}</p>
+                              </div>
                             </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground text-xs h-8"
+                              onClick={() => {
+                                setConfirmedSerials((prev) => {
+                                  const next = { ...prev };
+                                  delete next[item.id];
+                                  return next;
+                                });
+                                setManualSerials((prev) => ({ ...prev, [item.id]: '' }));
+                              }}
+                            >
+                              Cambiar serial
+                            </Button>
                           </div>
                         ) : matchingSerials.length === 0 ? (
                           <div className="space-y-2">
@@ -1076,12 +1094,19 @@ export default function MobileWODetail({ wo }: Props) {
             </Button>
           </div>
 
-          <div className="flex-1 relative bg-white">
+          <div className="flex-1 relative bg-white" style={{ minHeight: 0 }}>
             <SignaturePad
               ref={sigPadRef}
+              onBegin={() => setHasSigned(true)}
               canvasProps={{
-                className: 'w-full h-full',
-                style: { touchAction: 'none' },
+                style: {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  touchAction: 'none',
+                },
               }}
               backgroundColor="white"
             />
@@ -1091,19 +1116,22 @@ export default function MobileWODetail({ wo }: Props) {
             <Button
               variant="outline"
               className="flex-1 h-14 text-base"
-              onClick={() => sigPadRef.current?.clear()}
+              onClick={() => {
+                sigPadRef.current?.clear();
+                setHasSigned(false);
+              }}
             >
               Limpiar
             </Button>
             <Button
               className="flex-1 h-14 text-base"
+              disabled={!hasSigned}
               onClick={() => {
-                if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
+                if (sigPadRef.current && hasSigned) {
                   const dataUrl = sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
                   setFirmaData(dataUrl);
+                  setHasSigned(false);
                   setShowFirmaModal(false);
-                } else {
-                  toast.error('Dibuja la firma antes de aceptar');
                 }
               }}
             >
