@@ -40,6 +40,8 @@ import EditProduct from "./pages/inventory/EditProduct";
 import InventoryReports from "./pages/inventory/InventoryReports";
 import StockAlerts from "./pages/inventory/StockAlerts";
 import TechnicianInventory from "./pages/inventory/TechnicianInventory";
+import BodegasPage from "./pages/inventory/BodegasPage";
+import RecepcionesPage from "./pages/inventory/RecepcionesPage";
 import CompatibilityMatrix from "./pages/inventory/CompatibilityMatrix";
 import AnalyticsDashboard from "./pages/analytics/AnalyticsDashboard";
 import SettingsLayout from "./pages/settings/SettingsLayout";
@@ -127,6 +129,8 @@ const App = () => (
           <Route path="/inventory/products/:id/edit" element={<ProtectedRoute><AppLayout><EditProduct /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/reports" element={<ProtectedRoute><AppLayout><InventoryReports /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/alerts" element={<ProtectedRoute><AppLayout><StockAlerts /></AppLayout></ProtectedRoute>} />
+          <Route path="/inventory/bodegas" element={<ProtectedRoute><AppLayout><BodegasPage /></AppLayout></ProtectedRoute>} />
+          <Route path="/inventory/recepciones" element={<ProtectedRoute><AppLayout><RecepcionesPage /></AppLayout></ProtectedRoute>} />
           <Route path="/inventory/technicians" element={<ProtectedRoute><AppLayout><TechnicianInventory /></AppLayout></ProtectedRoute>} />
           <Route path="/compatibility" element={<ProtectedRoute><AppLayout><CompatibilityMatrix /></AppLayout></ProtectedRoute>} />
           

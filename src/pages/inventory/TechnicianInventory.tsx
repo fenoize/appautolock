@@ -331,7 +331,6 @@ export default function TechnicianInventory() {
             <TabsTrigger value="tecnicos">Por Técnico</TabsTrigger>
             <TabsTrigger value="bodegas">Bodegas</TabsTrigger>
             <TabsTrigger value="seriales">Por Serial</TabsTrigger>
-            <TabsTrigger value="recepcion">Recepción</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tecnicos" className="mt-6">
@@ -535,13 +534,6 @@ export default function TechnicianInventory() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="recepcion" className="mt-6">
-          <RecepcionTab
-            products={products ?? []}
-            bodegas={bodegas ?? []}
-            onSuccess={invalidate}
-          />
-        </TabsContent>
       </Tabs>
 
       <AssignDialog
@@ -561,149 +553,6 @@ export default function TechnicianInventory() {
         isPending={returnMutation.isPending}
       />
     </PageContainer>
-  );
-}
-
-function RecepcionTab({
-  products,
-  bodegas,
-  onSuccess,
-}: {
-  products: any[];
-  bodegas: any[];
-  onSuccess: () => void;
-}) {
-  const [productId, setProductId] = useState('');
-  const [bodegaId, setBodegaId] = useState('');
-  const [serialInput, setSerialInput] = useState('');
-  const [proveedor, setProveedor] = useState('');
-  const [notas, setNotas] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  const seriales = serialInput
-    .split('\n')
-    .map((s) => s.trim().toUpperCase())
-    .filter(Boolean);
-  const canSubmit = productId && bodegaId && seriales.length > 0;
-
-  const handleSubmit = async () => {
-    if (!canSubmit) return;
-    setSubmitting(true);
-    try {
-      const { error: moveErr } = await supabase.from('stock_moves').insert({
-        tipo: 'compra',
-        product_id: productId,
-        cantidad: seriales.length,
-        to_location_id: bodegaId,
-        referencia: proveedor ? `Compra: ${proveedor}` : 'Recepción de compra',
-        notas: notas || null,
-        fecha: new Date().toISOString(),
-      } as any);
-      if (moveErr) throw moveErr;
-
-      const { data: existing } = await supabase
-        .from('product_serials')
-        .select('serial_number')
-        .in('serial_number', seriales);
-      const existingSet = new Set((existing || []).map((e: any) => e.serial_number));
-
-      const nuevos = seriales.filter((s) => !existingSet.has(s));
-      if (nuevos.length > 0) {
-        const { error: insErr } = await supabase.from('product_serials').insert(
-          nuevos.map((s) => ({
-            serial_number: s,
-            product_id: productId,
-            location_id: bodegaId,
-            estado: 'disponible',
-          })) as any
-        );
-        if (insErr) throw insErr;
-      }
-
-      const existentes = seriales.filter((s) => existingSet.has(s));
-      if (existentes.length > 0) {
-        await supabase
-          .from('product_serials')
-          .update({ location_id: bodegaId, estado: 'disponible' } as any)
-          .in('serial_number', existentes);
-      }
-
-      const bodegaNombre = bodegas.find((b) => b.id === bodegaId)?.nombre ?? 'bodega';
-      toast({ title: 'Ingreso registrado', description: `${seriales.length} equipo(s) añadidos a ${bodegaNombre}.` });
-      setSerialInput('');
-      setProveedor('');
-      setNotas('');
-      onSuccess();
-    } catch (e: any) {
-      toast({ title: 'Error', description: e.message, variant: 'destructive' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="max-w-lg space-y-5">
-      <p className="text-sm text-muted-foreground">
-        Registra equipos que llegan a bodega. Pega los números de serie (uno por línea).
-      </p>
-
-      <div className="space-y-2">
-        <Label>Producto *</Label>
-        <Select value={productId} onValueChange={setProductId}>
-          <SelectTrigger><SelectValue placeholder="Selecciona un producto" /></SelectTrigger>
-          <SelectContent>
-            {products.filter((p) => p.serializable).map((p) => (
-              <SelectItem key={p.id} value={p.id}>{p.sku} · {p.nombre}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Bodega de ingreso *</Label>
-        <Select value={bodegaId} onValueChange={setBodegaId}>
-          <SelectTrigger><SelectValue placeholder="Selecciona bodega" /></SelectTrigger>
-          <SelectContent>
-            {bodegas.map((b) => (
-              <SelectItem key={b.id} value={b.id}>{b.nombre}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label>
-          Números de serie *
-          {seriales.length > 0 && (
-            <span className="ml-2 text-xs font-normal text-muted-foreground">
-              ({seriales.length} detectado{seriales.length !== 1 ? 's' : ''})
-            </span>
-          )}
-        </Label>
-        <Textarea
-          placeholder={"SN-000001\nSN-000002\nSN-000003"}
-          value={serialInput}
-          onChange={(e) => setSerialInput(e.target.value)}
-          rows={6}
-          className="font-mono text-sm"
-        />
-        <p className="text-xs text-muted-foreground">Un serial por línea. Se ignoran espacios y se convierten a mayúsculas.</p>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Proveedor (opcional)</Label>
-        <Input value={proveedor} onChange={(e) => setProveedor(e.target.value)} placeholder="Ej: Distribuidora XYZ" />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Notas (opcional)</Label>
-        <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} placeholder="Ej: Factura #1234" />
-      </div>
-
-      <Button onClick={handleSubmit} disabled={!canSubmit || submitting} className="w-full">
-        {submitting ? 'Registrando...' : `Registrar ingreso${seriales.length > 0 ? ` (${seriales.length})` : ''}`}
-      </Button>
-    </div>
   );
 }
 
@@ -839,7 +688,7 @@ function AssignDialog({
                 <p className="text-sm text-muted-foreground py-2">Cargando seriales...</p>
               ) : availableSerials.length === 0 ? (
                 <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
-                  No hay seriales disponibles en esta bodega. Usa el tab "Recepción" para ingresar equipos primero.
+                  No hay seriales disponibles en esta bodega. Registra ingresos en Inventario / Recepciones.
                 </p>
               ) : (
                 <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
