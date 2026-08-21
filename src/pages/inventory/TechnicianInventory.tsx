@@ -59,44 +59,121 @@ const initials = (nombre: string, apellido?: string | null) =>
 
 const fullName = (nombre: string, apellido?: string | null) => `${nombre} ${apellido ?? ''}`.trim();
 
-function useTechnicians() {
+function useTechnicianProfiles() {
   return useQuery({
-    queryKey: ['technician-inventory', 'technicians'],
-    queryFn: async (): Promise<Technician[]> => {
-      const { data: roles, error: rolesError } = await supabase
+    queryKey: ['technician-inventory', 'techs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from('user_roles')
-        .select('user_id')
+        .select('user_id, profiles(id, nombre, apellido, email, estado)')
         .eq('role', 'tecnico');
-      if (rolesError) throw rolesError;
-      const ids = (roles ?? []).map((r: any) => r.user_id);
-      if (!ids.length) return [];
-
-      const [{ data: profiles, error: pErr }, { data: locations, error: lErr }] = await Promise.all([
-        supabase.from('profiles').select('id, nombre, apellido, email, estado').in('id', ids).eq('estado', 'activo'),
-        supabase.from('stock_locations').select('id, codigo, nombre, profile_id, tipo, activa').eq('tipo', 'camioneta').in('profile_id', ids),
-      ]);
-      if (pErr) throw pErr;
-      if (lErr) throw lErr;
-
-      return (profiles ?? [])
-        .map((p: any) => {
-          const loc = (locations ?? []).find((l: any) => l.profile_id === p.id);
-          if (!loc) return null;
-          return {
-            id: p.id,
-            nombre: p.nombre,
-            apellido: p.apellido,
-            email: p.email,
-            location_id: loc.id,
-            codigo: loc.codigo,
-            location_nombre: loc.nombre,
-          } as Technician;
-        })
-        .filter(Boolean)
-        .sort((a: any, b: any) => a.nombre.localeCompare(b.nombre)) as Technician[];
+      if (error) throw error;
+      return (data ?? []) as any[];
     },
   });
 }
+
+function useCamionetas() {
+  return useQuery({
+    queryKey: ['technician-inventory', 'camionetas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stock_locations')
+        .select('*')
+        .eq('tipo', 'camioneta');
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+}
+
+function CamionetaDialog({
+  tecnico,
+  camioneta,
+  open,
+  onOpenChange,
+}: {
+  tecnico: any;
+  camioneta: any | null;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const isEdit = !!camioneta;
+  const [nombre, setNombre] = useState(camioneta?.nombre ?? '');
+  const [activa, setActiva] = useState(camioneta?.activa ?? true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isEdit) setNombre(`Camioneta ${tecnico.nombre} ${tecnico.apellido ?? ''}`.trim());
+  }, [tecnico, isEdit]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (isEdit) {
+        const { error } = await supabase
+          .from('stock_locations')
+          .update({ nombre: nombre.trim(), activa })
+          .eq('id', camioneta.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('stock_locations').insert({
+          nombre: nombre.trim(),
+          tipo: 'camioneta',
+          profile_id: tecnico.id,
+          activa: true,
+          codigo: `CAM-${tecnico.id.slice(0, 6).toUpperCase()}`,
+        } as any);
+        if (error) throw error;
+      }
+      queryClient.invalidateQueries({ queryKey: ['technician-inventory'] });
+      toast({ title: isEdit ? 'Camioneta actualizada' : 'Camioneta asignada' });
+      onOpenChange(false);
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? 'Editar camioneta' : 'Asignar camioneta'}</DialogTitle>
+          <DialogDescription>
+            {tecnico.nombre} {tecnico.apellido ?? ''}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Nombre de la camioneta *</Label>
+            <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej: Camioneta Norte" />
+          </div>
+          {isEdit && (
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <Label>Activa</Label>
+                <p className="text-xs text-muted-foreground">Las inactivas no aparecen en asignaciones.</p>
+              </div>
+              <Switch checked={activa} onCheckedChange={setActiva} />
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} disabled={!nombre.trim() || saving}>
+            {isEdit ? 'Guardar' : 'Asignar'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function useTechnicianStock() {
   return useQuery({
