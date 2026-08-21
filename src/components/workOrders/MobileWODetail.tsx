@@ -166,6 +166,27 @@ export default function MobileWODetail({ wo }: Props) {
     load();
   }, [step]);
 
+  useEffect(() => {
+    if (!showFirmaModal) return;
+    const timer = setTimeout(() => {
+      const canvas = firmaCanvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width || window.innerWidth;
+      canvas.height = rect.height || window.innerHeight - 130;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#1a1a1a';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [showFirmaModal]);
+
   const stepIdx = STEPS.indexOf(step);
   const progress = ((stepIdx + 1) / STEPS.length) * 100;
 
@@ -358,6 +379,47 @@ export default function MobileWODetail({ wo }: Props) {
     } finally {
       setConfirmingSerial(null);
     }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const canvas = firmaCanvasRef.current;
+    if (!canvas) return;
+    (e.target as HTMLCanvasElement).setPointerCapture(e.pointerId);
+    isDrawingRef.current = true;
+    const rect = canvas.getBoundingClientRect();
+    lastPosRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    setHasSigned(true);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!isDrawingRef.current || !firmaCanvasRef.current || !lastPosRef.current) return;
+    const canvas = firmaCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const rect = canvas.getBoundingClientRect();
+    const pos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    ctx.beginPath();
+    ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+    lastPosRef.current = pos;
+  };
+
+  const handlePointerUp = () => {
+    isDrawingRef.current = false;
+    lastPosRef.current = null;
+  };
+
+  const clearFirmaCanvas = () => {
+    const canvas = firmaCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    setHasSigned(false);
   };
 
   const handleClose = async () => {
