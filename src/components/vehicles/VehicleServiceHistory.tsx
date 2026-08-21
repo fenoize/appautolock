@@ -1,4 +1,4 @@
-import { useWorkOrders } from '@/hooks/useWorkOrders';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
@@ -7,6 +7,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VehicleServiceHistoryProps {
   vehicleId: string;
@@ -14,11 +15,23 @@ interface VehicleServiceHistoryProps {
 
 export function VehicleServiceHistory({ vehicleId }: VehicleServiceHistoryProps) {
   const navigate = useNavigate();
-  const { data, isLoading } = useWorkOrders({ pageSize: 200 });
-  const workOrders = data?.data;
-
-  // Filtrar órdenes de trabajo por vehículo
-  const vehicleWorkOrders = workOrders?.filter(wo => wo.vehicle_id === vehicleId) || [];
+  const { data: workOrders, isLoading } = useQuery({
+    queryKey: ['vehicle-work-orders', vehicleId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('work_orders')
+        .select(`
+          id, folio, fecha_programada, estado, notas, duracion_minutos,
+          tecnico:profiles!tecnico_id(nombre, apellido, email),
+          items:wo_items(nombre, item_tipo)
+        `)
+        .eq('vehicle_id', vehicleId)
+        .order('fecha_programada', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!vehicleId,
+  });
 
   if (isLoading) {
     return (
@@ -39,7 +52,7 @@ export function VehicleServiceHistory({ vehicleId }: VehicleServiceHistoryProps)
     );
   }
 
-  if (vehicleWorkOrders.length === 0) {
+  if (!workOrders || workOrders.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -59,11 +72,11 @@ export function VehicleServiceHistory({ vehicleId }: VehicleServiceHistoryProps)
       <CardHeader>
         <CardTitle>Historial de Servicios</CardTitle>
         <p className="text-sm text-muted-foreground">
-          {vehicleWorkOrders.length} {vehicleWorkOrders.length === 1 ? 'orden de trabajo' : 'órdenes de trabajo'}
+          {workOrders.length} {workOrders.length === 1 ? 'orden de trabajo' : 'órdenes de trabajo'}
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
-        {vehicleWorkOrders.map(wo => (
+        {workOrders.map((wo: any) => (
           <div
             key={wo.id}
             onClick={() => navigate(`/work-orders/${wo.id}`)}
@@ -109,7 +122,7 @@ export function VehicleServiceHistory({ vehicleId }: VehicleServiceHistoryProps)
             {/* Items de servicio */}
             {wo.items && wo.items.length > 0 && (
               <div className="flex flex-wrap gap-1 pt-2">
-                {wo.items.slice(0, 3).map(item => (
+                {wo.items.slice(0, 3).map((item: any) => (
                   <Badge key={item.id} variant="secondary" className="text-xs">
                     {item.nombre}
                   </Badge>
