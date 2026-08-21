@@ -12,6 +12,8 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { SubscriptionPlanSelector } from '@/components/shared/SubscriptionPlanSelector';
 import { format } from 'date-fns';
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +21,35 @@ export default function ProductDetail() {
   const { data: product, isLoading } = useProduct(id!);
   const updateProduct = useUpdateProduct();
   const { data: moves } = useStockMoves({ product_id: id });
+
+  // Stock por ubicación
+  const { data: stockByLocation } = useQuery({
+    queryKey: ['product-stock-by-location', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stock_by_location')
+        .select('*')
+        .eq('product_id', id);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
+  // Números de serie
+  const { data: serials } = useQuery({
+    queryKey: ['product-serials', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_serials')
+        .select('id, serial_number, estado, location_id, updated_at, stock_locations(nombre, tipo)')
+        .eq('product_id', id)
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id && product?.serializable,
+  });
 
 
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
@@ -151,7 +182,32 @@ export default function ProductDetail() {
               <CardTitle>Stock por Ubicación</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Visualización de stock por ubicación próximamente</p>
+              {!stockByLocation || stockByLocation.length === 0 ? (
+                <p className="text-muted-foreground">Sin stock registrado en ninguna ubicación.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ubicación</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead className="text-right">Stock actual</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stockByLocation.map((row: any) => (
+                      <TableRow key={row.location_id}>
+                        <TableCell className="font-medium">{row.location_nombre ?? row.location_id}</TableCell>
+                        <TableCell className="capitalize text-muted-foreground text-sm">{row.location_tipo ?? '—'}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={Number(row.stock_actual) > 0 ? 'default' : 'secondary'}>
+                            {Number(row.stock_actual)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -211,10 +267,68 @@ export default function ProductDetail() {
           <TabsContent value="serials">
             <Card>
               <CardHeader>
-                <CardTitle>Números de Serie</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Números de Serie</CardTitle>
+                  <div className="flex gap-2 text-xs text-muted-foreground">
+                    {(['disponible', 'reservado', 'vendido', 'defectuoso'] as const).map((estado) => {
+                      const count = (serials ?? []).filter((s: any) => s.estado === estado).length;
+                      if (count === 0) return null;
+                      const colors: Record<string, string> = {
+                        disponible: 'bg-green-500/10 text-green-700 border-green-500/30',
+                        reservado: 'bg-blue-500/10 text-blue-700 border-blue-500/30',
+                        vendido: 'bg-muted text-muted-foreground',
+                        defectuoso: 'bg-red-500/10 text-red-700 border-red-500/30',
+                      };
+                      return (
+                        <Badge key={estado} variant="outline" className={colors[estado]}>
+                          {count} {estado}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Gestión de números de serie próximamente</p>
+                {!serials || serials.length === 0 ? (
+                  <p className="text-muted-foreground">No hay números de serie registrados para este producto.</p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Serial</TableHead>
+                        <TableHead>Ubicación</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Estado</TableHead>
+                        <TableHead>Última actualización</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(serials as any[]).map((s) => {
+                        const estadoColors: Record<string, string> = {
+                          disponible: 'bg-green-500/10 text-green-700 border-green-500/30',
+                          reservado: 'bg-blue-500/10 text-blue-700 border-blue-500/30',
+                          vendido: 'bg-muted text-muted-foreground border-border',
+                          defectuoso: 'bg-red-500/10 text-red-700 border-red-500/30',
+                        };
+                        return (
+                          <TableRow key={s.id}>
+                            <TableCell className="font-mono text-sm font-medium">{s.serial_number}</TableCell>
+                            <TableCell>{s.stock_locations?.nombre ?? '—'}</TableCell>
+                            <TableCell className="capitalize text-muted-foreground text-sm">{s.stock_locations?.tipo ?? '—'}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={estadoColors[s.estado] ?? ''}>
+                                {s.estado}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {s.updated_at ? format(new Date(s.updated_at), 'dd/MM/yyyy HH:mm') : '—'}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
