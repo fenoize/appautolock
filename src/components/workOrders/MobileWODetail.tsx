@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -87,6 +88,7 @@ export default function MobileWODetail({ wo }: Props) {
     )
   );
   const [confirmingSerial, setConfirmingSerial] = useState<string | null>(null);
+  const [manualSerials, setManualSerials] = useState<Record<string, string>>({});
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
@@ -260,6 +262,51 @@ export default function MobileWODetail({ wo }: Props) {
       toast.success(`Serial ${serial} confirmado`);
     } catch {
       toast.error('Error al confirmar serial');
+    } finally {
+      setConfirmingSerial(null);
+    }
+  };
+
+  const handleConfirmManualSerial = async (woItemId: string, itemRefId: string | null | undefined) => {
+    const serial = (manualSerials[woItemId] || '').trim().toUpperCase();
+    if (!serial) return;
+    setConfirmingSerial(woItemId);
+    try {
+      // Verificar si el serial ya existe en el sistema
+      const { data: existing } = await supabase
+        .from('product_serials')
+        .select('id')
+        .eq('serial_number', serial)
+        .maybeSingle();
+
+      if (existing) {
+        // Actualizar estado a 'vendido'
+        await supabase
+          .from('product_serials')
+          .update({ estado: 'vendido' })
+          .eq('serial_number', serial);
+      } else if (itemRefId) {
+        // Crear nuevo registro de serial
+        await supabase
+          .from('product_serials')
+          .insert({
+            serial_number: serial,
+            product_id: itemRefId,
+            estado: 'vendido',
+            location_id: techLocationId,
+          });
+      }
+
+      // Vincular serial al wo_item
+      await supabase
+        .from('wo_items')
+        .update({ serial_instalado: serial, serial_verificado: true })
+        .eq('id', woItemId);
+
+      setConfirmedSerials((prev) => ({ ...prev, [woItemId]: serial }));
+      toast.success(`Serial ${serial} registrado correctamente`);
+    } catch {
+      toast.error('Error al registrar serial');
     } finally {
       setConfirmingSerial(null);
     }
@@ -639,6 +686,36 @@ export default function MobileWODetail({ wo }: Props) {
                             >
                               {confirmingSerial === item.id ? 'Confirmando...' : 'Confirmar serial instalado'}
                             </Button>
+                          </div>
+                        )}
+
+                        {/* Entrada manual de serial — siempre disponible si no está confirmado */}
+                        {!confirmed && (
+                          <div className="border-t pt-3 space-y-2">
+                            <p className="text-xs text-muted-foreground">
+                              ¿El serial no está en la lista o lo tienes en mano? Ingrésalo manualmente:
+                            </p>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Ej: ABC123456789"
+                                value={manualSerials[item.id] || ''}
+                                onChange={(e) =>
+                                  setManualSerials((prev) => ({
+                                    ...prev,
+                                    [item.id]: e.target.value.toUpperCase(),
+                                  }))
+                                }
+                                className="h-11 font-mono text-sm flex-1"
+                              />
+                              <Button
+                                variant="outline"
+                                className="shrink-0 h-11"
+                                disabled={!manualSerials[item.id]?.trim() || confirmingSerial === item.id}
+                                onClick={() => handleConfirmManualSerial(item.id, item.ref_id)}
+                              >
+                                {confirmingSerial === item.id ? '...' : 'Registrar'}
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </Card>
