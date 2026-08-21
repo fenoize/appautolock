@@ -22,6 +22,35 @@ export default function ProductDetail() {
   const updateProduct = useUpdateProduct();
   const { data: moves } = useStockMoves({ product_id: id });
 
+  // Stock por ubicación
+  const { data: stockByLocation } = useQuery({
+    queryKey: ['product-stock-by-location', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stock_by_location')
+        .select('*')
+        .eq('product_id', id);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
+  // Números de serie
+  const { data: serials } = useQuery({
+    queryKey: ['product-serials', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('product_serials')
+        .select('id, serial_number, estado, location_id, updated_at, stock_locations(nombre, tipo)')
+        .eq('product_id', id)
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id && product?.serializable,
+  });
+
 
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
   const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
