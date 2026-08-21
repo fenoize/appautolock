@@ -206,6 +206,12 @@ export function WOSubscriptionConfig({
                   onChange={(e) => handleGpsDataChange('imei_gps', e.target.value)}
                   placeholder="Ej: 123456789012345"
                 />
+                {gpsData.imei_gps && imeiPrePoblado && (
+                  <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                    <CheckCircle className="h-3 w-3" />
+                    Serial obtenido del paso Equipos
+                  </p>
+                )}
               </div>
             </div>
 
