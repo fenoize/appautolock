@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { WorkOrder } from '@/types/workOrders';
 import { useCloseWorkOrder } from '@/hooks/useWorkOrders';
