@@ -416,6 +416,64 @@ export default function TechnicianInventory() {
           )}
         </TabsContent>
 
+        <TabsContent value="bodegas" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(bodegaData?.locations ?? []).map((loc: any) => {
+              const items = (bodegaData?.serials ?? []).filter((s: any) => s.location_id === loc.id);
+              const byEstado = {
+                disponible: items.filter((s: any) => s.estado === 'disponible'),
+                reservado: items.filter((s: any) => s.estado === 'reservado'),
+                defectuoso: items.filter((s: any) => s.estado === 'defectuoso'),
+              };
+              return (
+                <Card key={loc.id} className="border-border/70">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">{loc.nombre}</CardTitle>
+                      <Badge variant="secondary">{loc.codigo}</Badge>
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                      <Badge className="bg-green-500/10 text-green-700 border-green-500/30">{byEstado.disponible.length} disponibles</Badge>
+                      {byEstado.reservado.length > 0 && <Badge className="bg-blue-500/10 text-blue-700 border-blue-500/30">{byEstado.reservado.length} reservados</Badge>}
+                      {byEstado.defectuoso.length > 0 && <Badge className="bg-red-500/10 text-red-700 border-red-500/30">{byEstado.defectuoso.length} defectuosos</Badge>}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {items.length === 0 ? (
+                      <div className="rounded-lg border border-dashed py-6 text-center">
+                        <Boxes className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">Sin equipos en bodega</p>
+                      </div>
+                    ) : (
+                      <ul className="divide-y max-h-64 overflow-y-auto">
+                        {items.map((s: any) => (
+                          <li key={s.id} className="flex items-center gap-2 py-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate">{s.products?.nombre ?? '—'}</p>
+                              <p className="text-xs font-mono text-muted-foreground">{s.serial_number}</p>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className={
+                                s.estado === 'disponible' ? 'border-green-500/40 text-green-700' :
+                                s.estado === 'reservado' ? 'border-blue-500/40 text-blue-700' :
+                                s.estado === 'defectuoso' ? 'border-red-500/40 text-red-700' :
+                                'border-border text-muted-foreground'
+                              }
+                            >
+                              {s.estado}
+                            </Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
         <TabsContent value="seriales" className="mt-6 space-y-4">
           <SearchBar value={search} onChange={setSearch} placeholder="Buscar por serie o producto..." />
           <Card>
