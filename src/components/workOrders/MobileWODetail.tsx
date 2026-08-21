@@ -291,7 +291,7 @@ export default function MobileWODetail({ wo }: Props) {
       )}`
     : null;
 
-  const productos = (wo.items ?? []).filter((i) => i.item_tipo === 'producto');
+  
 
   return (
     <div className="min-h-screen bg-background pb-40">
