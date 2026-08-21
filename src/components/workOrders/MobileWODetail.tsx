@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -87,6 +88,7 @@ export default function MobileWODetail({ wo }: Props) {
     )
   );
   const [confirmingSerial, setConfirmingSerial] = useState<string | null>(null);
+  const [manualSerials, setManualSerials] = useState<Record<string, string>>({});
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
@@ -260,6 +262,51 @@ export default function MobileWODetail({ wo }: Props) {
       toast.success(`Serial ${serial} confirmado`);
     } catch {
       toast.error('Error al confirmar serial');
+    } finally {
+      setConfirmingSerial(null);
+    }
+  };
+
+  const handleConfirmManualSerial = async (woItemId: string, itemRefId: string | null | undefined) => {
+    const serial = (manualSerials[woItemId] || '').trim().toUpperCase();
+    if (!serial) return;
+    setConfirmingSerial(woItemId);
+    try {
+      // Verificar si el serial ya existe en el sistema
+      const { data: existing } = await supabase
+        .from('product_serials')
+        .select('id')
+        .eq('serial_number', serial)
+        .maybeSingle();
+
+      if (existing) {
+        // Actualizar estado a 'vendido'
+        await supabase
+          .from('product_serials')
+          .update({ estado: 'vendido' })
+          .eq('serial_number', serial);
+      } else if (itemRefId) {
+        // Crear nuevo registro de serial
+        await supabase
+          .from('product_serials')
+          .insert({
+            serial_number: serial,
+            product_id: itemRefId,
+            estado: 'vendido',
+            location_id: techLocationId,
+          });
+      }
+
+      // Vincular serial al wo_item
+      await supabase
+        .from('wo_items')
+        .update({ serial_instalado: serial, serial_verificado: true })
+        .eq('id', woItemId);
+
+      setConfirmedSerials((prev) => ({ ...prev, [woItemId]: serial }));
+      toast.success(`Serial ${serial} registrado correctamente`);
+    } catch {
+      toast.error('Error al registrar serial');
     } finally {
       setConfirmingSerial(null);
     }
