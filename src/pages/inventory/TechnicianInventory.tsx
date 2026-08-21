@@ -475,7 +475,21 @@ export default function TechnicianInventory() {
         </TabsContent>
 
         <TabsContent value="seriales" className="mt-6 space-y-4">
-          <SearchBar value={search} onChange={setSearch} placeholder="Buscar por serie o producto..." />
+          <div className="flex gap-3 items-center">
+            <SearchBar value={search} onChange={setSearch} placeholder="Buscar por serie o producto..." className="flex-1" />
+            <Select value={estadoFiltro} onValueChange={setEstadoFiltro}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="disponible">Disponible</SelectItem>
+                <SelectItem value="reservado">Reservado</SelectItem>
+                <SelectItem value="vendido">Vendido</SelectItem>
+                <SelectItem value="defectuoso">Defectuoso</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Card>
             <CardContent className="p-0">
               {filteredSerials.length === 0 ? (
