@@ -1010,7 +1010,12 @@ export default function MobileWODetail({ wo }: Props) {
             </div>
             <Button
               onClick={handleClose}
-              disabled={closeWO.isPending}
+              disabled={
+                closeWO.isPending ||
+                !observaciones.trim() ||
+                pendingGPS.length > 0 ||
+                (subscriptionItems.length > 0 && !gpsConfirmado)
+              }
               className="w-full h-14 text-base"
             >
               <CheckCircle2 className="mr-2 h-5 w-5" />
