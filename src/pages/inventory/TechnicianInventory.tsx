@@ -109,19 +109,40 @@ function useTechnicianStock() {
   });
 }
 
-function useCamionetaSerials() {
+function useAllSerials() {
   return useQuery({
     queryKey: ['technician-inventory', 'serials'],
     queryFn: async (): Promise<SerialRow[]> => {
       const { data, error } = await supabase
         .from('product_serials')
         .select(
-          'id, serial_number, product_id, location_id, estado, updated_at, products(nombre, sku), stock_locations!inner(id, codigo, nombre, tipo, profile_id, profiles(nombre, apellido))'
+          'id, serial_number, product_id, location_id, estado, updated_at, products(nombre, sku), stock_locations(id, codigo, nombre, tipo, profile_id, profiles(nombre, apellido))'
         )
-        .eq('stock_locations.tipo', 'camioneta')
         .order('updated_at', { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as SerialRow[];
+    },
+  });
+}
+
+function useBodegaStock() {
+  return useQuery({
+    queryKey: ['technician-inventory', 'bodega-stock'],
+    queryFn: async () => {
+      const { data: locations, error: lErr } = await supabase
+        .from('stock_locations')
+        .select('id, nombre, codigo')
+        .eq('tipo', 'bodega')
+        .eq('activa', true);
+      if (lErr) throw lErr;
+
+      const { data: serials, error: sErr } = await supabase
+        .from('product_serials')
+        .select('id, serial_number, product_id, location_id, estado, products(nombre, sku)')
+        .in('location_id', (locations ?? []).map((l: any) => l.id));
+      if (sErr) throw sErr;
+
+      return { locations: locations ?? [], serials: serials ?? [] };
     },
   });
 }
@@ -161,11 +182,13 @@ export default function TechnicianInventory() {
   const queryClient = useQueryClient();
   const { data: technicians, isLoading: loadingTechs } = useTechnicians();
   const { data: stock } = useTechnicianStock();
-  const { data: serials } = useCamionetaSerials();
+  const { data: serials } = useAllSerials();
+  const { data: bodegaData } = useBodegaStock();
   const { data: bodegas } = useBodegas();
   const { data: products } = useActiveProducts();
 
   const [search, setSearch] = useState('');
+  const [estadoFiltro, setEstadoFiltro] = useState<string>('todos');
   const [assignTech, setAssignTech] = useState<Technician | null>(null);
   const [returnCtx, setReturnCtx] = useState<{
     tech: Technician;
@@ -288,13 +311,16 @@ export default function TechnicianInventory() {
 
   const filteredSerials = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return serials ?? [];
-    return (serials ?? []).filter(
-      (s) =>
+    return (serials ?? []).filter((s) => {
+      const matchSearch =
+        !q ||
         s.serial_number.toLowerCase().includes(q) ||
-        (s.products?.nombre ?? '').toLowerCase().includes(q)
-    );
-  }, [serials, search]);
+        (s.products?.nombre ?? '').toLowerCase().includes(q) ||
+        (s.stock_locations?.nombre ?? '').toLowerCase().includes(q);
+      const matchEstado = estadoFiltro === 'todos' || s.estado === estadoFiltro;
+      return matchSearch && matchEstado;
+    });
+  }, [serials, search, estadoFiltro]);
 
   return (
     <PageContainer>
@@ -303,13 +329,14 @@ export default function TechnicianInventory() {
         description="Controla qué ítems tiene cada técnico en su camioneta"
       />
 
-      <Tabs defaultValue="tecnicos">
-        <TabsList>
-          <TabsTrigger value="tecnicos">Por Técnico</TabsTrigger>
-          <TabsTrigger value="seriales">Por Serial</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="tecnicos">
+          <TabsList>
+            <TabsTrigger value="tecnicos">Por Técnico</TabsTrigger>
+            <TabsTrigger value="bodegas">Bodegas</TabsTrigger>
+            <TabsTrigger value="seriales">Por Serial</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="tecnicos" className="mt-6">
+          <TabsContent value="tecnicos" className="mt-6">
           {loadingTechs ? (
             <p className="text-muted-foreground py-12 text-center">Cargando técnicos...</p>
           ) : !technicians?.length ? (
@@ -389,8 +416,80 @@ export default function TechnicianInventory() {
           )}
         </TabsContent>
 
+        <TabsContent value="bodegas" className="mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(bodegaData?.locations ?? []).map((loc: any) => {
+              const items = (bodegaData?.serials ?? []).filter((s: any) => s.location_id === loc.id);
+              const byEstado = {
+                disponible: items.filter((s: any) => s.estado === 'disponible'),
+                reservado: items.filter((s: any) => s.estado === 'reservado'),
+                defectuoso: items.filter((s: any) => s.estado === 'defectuoso'),
+              };
+              return (
+                <Card key={loc.id} className="border-border/70">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">{loc.nombre}</CardTitle>
+                      <Badge variant="secondary">{loc.codigo}</Badge>
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                      <Badge className="bg-green-500/10 text-green-700 border-green-500/30">{byEstado.disponible.length} disponibles</Badge>
+                      {byEstado.reservado.length > 0 && <Badge className="bg-blue-500/10 text-blue-700 border-blue-500/30">{byEstado.reservado.length} reservados</Badge>}
+                      {byEstado.defectuoso.length > 0 && <Badge className="bg-red-500/10 text-red-700 border-red-500/30">{byEstado.defectuoso.length} defectuosos</Badge>}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {items.length === 0 ? (
+                      <div className="rounded-lg border border-dashed py-6 text-center">
+                        <Boxes className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">Sin equipos en bodega</p>
+                      </div>
+                    ) : (
+                      <ul className="divide-y max-h-64 overflow-y-auto">
+                        {items.map((s: any) => (
+                          <li key={s.id} className="flex items-center gap-2 py-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate">{s.products?.nombre ?? '—'}</p>
+                              <p className="text-xs font-mono text-muted-foreground">{s.serial_number}</p>
+                            </div>
+                            <Badge
+                              variant="outline"
+                              className={
+                                s.estado === 'disponible' ? 'border-green-500/40 text-green-700' :
+                                s.estado === 'reservado' ? 'border-blue-500/40 text-blue-700' :
+                                s.estado === 'defectuoso' ? 'border-red-500/40 text-red-700' :
+                                'border-border text-muted-foreground'
+                              }
+                            >
+                              {s.estado}
+                            </Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
         <TabsContent value="seriales" className="mt-6 space-y-4">
-          <SearchBar value={search} onChange={setSearch} placeholder="Buscar por serie o producto..." />
+          <div className="flex gap-3 items-center">
+            <SearchBar value={search} onChange={setSearch} placeholder="Buscar por serie o producto..." className="flex-1" />
+            <Select value={estadoFiltro} onValueChange={setEstadoFiltro}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="disponible">Disponible</SelectItem>
+                <SelectItem value="reservado">Reservado</SelectItem>
+                <SelectItem value="vendido">Vendido</SelectItem>
+                <SelectItem value="defectuoso">Defectuoso</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Card>
             <CardContent className="p-0">
               {filteredSerials.length === 0 ? (
@@ -408,7 +507,6 @@ export default function TechnicianInventory() {
                       <TableRow>
                         <TableHead>Serial</TableHead>
                         <TableHead>Producto</TableHead>
-                        <TableHead>Técnico actual</TableHead>
                         <TableHead>Ubicación</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead>Última actualización</TableHead>
@@ -420,12 +518,10 @@ export default function TechnicianInventory() {
                           <TableCell className="font-mono text-xs">{s.serial_number}</TableCell>
                           <TableCell>{s.products?.nombre ?? '—'}</TableCell>
                           <TableCell>
-                            {s.stock_locations?.profiles
-                              ? fullName(s.stock_locations.profiles.nombre, s.stock_locations.profiles.apellido)
-                              : 'Sin asignar'}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{s.stock_locations?.codigo ?? '—'}</Badge>
+                            <div>
+                              <p className="text-sm">{s.stock_locations?.nombre ?? '—'}</p>
+                              <p className="text-xs text-muted-foreground capitalize">{s.stock_locations?.tipo ?? ''}</p>
+                            </div>
                           </TableCell>
                           <TableCell className="capitalize">{s.estado ?? '—'}</TableCell>
                           <TableCell className="text-muted-foreground text-sm">
