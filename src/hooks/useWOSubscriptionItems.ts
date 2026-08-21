@@ -162,9 +162,9 @@ export function useCreateSubscriptionFromWOItem() {
 
       return subscriptionId;
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['wo-subscription-items'] });
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wo-subscription-items'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'], exact: false });
       toast({
         title: "Éxito",
         description: "Suscripción creada exitosamente",
