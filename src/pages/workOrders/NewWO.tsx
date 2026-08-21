@@ -16,6 +16,7 @@ import { useClients } from '@/hooks/useClients';
 import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useCreateWorkOrder, useCreateWOItem } from '@/hooks/useWorkOrders';
 import { useBranches } from '@/hooks/useBranches';
+import { useServices } from '@/hooks/useServices';
 import { useClientAddresses } from '@/hooks/useClientAddresses';
 import { CreateClientDialog } from '@/components/quotes/CreateClientDialog';
 import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
@@ -119,6 +120,7 @@ export default function NewWO() {
   const { data: clients } = useClients();
   const { data: vehicles } = useVehiclesByClient(formData.client_id);
   const { data: branches } = useBranches();
+  const { data: services = [] } = useServices();
   const { data: clientAddresses } = useClientAddresses(formData.client_id);
   const { data: checklistTemplates = [] } = useChecklistTemplates();
   const [checklistTemplateId, setChecklistTemplateId] = useState<string>('');
@@ -184,15 +186,39 @@ export default function NewWO() {
     nombre: string;
     precio_unitario: number;
   }) => {
-    const item: WOItemForm = {
+    const toAdd: WOItemForm[] = [{
       item_tipo: newItem.tipo,
       ref_id: newItem.ref_id,
       nombre: newItem.nombre,
       cantidad: 1,
       precio_unitario: newItem.precio_unitario,
-    };
-    setItems([...items, item]);
-    toast.success('Item agregado');
+    }];
+
+    // Si es un servicio, agregar también sus productos como items separados
+    if (newItem.tipo === 'servicio') {
+      const svc = services.find((s: any) => s.id === newItem.ref_id);
+      const svcProducts: any[] = (svc as any)?.services_products || [];
+      for (const sp of svcProducts) {
+        if (sp.product) {
+          toAdd.push({
+            item_tipo: 'producto',
+            ref_id: sp.product_id || sp.product.id,
+            nombre: sp.product.nombre,
+            cantidad: sp.cantidad || 1,
+            precio_unitario: sp.product.precio_venta || 0,
+          });
+        }
+      }
+      if (svcProducts.length > 0) {
+        toast.success(`Servicio agregado con ${svcProducts.length} equipo(s) incluido(s)`);
+      } else {
+        toast.success('Servicio agregado');
+      }
+    } else {
+      toast.success('Item agregado');
+    }
+
+    setItems(prev => [...prev, ...toAdd]);
   };
 
   const updateItemQuantity = (index: number, cantidad: number) => {
