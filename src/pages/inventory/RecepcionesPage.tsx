@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -193,6 +194,7 @@ function NuevaRecepcionDialog({
   const [productId, setProductId] = useState('');
   const [bodegaId, setBodegaId] = useState('');
   const [serialInput, setSerialInput] = useState('');
+  const [sinSerial, setSinSerial] = useState(false);
   const [cantidad, setCantidad] = useState('');
   const [proveedorId, setProveedorId] = useState<string | null>(null);
   const [proveedorNombre, setProveedorNombre] = useState('');
@@ -209,12 +211,21 @@ function NuevaRecepcionDialog({
 
   const cantidadNum = Number(cantidad);
   const canSubmit =
-    !!productId && !!bodegaId && (esSerializable ? seriales.length > 0 : cantidadNum > 0);
+    !!productId &&
+    !!bodegaId &&
+    (esSerializable && !sinSerial ? seriales.length > 0 : cantidadNum > 0);
+
+  const handleSinSerialChange = (v: boolean) => {
+    setSinSerial(v);
+    if (v) setSerialInput('');
+    else setCantidad('');
+  };
 
   const reset = () => {
     setProductId('');
     setBodegaId('');
     setSerialInput('');
+    setSinSerial(false);
     setCantidad('');
     setProveedorId(null);
     setProveedorNombre('');
