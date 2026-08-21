@@ -23,7 +23,8 @@ import {
 } from '@/components/ui/select';
 import { WOStatusBadge } from './WOStatusBadge';
 import { WOTipoBadge } from './WOTipoBadge';
-import { WOSignaturePad } from './WOSignaturePad';
+import { WOSubscriptionConfig } from './WOSubscriptionConfig';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AssignTechnicianDialog } from './AssignTechnicianDialog';
 import {
   ArrowLeft,
@@ -546,7 +547,7 @@ export default function MobileWODetail({ wo }: Props) {
 
             {/* Inspección Externa */}
             <Card className="p-4 space-y-3">
-              <h3 className="font-semibold text-sm flex items-center gap-2">🔍 Inspección Externa</h3>
+              <h3 className="font-semibold text-sm flex items-center gap-2">Inspección Externa</h3>
               <p className="text-xs text-muted-foreground">
                 Fotografía el estado del vehículo por fuera — rayones, abollones, daños preexistentes.
               </p>
@@ -603,7 +604,7 @@ export default function MobileWODetail({ wo }: Props) {
 
             {/* Inspección Interna */}
             <Card className="p-4 space-y-3">
-              <h3 className="font-semibold text-sm flex items-center gap-2">🎛️ Inspección Interna</h3>
+              <h3 className="font-semibold text-sm flex items-center gap-2">Inspección Interna</h3>
               <p className="text-xs text-muted-foreground">
                 Fotografía el panel con el motor encendido — testigos activos, estado del interior.
               </p>
@@ -685,7 +686,7 @@ export default function MobileWODetail({ wo }: Props) {
                         {(wo as any).tipo === 'garantia' && (
                           <Card className="p-4 border-orange-200 bg-orange-50 space-y-3">
                             <p className="text-sm font-medium text-orange-800">
-                              🔄 OT de Garantía — Reemplazo de equipo
+                              OT de Garantía — Reemplazo de equipo
                             </p>
                             <div className="space-y-2">
                               <Label className="text-xs text-orange-700">
@@ -732,7 +733,7 @@ export default function MobileWODetail({ wo }: Props) {
                         ) : matchingSerials.length === 0 ? (
                           <div className="space-y-2">
                             <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
-                              ⚠️ No tienes seriales disponibles para este producto en tu camioneta.
+                              No tienes seriales disponibles para este producto en tu camioneta.
                             </p>
                             <Button
                               variant="outline"
@@ -849,7 +850,7 @@ export default function MobileWODetail({ wo }: Props) {
 
             {/* Fotos post-instalación */}
             <Card className="p-4 space-y-3">
-              <h3 className="font-semibold text-sm">📸 Fotos Post-Instalación</h3>
+              <h3 className="font-semibold text-sm">Fotos Post-Instalación</h3>
               <p className="text-xs text-muted-foreground">
                 Documenta el trabajo finalizado y el estado del vehículo al entregar.
               </p>
