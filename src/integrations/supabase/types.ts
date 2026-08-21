@@ -3290,7 +3290,7 @@ export type Database = {
       create_subscription_from_wo_item: {
         Args: {
           p_fecha_inicio?: string
-          p_numeros_serie: Json
+          p_numeros_serie?: Json
           p_plan_id: string
           p_wo_subscription_item_id: string
         }

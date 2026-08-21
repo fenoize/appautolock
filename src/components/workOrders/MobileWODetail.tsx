@@ -1088,6 +1088,27 @@ export default function MobileWODetail({ wo }: Props) {
                 placeholder="Detalles del trabajo realizado..."
               />
             </div>
+            {/* Mensajes de validación */}
+            <div className="space-y-1">
+              {!observaciones.trim() && (
+                <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  Escribe las observaciones finales para continuar
+                </p>
+              )}
+              {pendingGPS.length > 0 && (
+                <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  Configura {pendingGPS.length === 1 ? 'el GPS pendiente' : `los ${pendingGPS.length} GPS pendientes`} antes de cerrar
+                </p>
+              )}
+              {subscriptionItems.length > 0 && !gpsConfirmado && pendingGPS.length === 0 && (
+                <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  Confirma que el GPS quedó activo antes de cerrar
+                </p>
+              )}
+            </div>
             <Button
               onClick={handleClose}
               disabled={
