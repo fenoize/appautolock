@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import SignaturePad from 'react-signature-canvas';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { WorkOrder } from '@/types/workOrders';
@@ -118,7 +117,9 @@ export default function MobileWODetail({ wo }: Props) {
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [showFirmaModal, setShowFirmaModal] = useState(false);
   const [hasSigned, setHasSigned] = useState(false);
-  const sigPadRef = useRef<any>(null);
+  const firmaCanvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef(false);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
   const [assignOpen, setAssignOpen] = useState(false);
   const [gpsConfirmado, setGpsConfirmado] = useState(false);
