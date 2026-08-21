@@ -49,6 +49,7 @@ export function WOSubscriptionConfig({
   open,
   onOpenChange,
   item,
+  woId,
   woFechaFin,
 }: WOSubscriptionConfigProps) {
   const [planId, setPlanId] = useState<string>('');
@@ -58,6 +59,7 @@ export function WOSubscriptionConfig({
   ]);
   const [fechaInicio, setFechaInicio] = useState(woFechaFin || new Date().toISOString().split('T')[0]);
   const [notas, setNotas] = useState('');
+  const [imeiPrePoblado, setImeiPrePoblado] = useState(false);
   
   // GPS Data
   const [gpsData, setGpsData] = useState<GPSData>({
@@ -73,6 +75,36 @@ export function WOSubscriptionConfig({
 
   const { data: allPlans } = useSubscriptionPlans();
   const createMutation = useCreateSubscriptionFromWOItem();
+
+  // Buscar serial verificado del paso Equipos para pre-poblar IMEI GPS
+  const { data: verifiedSerialItems } = useQuery({
+    queryKey: ['wo-verified-serials', woId, item.ref_id],
+    queryFn: async () => {
+      if (!woId || !item.ref_id) return [];
+      const { data, error } = await supabase
+        .from('wo_items')
+        .select('serial_instalado')
+        .eq('wo_id', woId)
+        .eq('ref_id', item.ref_id)
+        .eq('serial_verificado', true)
+        .not('serial_instalado', 'is', null)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!woId && !!item.ref_id,
+  });
+
+  useEffect(() => {
+    if (verifiedSerialItems && verifiedSerialItems.length > 0 && !gpsData.imei_gps) {
+      const firstSerial = verifiedSerialItems[0].serial_instalado;
+      if (firstSerial) {
+        setGpsData(prev => ({ ...prev, imei_gps: firstSerial }));
+        setImeiPrePoblado(true);
+      }
+    }
+  }, [verifiedSerialItems]);
 
   // Obtener planes disponibles según el producto/servicio
   const tiposDisponibles = item.product?.tipos_suscripcion_disponibles || 
