@@ -527,8 +527,10 @@ export function useApproveQuoteManually() {
       await logQuoteEvent(quoteId, 'aceptada', { notas: 'Aprobada manualmente' });
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['quotes'] });
+      queryClient.invalidateQueries({ queryKey: ['quote', variables.quoteId] });
+      if (data?.id) queryClient.invalidateQueries({ queryKey: ['quote', data.id] });
       toast.success('Cotización aprobada exitosamente');
     },
     onError: (error: any) => {
