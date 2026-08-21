@@ -182,7 +182,8 @@ export default function TechnicianInventory() {
   const queryClient = useQueryClient();
   const { data: technicians, isLoading: loadingTechs } = useTechnicians();
   const { data: stock } = useTechnicianStock();
-  const { data: serials } = useCamionetaSerials();
+  const { data: serials } = useAllSerials();
+  const { data: bodegaData } = useBodegaStock();
   const { data: bodegas } = useBodegas();
   const { data: products } = useActiveProducts();
 
