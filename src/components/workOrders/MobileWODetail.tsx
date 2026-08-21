@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { WOStatusBadge } from './WOStatusBadge';
+import { WOTipoBadge } from './WOTipoBadge';
 import { WOSignaturePad } from './WOSignaturePad';
 import { AssignTechnicianDialog } from './AssignTechnicianDialog';
 import {
@@ -89,6 +90,7 @@ export default function MobileWODetail({ wo }: Props) {
   );
   const [confirmingSerial, setConfirmingSerial] = useState<string | null>(null);
   const [manualSerials, setManualSerials] = useState<Record<string, string>>({});
+  const [serialDefectuoso, setSerialDefectuoso] = useState<Record<string, string>>({});
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
@@ -348,7 +350,10 @@ export default function MobileWODetail({ wo }: Props) {
           <Button variant="ghost" size="sm" onClick={() => navigate('/work-orders')} className="-ml-2">
             <ArrowLeft className="h-4 w-4 mr-1" /> OTs
           </Button>
-          <div className="text-sm font-semibold">{wo.folio}</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold">{wo.folio}</span>
+            <WOTipoBadge tipo={(wo as any).tipo} />
+          </div>
           <WOStatusBadge status={wo.estado} />
         </div>
         <Progress value={progress} className="h-1.5" />

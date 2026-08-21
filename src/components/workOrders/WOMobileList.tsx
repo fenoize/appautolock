@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
+import { WOTipoBadge } from '@/components/workOrders/WOTipoBadge';
 
 interface Props {
   workOrders: any[];
@@ -45,6 +46,7 @@ export function WOMobileList({ workOrders, pendingGpsWoIds, onAssign }: Props) {
                   {wo.folio}
                 </span>
                 <WOStatusBadge status={wo.estado} />
+                <WOTipoBadge tipo={(wo as any).tipo} />
                 {pendingGpsWoIds.has(wo.id) && (
                   <AlertTriangle className="h-3.5 w-3.5 text-orange-500 shrink-0" />
                 )}
