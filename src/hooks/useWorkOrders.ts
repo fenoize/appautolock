@@ -155,15 +155,16 @@ export const useCreateWOItem = () => {
 export const useDeleteWOItem = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async ({ id }: { id: string; wo_id: string }) => {
       const { error } = await supabase
         .from('wo_items')
         .delete()
         .eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['work-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['work-order', variables.wo_id] });
       toast.success('Item eliminado');
     }
   });
