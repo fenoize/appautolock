@@ -1076,12 +1076,19 @@ export default function MobileWODetail({ wo }: Props) {
             </Button>
           </div>
 
-          <div className="flex-1 relative bg-white">
+          <div className="flex-1 relative bg-white" style={{ minHeight: 0 }}>
             <SignaturePad
               ref={sigPadRef}
+              onBegin={() => setHasSigned(true)}
               canvasProps={{
-                className: 'w-full h-full',
-                style: { touchAction: 'none' },
+                style: {
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  touchAction: 'none',
+                },
               }}
               backgroundColor="white"
             />
@@ -1091,19 +1098,22 @@ export default function MobileWODetail({ wo }: Props) {
             <Button
               variant="outline"
               className="flex-1 h-14 text-base"
-              onClick={() => sigPadRef.current?.clear()}
+              onClick={() => {
+                sigPadRef.current?.clear();
+                setHasSigned(false);
+              }}
             >
               Limpiar
             </Button>
             <Button
               className="flex-1 h-14 text-base"
+              disabled={!hasSigned}
               onClick={() => {
-                if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
+                if (sigPadRef.current && hasSigned) {
                   const dataUrl = sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
                   setFirmaData(dataUrl);
+                  setHasSigned(false);
                   setShowFirmaModal(false);
-                } else {
-                  toast.error('Dibuja la firma antes de aceptar');
                 }
               }}
             >
