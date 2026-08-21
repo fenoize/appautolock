@@ -507,7 +507,6 @@ export default function TechnicianInventory() {
                       <TableRow>
                         <TableHead>Serial</TableHead>
                         <TableHead>Producto</TableHead>
-                        <TableHead>Técnico actual</TableHead>
                         <TableHead>Ubicación</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead>Última actualización</TableHead>
@@ -519,12 +518,10 @@ export default function TechnicianInventory() {
                           <TableCell className="font-mono text-xs">{s.serial_number}</TableCell>
                           <TableCell>{s.products?.nombre ?? '—'}</TableCell>
                           <TableCell>
-                            {s.stock_locations?.profiles
-                              ? fullName(s.stock_locations.profiles.nombre, s.stock_locations.profiles.apellido)
-                              : 'Sin asignar'}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{s.stock_locations?.codigo ?? '—'}</Badge>
+                            <div>
+                              <p className="text-sm">{s.stock_locations?.nombre ?? '—'}</p>
+                              <p className="text-xs text-muted-foreground capitalize">{s.stock_locations?.tipo ?? ''}</p>
+                            </div>
                           </TableCell>
                           <TableCell className="capitalize">{s.estado ?? '—'}</TableCell>
                           <TableCell className="text-muted-foreground text-sm">
