@@ -104,6 +104,33 @@ export default function MobileWODetail({ wo }: Props) {
     }
   }, [step, wo.id]);
 
+  useEffect(() => {
+    if (step !== 'equipos') return;
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: loc } = await supabase
+        .from('stock_locations')
+        .select('id')
+        .eq('tipo', 'camioneta')
+        .eq('profile_id', user.id)
+        .maybeSingle();
+
+      if (!loc) return;
+      setTechLocationId(loc.id);
+
+      const { data: serials } = await supabase
+        .from('product_serials')
+        .select('id, serial_number, product_id')
+        .eq('location_id', loc.id)
+        .eq('estado', 'reservado');
+
+      setTechSerials(serials || []);
+    };
+    load();
+  }, [step]);
+
   const stepIdx = STEPS.indexOf(step);
   const progress = ((stepIdx + 1) / STEPS.length) * 100;
 
