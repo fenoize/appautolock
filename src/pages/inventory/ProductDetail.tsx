@@ -182,7 +182,32 @@ export default function ProductDetail() {
               <CardTitle>Stock por Ubicación</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Visualización de stock por ubicación próximamente</p>
+              {!stockByLocation || stockByLocation.length === 0 ? (
+                <p className="text-muted-foreground">Sin stock registrado en ninguna ubicación.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ubicación</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead className="text-right">Stock actual</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stockByLocation.map((row: any) => (
+                      <TableRow key={row.location_id}>
+                        <TableCell className="font-medium">{row.location_nombre ?? row.location_id}</TableCell>
+                        <TableCell className="capitalize text-muted-foreground text-sm">{row.location_tipo ?? '—'}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={Number(row.stock_actual) > 0 ? 'default' : 'secondary'}>
+                            {Number(row.stock_actual)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
