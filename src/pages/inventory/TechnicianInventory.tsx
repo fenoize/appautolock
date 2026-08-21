@@ -534,6 +534,14 @@ export default function TechnicianInventory() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="recepcion" className="mt-6">
+          <RecepcionTab
+            products={products ?? []}
+            bodegas={bodegas ?? []}
+            onSuccess={invalidate}
+          />
+        </TabsContent>
       </Tabs>
 
       <AssignDialog
