@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { PackagePlus } from 'lucide-react';
+import { ProveedorCombobox } from '@/components/proveedores/ProveedorCombobox';
 
 interface ProductOption {
   id: string;
@@ -193,7 +194,8 @@ function NuevaRecepcionDialog({
   const [bodegaId, setBodegaId] = useState('');
   const [serialInput, setSerialInput] = useState('');
   const [cantidad, setCantidad] = useState('');
-  const [proveedor, setProveedor] = useState('');
+  const [proveedorId, setProveedorId] = useState<string | null>(null);
+  const [proveedorNombre, setProveedorNombre] = useState('');
   const [notas, setNotas] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -214,7 +216,8 @@ function NuevaRecepcionDialog({
     setBodegaId('');
     setSerialInput('');
     setCantidad('');
-    setProveedor('');
+    setProveedorId(null);
+    setProveedorNombre('');
     setNotas('');
   };
 
@@ -229,7 +232,8 @@ function NuevaRecepcionDialog({
         product_id: productId,
         cantidad: total,
         to_location_id: bodegaId,
-        referencia: proveedor ? `Compra: ${proveedor}` : 'Recepción de compra',
+        proveedor_id: proveedorId,
+        referencia: proveedorNombre ? `Compra: ${proveedorNombre}` : 'Recepción de compra',
         notas: notas || null,
         fecha: new Date().toISOString(),
       } as any);
@@ -358,10 +362,13 @@ function NuevaRecepcionDialog({
 
           <div className="space-y-2">
             <Label>Proveedor (opcional)</Label>
-            <Input
-              value={proveedor}
-              onChange={(e) => setProveedor(e.target.value)}
-              placeholder="Ej: Distribuidora XYZ"
+            <ProveedorCombobox
+              value={proveedorId}
+              onChange={(id, nombre) => {
+                setProveedorId(id);
+                setProveedorNombre(nombre);
+              }}
+              placeholder="Buscar o crear proveedor"
             />
           </div>
 
