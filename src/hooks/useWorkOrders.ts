@@ -20,10 +20,7 @@ export const useWorkOrders = (filters?: WOFilters) => {
           vehicle:vehicles(*),
           tecnico:profiles(*),
           branch:branches(*),
-          items:wo_items(
-            *,
-            product:products(id, nombre, sku, serializable)
-          ),
+          items:wo_items(*),
           substitutions:wo_substitutions(
             *,
             producto_original:products!wo_substitutions_producto_original_id_fkey(*),
@@ -68,10 +65,7 @@ export const useWorkOrder = (id: string) => {
           vehicle:vehicles(*),
           tecnico:profiles(*),
           branch:branches(*),
-          items:wo_items(
-            *,
-            product:products(id, nombre, sku, serializable)
-          ),
+          items:wo_items(*),
           substitutions:wo_substitutions(
             *,
             producto_original:products!wo_substitutions_producto_original_id_fkey(*),
