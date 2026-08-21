@@ -440,16 +440,16 @@ export default function TechnicianInventory() {
             <Card>
               <CardContent className="py-12 text-center">
                 <HardHat className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-                <p className="font-medium">Sin técnicos con camioneta</p>
+                <p className="font-medium">Sin técnicos registrados</p>
                 <p className="text-sm text-muted-foreground">
-                  Asocia una ubicación de tipo camioneta a cada técnico para gestionar su inventario.
+                  Crea usuarios con rol técnico para gestionar su inventario.
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {technicians.map((t) => {
-                const items = itemsByLocation.get(t.location_id) ?? [];
+                const items = t.location_id ? itemsByLocation.get(t.location_id) ?? [] : [];
                 return (
                   <Card key={t.id} className="border-border/70">
                     <CardHeader className="pb-3">
@@ -460,8 +460,36 @@ export default function TechnicianInventory() {
                         <div className="min-w-0 flex-1">
                           <CardTitle className="text-base truncate">{fullName(t.nombre, t.apellido)}</CardTitle>
                           <p className="text-xs text-muted-foreground truncate">{t.email}</p>
+                          {t.camioneta ? (
+                            <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                              <Truck className="h-3 w-3" />
+                              <span className="truncate">{t.camioneta.nombre}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                onClick={() => setCamionetaDialog({ tecnico: t, camioneta: t.camioneta })}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="mt-1 flex items-center gap-2">
+                              <Badge variant="outline" className="border-amber-500 text-amber-600">
+                                Sin camioneta
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-xs"
+                                onClick={() => setCamionetaDialog({ tecnico: t, camioneta: null })}
+                              >
+                                + Asignar
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        <Badge variant="secondary">{t.codigo}</Badge>
+                        {t.codigo && <Badge variant="secondary">{t.codigo}</Badge>}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -501,9 +529,9 @@ export default function TechnicianInventory() {
                           ))}
                         </ul>
                       )}
-                      <Button className="w-full" onClick={() => setAssignTech(t)}>
+                      <Button className="w-full" onClick={() => setAssignTech(t)} disabled={!t.location_id}>
                         <PackagePlus className="mr-2 h-4 w-4" />
-                        Asignar ítem
+                        {t.location_id ? 'Asignar ítem' : 'Requiere camioneta'}
                       </Button>
                     </CardContent>
                   </Card>
@@ -511,6 +539,16 @@ export default function TechnicianInventory() {
               })}
             </div>
           )}
+
+          {camionetaDialog && (
+            <CamionetaDialog
+              tecnico={camionetaDialog.tecnico}
+              camioneta={camionetaDialog.camioneta}
+              open={!!camionetaDialog}
+              onOpenChange={(v) => !v && setCamionetaDialog(null)}
+            />
+          )}
+
         </TabsContent>
 
         <TabsContent value="bodegas" className="mt-6">
