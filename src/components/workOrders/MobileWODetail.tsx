@@ -117,6 +117,7 @@ export default function MobileWODetail({ wo }: Props) {
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [showFirmaModal, setShowFirmaModal] = useState(false);
+  const [hasSigned, setHasSigned] = useState(false);
   const sigPadRef = useRef<any>(null);
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
   const [assignOpen, setAssignOpen] = useState(false);
