@@ -16,7 +16,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { HardHat, PackagePlus, Undo2, Boxes, Barcode, Pencil, Truck } from 'lucide-react';
+import { HardHat, PackagePlus, Undo2, Boxes, Barcode, Pencil, Truck, ChevronDown, Search, Hash } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 
 interface Technician {
