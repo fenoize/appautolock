@@ -157,6 +157,7 @@ const App = () => (
             <Route path="audit" element={<AuditSettings />} />
             <Route path="checklist-templates" element={<ChecklistTemplatesSettings />} />
             <Route path="sistema" element={<SistemaSettings />} />
+          </Route>
           
           <Route path="*" element={<NotFound />} />
         </Routes>
