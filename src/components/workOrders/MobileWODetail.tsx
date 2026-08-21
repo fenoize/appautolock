@@ -1057,6 +1057,62 @@ export default function MobileWODetail({ wo }: Props) {
           branchId={wo.branch_id}
         />
       )}
+
+      {selectedSubscriptionItem && (
+        <WOSubscriptionConfig
+          open={!!selectedSubscriptionItem}
+          onOpenChange={(open) => !open && setSelectedSubscriptionItem(null)}
+          item={selectedSubscriptionItem}
+          woId={wo.id}
+        />
+      )}
+
+      {/* Modal de firma fullscreen */}
+      <Dialog open={showFirmaModal} onOpenChange={setShowFirmaModal}>
+        <DialogContent className="w-screen h-screen max-w-none max-h-none m-0 p-0 rounded-none flex flex-col">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="font-semibold text-lg">Firma aquí</h2>
+            <Button variant="ghost" size="sm" onClick={() => setShowFirmaModal(false)}>
+              Cancelar
+            </Button>
+          </div>
+
+          <div className="flex-1 relative bg-white">
+            <SignaturePad
+              ref={sigPadRef}
+              canvasProps={{
+                className: 'w-full h-full',
+                style: { touchAction: 'none' },
+              }}
+              backgroundColor="white"
+            />
+          </div>
+
+          <div className="flex gap-3 p-4 border-t">
+            <Button
+              variant="outline"
+              className="flex-1 h-14 text-base"
+              onClick={() => sigPadRef.current?.clear()}
+            >
+              Limpiar
+            </Button>
+            <Button
+              className="flex-1 h-14 text-base"
+              onClick={() => {
+                if (sigPadRef.current && !sigPadRef.current.isEmpty()) {
+                  const dataUrl = sigPadRef.current.getTrimmedCanvas().toDataURL('image/png');
+                  setFirmaData(dataUrl);
+                  setShowFirmaModal(false);
+                } else {
+                  toast.error('Dibuja la firma antes de aceptar');
+                }
+              }}
+            >
+              Aceptar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
