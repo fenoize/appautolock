@@ -62,6 +62,156 @@ const initials = (nombre: string, apellido?: string | null) =>
 
 const fullName = (nombre: string, apellido?: string | null) => `${nombre} ${apellido ?? ''}`.trim();
 
+interface SerialItem {
+  id: string;
+  serial_number: string;
+  estado: string;
+}
+
+interface ProductGroupData {
+  product_id: string;
+  nombre: string;
+  qty: number;
+  serials: SerialItem[];
+}
+
+function ProductGroup({
+  group,
+  onReturn,
+  onAssignSerial,
+}: {
+  group: ProductGroupData;
+  onReturn: (serial: SerialItem) => void;
+  onAssignSerial: (serial: SerialItem) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const hasSinSerial = group.serials.some((s) => s.estado === 'sin_serial');
+
+  return (
+    <div>
+      <button
+        type="button"
+        className="w-full flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="flex items-center gap-2 text-sm font-medium truncate">
+          {hasSinSerial ? (
+            <Badge variant="outline" className="border-amber-500 text-amber-600 text-[10px] px-1.5">
+              Sin serie
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="text-xs px-1.5">
+              {group.qty}
+            </Badge>
+          )}
+          <span className="truncate">{group.nombre}</span>
+        </span>
+        <ChevronDown
+          className={cn('h-4 w-4 text-muted-foreground shrink-0 transition-transform', open && 'rotate-180')}
+        />
+      </button>
+
+      {open && (
+        <div className="pb-2 px-4 space-y-0.5">
+          {group.serials.map((s) => (
+            <div key={s.id} className="flex items-center justify-between gap-2 py-1">
+              {s.estado === 'sin_serial' ? (
+                <span className="text-xs text-muted-foreground italic">Sin serial registrado</span>
+              ) : (
+                <span className="text-xs font-mono text-muted-foreground truncate">{s.serial_number}</span>
+              )}
+              <div className="flex gap-1 shrink-0">
+                {s.estado === 'sin_serial' && (
+                  <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => onAssignSerial(s)}>
+                    <Hash className="mr-1 h-3 w-3" /> Asignar
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => onReturn(s)}>
+                  <Undo2 className="mr-1 h-3 w-3" /> Devolver
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AsignarSerialTecnicoDialog({
+  serialEditing,
+  onClose,
+}: {
+  serialEditing: { id: string; placeholder: string } | null;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [serial, setSerial] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleConfirm = async () => {
+    const nuevoSerial = serial.trim().toUpperCase();
+    if (!nuevoSerial || !serialEditing) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('product_serials')
+        .update({ serial_number: nuevoSerial, estado: 'disponible' } as any)
+        .eq('id', serialEditing.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['technician-inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['bodegas-page'] });
+      toast({ title: 'Serial asignado', description: nuevoSerial });
+      setSerial('');
+      onClose();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={!!serialEditing}
+      onOpenChange={(v) => {
+        if (!v) {
+          setSerial('');
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Asignar serial real</DialogTitle>
+          <DialogDescription>
+            Reemplaza el registro provisorio {serialEditing?.placeholder} por el número de serie real.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label>Número de serie *</Label>
+          <Input
+            value={serial}
+            onChange={(e) => setSerial(e.target.value)}
+            placeholder="SN-000123"
+            className="font-mono"
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirm} disabled={!serial.trim() || saving}>
+            {saving ? 'Guardando...' : 'Confirmar'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+
 function useTechnicianProfiles() {
   return useQuery({
     queryKey: ['technician-inventory', 'techs'],
