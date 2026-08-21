@@ -311,13 +311,16 @@ export default function TechnicianInventory() {
 
   const filteredSerials = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return serials ?? [];
-    return (serials ?? []).filter(
-      (s) =>
+    return (serials ?? []).filter((s) => {
+      const matchSearch =
+        !q ||
         s.serial_number.toLowerCase().includes(q) ||
-        (s.products?.nombre ?? '').toLowerCase().includes(q)
-    );
-  }, [serials, search]);
+        (s.products?.nombre ?? '').toLowerCase().includes(q) ||
+        (s.stock_locations?.nombre ?? '').toLowerCase().includes(q);
+      const matchEstado = estadoFiltro === 'todos' || s.estado === estadoFiltro;
+      return matchSearch && matchEstado;
+    });
+  }, [serials, search, estadoFiltro]);
 
   return (
     <PageContainer>
