@@ -288,7 +288,9 @@ export default function TechnicianInventory() {
   const { data: products } = useActiveProducts();
 
   const [search, setSearch] = useState('');
+  const [camionetaDialog, setCamionetaDialog] = useState<{ tecnico: any; camioneta: any | null } | null>(null);
   const [estadoFiltro, setEstadoFiltro] = useState<string>('todos');
+
   const [assignTech, setAssignTech] = useState<Technician | null>(null);
   const [returnCtx, setReturnCtx] = useState<{
     tech: Technician;
