@@ -53,7 +53,7 @@ import BackupsSettings from "./pages/settings/BackupsSettings";
 import AuditSettings from "./pages/settings/AuditSettings";
 import ChecklistTemplatesSettings from "./pages/settings/ChecklistTemplatesSettings";
 import SistemaSettings from "./pages/settings/SistemaSettings";
-import UserDetail from "./pages/admin/UserDetail";
+import UsersList from "./pages/admin/UsersList";
 import InviteUser from "./pages/admin/InviteUser";
 import UserProfile from "./pages/settings/UserProfile";
 import QuotesList from "./pages/quotes/QuotesList";
