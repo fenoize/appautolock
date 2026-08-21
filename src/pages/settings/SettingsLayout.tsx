@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from "react-router-dom";
-import { Settings, Building2, Hash, Bell, FileText, Plug, Database, FileBarChart, ListChecks } from "lucide-react";
+import { Settings, Building2, Hash, Bell, FileText, Plug, Database, FileBarChart, ListChecks, Monitor } from "lucide-react";
 
 const navigation = [
   { name: 'General', href: '/settings', icon: Settings, end: true },
