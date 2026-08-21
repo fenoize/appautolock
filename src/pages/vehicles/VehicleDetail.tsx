@@ -1,15 +1,46 @@
+import { useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 import { useVehicle } from '@/hooks/useVehicles';
 import { VehicleServiceHistory } from '@/components/vehicles/VehicleServiceHistory';
 import { VehicleProductCompatibility } from '@/components/vehicles/VehicleProductCompatibility';
+import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { FileText } from 'lucide-react';
 
 export default function VehicleDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: vehicle, isLoading } = useVehicle(id!);
+
+  const { data: installedDevices } = useQuery({
+    queryKey: ['vehicle-installed-devices', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('wo_items')
+        .select(`
+          id,
+          nombre,
+          serial_instalado,
+          serial_verificado,
+          work_orders!inner(vehicle_id, folio, fecha_programada, estado),
+          products(nombre, sku)
+        `)
+        .eq('work_orders.vehicle_id', id)
+        .eq('serial_verificado', true)
+        .not('serial_instalado', 'is', null)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!id,
+  });
 
   if (isLoading) {
     return (
@@ -66,7 +97,7 @@ export default function VehicleDetail() {
             {vehicle.clients && (
               <div className="p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">Propietario</p>
-                <p 
+                <p
                   className="font-semibold text-lg cursor-pointer hover:text-primary"
                   onClick={() => navigate(`/clients/${vehicle.client_id}`)}
                 >
@@ -133,13 +164,95 @@ export default function VehicleDetail() {
           </CardContent>
         </Card>
 
-        {/* Historial de Servicios */}
-        <VehicleServiceHistory vehicleId={id!} />
+        <Tabs defaultValue="services" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="services">Historial de Servicios</TabsTrigger>
+            <TabsTrigger value="devices">
+              Dispositivos Instalados
+              {installedDevices && installedDevices.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {installedDevices.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="compatibility">Compatibilidad</TabsTrigger>
+          </TabsList>
 
-        {/* Compatibilidad con productos GPS */}
-        <VehicleProductCompatibility
-          vehicle={{ marca: vehicle.marca, modelo: vehicle.modelo, anio: vehicle.anio }}
-        />
+          <TabsContent value="services" className="mt-4">
+            <VehicleServiceHistory vehicleId={id!} />
+          </TabsContent>
+
+          <TabsContent value="devices" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Dispositivos Instalados</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {installedDevices && installedDevices.length > 0
+                    ? `${installedDevices.length} dispositivo${installedDevices.length === 1 ? '' : 's'} instalado${installedDevices.length === 1 ? '' : 's'}`
+                    : 'Equipos y productos instalados en este vehículo'}
+                </p>
+              </CardHeader>
+              <CardContent>
+                {!installedDevices || installedDevices.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    No hay dispositivos instalados en este vehículo
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {installedDevices.map((device: any) => {
+                      const wo = device.work_orders as any;
+                      const product = device.products as any;
+                      return (
+                        <div
+                          key={device.id}
+                          onClick={() => navigate(`/work-orders/${wo?.id}`)}
+                          className="p-4 border border-border rounded-lg hover:bg-accent/50 cursor-pointer transition-colors space-y-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-semibold text-foreground">
+                                {device.nombre || product?.nombre || 'Dispositivo'}
+                              </span>
+                            </div>
+                            {wo?.estado && <WOStatusBadge status={wo.estado} />}
+                          </div>
+
+                          <div className="flex items-center gap-2 text-sm">
+                            <Badge variant="outline" className="font-mono">
+                              {device.serial_instalado}
+                            </Badge>
+                            {product?.sku && (
+                              <span className="text-muted-foreground">SKU: {product.sku}</span>
+                            )}
+                          </div>
+
+                          {wo?.folio && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>OT de origen: {wo.folio}</span>
+                            </div>
+                          )}
+
+                          {wo?.fecha_programada && (
+                            <div className="text-sm text-muted-foreground">
+                              {format(new Date(wo.fecha_programada), "d 'de' MMMM 'de' yyyy", { locale: es })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="compatibility" className="mt-4">
+            <VehicleProductCompatibility
+              vehicle={{ marca: vehicle.marca, modelo: vehicle.modelo, anio: vehicle.anio }}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
