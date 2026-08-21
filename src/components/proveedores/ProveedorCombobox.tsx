@@ -24,6 +24,7 @@ export interface ProveedorComboboxProps {
 interface ProveedorOption {
   id: string;
   razon_social: string;
+  nombre_fantasia: string | null;
   rut: string | null;
 }
 
@@ -33,7 +34,7 @@ export function useProveedoresActivos() {
     queryFn: async (): Promise<ProveedorOption[]> => {
       const { data, error } = await supabase
         .from('proveedores')
-        .select('id, razon_social, rut')
+        .select('id, razon_social, nombre_fantasia, rut')
         .eq('activo', true)
         .order('razon_social');
       if (error) throw error;
@@ -41,6 +42,8 @@ export function useProveedoresActivos() {
     },
   });
 }
+
+const displayName = (p: ProveedorOption) => p.nombre_fantasia ?? p.razon_social;
 
 export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona proveedor' }: ProveedorComboboxProps) {
   const [open, setOpen] = useState(false);
@@ -53,9 +56,15 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
   const selected = list.find((p) => p.id === value);
   const term = search.trim();
   const filtered = term
-    ? list.filter((p) => p.razon_social.toLowerCase().includes(term.toLowerCase()))
+    ? list.filter(
+        (p) =>
+          p.razon_social.toLowerCase().includes(term.toLowerCase()) ||
+          (p.nombre_fantasia ?? '').toLowerCase().includes(term.toLowerCase())
+      )
     : list;
-  const exactMatch = list.some((p) => p.razon_social.toLowerCase() === term.toLowerCase());
+  const exactMatch = list.some(
+    (p) => displayName(p).toLowerCase() === term.toLowerCase()
+  );
 
   const handleCreate = async () => {
     if (!term || creating) return;
@@ -64,14 +73,14 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
       const { data, error } = await supabase
         .from('proveedores')
         .insert({ razon_social: term } as any)
-        .select('id, razon_social, rut')
+        .select('id, razon_social, nombre_fantasia, rut')
         .single();
       if (error) throw error;
       await queryClient.invalidateQueries({ queryKey: ['proveedores'] });
-      onChange(data.id, data.razon_social);
+      onChange(data.id, displayName(data as ProveedorOption));
       setSearch('');
       setOpen(false);
-      toast({ title: 'Proveedor creado', description: data.razon_social });
+      toast({ title: 'Proveedor creado', description: displayName(data as ProveedorOption) });
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
     } finally {
@@ -90,7 +99,7 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
             className="w-full justify-between font-normal"
           >
             <span className={cn(!selected && 'text-muted-foreground')}>
-              {selected ? selected.razon_social : placeholder}
+              {selected ? displayName(selected) : placeholder}
             </span>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -111,7 +120,7 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
                       key={p.id}
                       value={p.id}
                       onSelect={() => {
-                        onChange(p.id, p.razon_social);
+                        onChange(p.id, displayName(p));
                         setSearch('');
                         setOpen(false);
                       }}
@@ -119,7 +128,7 @@ export function ProveedorCombobox({ value, onChange, placeholder = 'Selecciona p
                       <Check
                         className={cn('mr-2 h-4 w-4', value === p.id ? 'opacity-100' : 'opacity-0')}
                       />
-                      <span className="flex-1">{p.razon_social}</span>
+                      <span className="flex-1">{displayName(p)}</span>
                       {p.rut && <span className="text-xs text-muted-foreground">{p.rut}</span>}
                     </CommandItem>
                   ))}

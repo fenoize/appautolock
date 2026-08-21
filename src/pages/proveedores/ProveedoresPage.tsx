@@ -145,8 +145,7 @@ export default function ProveedoresPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Razón Social</TableHead>
-                    <TableHead>Nombre fantasía</TableHead>
+                    <TableHead>Proveedor</TableHead>
                     <TableHead>RUT</TableHead>
                     <TableHead>Contacto</TableHead>
                     <TableHead>Email</TableHead>
@@ -166,8 +165,12 @@ export default function ProveedoresPage() {
                         className="cursor-pointer"
                         onClick={() => setHistorialFor(p)}
                       >
-                        <TableCell className="font-medium">{p.razon_social}</TableCell>
-                        <TableCell>{p.nombre_fantasia ?? '—'}</TableCell>
+                        <TableCell className="font-medium">
+                          {p.nombre_fantasia ?? p.razon_social}
+                          {p.nombre_fantasia && (
+                            <div className="text-xs text-muted-foreground">{p.razon_social}</div>
+                          )}
+                        </TableCell>
                         <TableCell className="font-mono text-xs">{p.rut ?? '—'}</TableCell>
                         <TableCell>{p.contacto ?? '—'}</TableCell>
                         <TableCell className="text-sm">{p.email ?? '—'}</TableCell>
@@ -433,7 +436,7 @@ function HistorialDialog({ proveedor, onClose }: { proveedor: Proveedor | null; 
     <Dialog open={!!proveedor} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Historial de compras — {proveedor?.razon_social}</DialogTitle>
+          <DialogTitle>Historial de compras — {proveedor?.nombre_fantasia ?? proveedor?.razon_social}</DialogTitle>
           <DialogDescription>Recepciones de stock registradas para este proveedor.</DialogDescription>
         </DialogHeader>
 
