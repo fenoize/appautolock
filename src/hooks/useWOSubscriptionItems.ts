@@ -151,7 +151,7 @@ export function useCreateSubscriptionFromWOItem() {
         if (Object.keys(updateFields).length > 0) {
           const { error: updateError } = await supabase
             .from('subscriptions')
-            .update(updateFields)
+            .update(updateFields as any)
             .eq('id', subscriptionId);
 
           if (updateError) {
