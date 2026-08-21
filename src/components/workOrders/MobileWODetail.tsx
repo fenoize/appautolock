@@ -11,6 +11,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { WOStatusBadge } from './WOStatusBadge';
 import { WOSignaturePad } from './WOSignaturePad';
 import { AssignTechnicianDialog } from './AssignTechnicianDialog';
