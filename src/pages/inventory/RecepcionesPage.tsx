@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -193,6 +194,7 @@ function NuevaRecepcionDialog({
   const [productId, setProductId] = useState('');
   const [bodegaId, setBodegaId] = useState('');
   const [serialInput, setSerialInput] = useState('');
+  const [sinSerial, setSinSerial] = useState(false);
   const [cantidad, setCantidad] = useState('');
   const [proveedorId, setProveedorId] = useState<string | null>(null);
   const [proveedorNombre, setProveedorNombre] = useState('');
@@ -209,12 +211,21 @@ function NuevaRecepcionDialog({
 
   const cantidadNum = Number(cantidad);
   const canSubmit =
-    !!productId && !!bodegaId && (esSerializable ? seriales.length > 0 : cantidadNum > 0);
+    !!productId &&
+    !!bodegaId &&
+    (esSerializable && !sinSerial ? seriales.length > 0 : cantidadNum > 0);
+
+  const handleSinSerialChange = (v: boolean) => {
+    setSinSerial(v);
+    if (v) setSerialInput('');
+    else setCantidad('');
+  };
 
   const reset = () => {
     setProductId('');
     setBodegaId('');
     setSerialInput('');
+    setSinSerial(false);
     setCantidad('');
     setProveedorId(null);
     setProveedorNombre('');
@@ -225,7 +236,7 @@ function NuevaRecepcionDialog({
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      const total = esSerializable ? seriales.length : cantidadNum;
+      const total = esSerializable && !sinSerial ? seriales.length : cantidadNum;
 
       const { error: moveErr } = await supabase.from('stock_moves').insert({
         tipo: 'compra',
@@ -239,7 +250,20 @@ function NuevaRecepcionDialog({
       } as any);
       if (moveErr) throw moveErr;
 
-      if (esSerializable) {
+      if (esSerializable && sinSerial) {
+        const fecha = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const placeholders = Array.from({ length: cantidadNum }, (_, i) => ({
+          serial_number: `PEND-${fecha}-${String(i + 1).padStart(3, '0')}-${Math.random()
+            .toString(36)
+            .slice(2, 6)
+            .toUpperCase()}`,
+          product_id: productId,
+          location_id: bodegaId,
+          estado: 'sin_serial',
+        }));
+        const { error: insErr } = await supabase.from('product_serials').insert(placeholders as any);
+        if (insErr) throw insErr;
+      } else if (esSerializable) {
         const { data: existing } = await supabase
           .from('product_serials')
           .select('serial_number')
@@ -325,7 +349,21 @@ function NuevaRecepcionDialog({
             </Select>
           </div>
 
-          {esSerializable ? (
+          {esSerializable && (
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <Switch id="sin-serial" checked={sinSerial} onCheckedChange={handleSinSerialChange} />
+              <div>
+                <Label htmlFor="sin-serial" className="cursor-pointer">
+                  Recibir sin serial
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Para cajas cerradas. El serial real se puede actualizar después desde Bodegas.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {esSerializable && !sinSerial ? (
             <div className="space-y-2">
               <Label>
                 Números de serie *
@@ -354,7 +392,7 @@ function NuevaRecepcionDialog({
                 min={1}
                 value={cantidad}
                 onChange={(e) => setCantidad(e.target.value)}
-                placeholder="Ej: 25"
+                placeholder={sinSerial ? 'Ej: 4' : 'Ej: 25'}
                 disabled={!productId}
               />
             </div>

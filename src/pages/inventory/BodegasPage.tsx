@@ -1,13 +1,24 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ChevronDown, ChevronRight, Warehouse } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { ChevronDown, ChevronRight, Hash, Warehouse } from 'lucide-react';
 
 interface Bodega {
   id: string;
@@ -16,12 +27,16 @@ interface Bodega {
 }
 
 interface ProductRow {
+  key: string;
   product_id: string;
   nombre: string;
   sku: string;
   disponible: number;
   reservado: number;
   total: number;
+  sinSerial?: boolean;
+  serialId?: string;
+  serialNumber?: string;
 }
 
 function useBodegasStock() {
@@ -43,7 +58,7 @@ function useBodegasStock() {
         (supabase as any).from('stock_by_location').select('*').in('location_id', ids),
         supabase
           .from('product_serials')
-          .select('id, product_id, location_id, estado, products(nombre, sku)')
+          .select('id, serial_number, product_id, location_id, estado, products(nombre, sku)')
           .in('location_id', ids),
       ]);
       if (vErr) throw vErr;
@@ -57,7 +72,7 @@ function useBodegasStock() {
       const ensure = (locationId: string, product_id: string, nombre: string, sku: string) => {
         const b = bucket(locationId);
         if (!b.has(product_id)) {
-          b.set(product_id, { product_id, nombre, sku, disponible: 0, reservado: 0, total: 0 });
+          b.set(product_id, { key: product_id, product_id, nombre, sku, disponible: 0, reservado: 0, total: 0 });
         }
         return b.get(product_id)!;
       };
@@ -74,6 +89,22 @@ function useBodegasStock() {
 
       ((serials ?? []) as any[]).forEach((s) => {
         if (!s.location_id) return;
+        if (s.estado === 'sin_serial') {
+          const key = `sinserial:${s.id}`;
+          bucket(s.location_id).set(key, {
+            key,
+            product_id: s.product_id,
+            nombre: s.products?.nombre ?? 'Producto',
+            sku: s.products?.sku ?? '',
+            disponible: 0,
+            reservado: 0,
+            total: 1,
+            sinSerial: true,
+            serialId: s.id,
+            serialNumber: s.serial_number,
+          });
+          return;
+        }
         const row = ensure(s.location_id, s.product_id, s.products?.nombre ?? 'Producto', s.products?.sku ?? '');
         row.total += 1;
         if (s.estado === 'reservado') row.reservado += 1;
@@ -96,6 +127,7 @@ function useBodegasStock() {
 export default function BodegasPage() {
   const { data, isLoading } = useBodegasStock();
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [serialEditing, setSerialEditing] = useState<{ id: string; placeholder: string } | null>(null);
 
   const summary = useMemo(() => {
     const map = new Map<string, { productos: number; unidades: number }>();
@@ -161,16 +193,42 @@ export default function BodegasPage() {
                               <TableHead className="text-right">Disponible</TableHead>
                               <TableHead className="text-right">Reservado</TableHead>
                               <TableHead className="text-right">Total</TableHead>
+                              <TableHead className="text-right">Acciones</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {rows.map((r) => (
-                              <TableRow key={r.product_id}>
+                              <TableRow key={r.key}>
                                 <TableCell className="font-medium">{r.nombre}</TableCell>
                                 <TableCell className="font-mono text-xs">{r.sku}</TableCell>
-                                <TableCell className="text-right">{r.disponible}</TableCell>
+                                <TableCell className="text-right">
+                                  {r.sinSerial ? (
+                                    <Badge className="border-transparent bg-warning text-warning-foreground">
+                                      Sin serie
+                                    </Badge>
+                                  ) : (
+                                    r.disponible
+                                  )}
+                                </TableCell>
                                 <TableCell className="text-right">{r.reservado}</TableCell>
                                 <TableCell className="text-right font-semibold">{r.total}</TableCell>
+                                <TableCell className="text-right">
+                                  {r.sinSerial && r.serialId && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        setSerialEditing({
+                                          id: r.serialId!,
+                                          placeholder: r.serialNumber ?? '',
+                                        })
+                                      }
+                                    >
+                                      <Hash className="mr-2 h-3.5 w-3.5" />
+                                      Asignar serial
+                                    </Button>
+                                  )}
+                                </TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -184,6 +242,81 @@ export default function BodegasPage() {
           })}
         </div>
       )}
+
+      <AsignarSerialDialog serialEditing={serialEditing} onClose={() => setSerialEditing(null)} />
     </PageContainer>
+  );
+}
+
+function AsignarSerialDialog({
+  serialEditing,
+  onClose,
+}: {
+  serialEditing: { id: string; placeholder: string } | null;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [serial, setSerial] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleConfirm = async () => {
+    const nuevoSerial = serial.trim().toUpperCase();
+    if (!nuevoSerial || !serialEditing) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('product_serials')
+        .update({ serial_number: nuevoSerial, estado: 'disponible' } as any)
+        .eq('id', serialEditing.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['bodegas-page'] });
+      queryClient.invalidateQueries({ queryKey: ['technician-inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['product-serials'] });
+      toast({ title: 'Serial asignado', description: nuevoSerial });
+      setSerial('');
+      onClose();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={!!serialEditing}
+      onOpenChange={(v) => {
+        if (!v) {
+          setSerial('');
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Asignar serial real</DialogTitle>
+          <DialogDescription>
+            Reemplaza el registro provisorio {serialEditing?.placeholder} por el número de serie real.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label>Número de serie *</Label>
+          <Input
+            value={serial}
+            onChange={(e) => setSerial(e.target.value)}
+            placeholder="SN-000123"
+            className="font-mono"
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={handleConfirm} disabled={!serial.trim() || saving}>
+            {saving ? 'Guardando...' : 'Confirmar'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
