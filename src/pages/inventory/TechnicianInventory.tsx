@@ -558,6 +558,149 @@ export default function TechnicianInventory() {
   );
 }
 
+function RecepcionTab({
+  products,
+  bodegas,
+  onSuccess,
+}: {
+  products: any[];
+  bodegas: any[];
+  onSuccess: () => void;
+}) {
+  const [productId, setProductId] = useState('');
+  const [bodegaId, setBodegaId] = useState('');
+  const [serialInput, setSerialInput] = useState('');
+  const [proveedor, setProveedor] = useState('');
+  const [notas, setNotas] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const seriales = serialInput
+    .split('\n')
+    .map((s) => s.trim().toUpperCase())
+    .filter(Boolean);
+  const canSubmit = productId && bodegaId && seriales.length > 0;
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    try {
+      const { error: moveErr } = await supabase.from('stock_moves').insert({
+        tipo: 'compra',
+        product_id: productId,
+        cantidad: seriales.length,
+        to_location_id: bodegaId,
+        referencia: proveedor ? `Compra: ${proveedor}` : 'Recepción de compra',
+        notas: notas || null,
+        fecha: new Date().toISOString(),
+      } as any);
+      if (moveErr) throw moveErr;
+
+      const { data: existing } = await supabase
+        .from('product_serials')
+        .select('serial_number')
+        .in('serial_number', seriales);
+      const existingSet = new Set((existing || []).map((e: any) => e.serial_number));
+
+      const nuevos = seriales.filter((s) => !existingSet.has(s));
+      if (nuevos.length > 0) {
+        const { error: insErr } = await supabase.from('product_serials').insert(
+          nuevos.map((s) => ({
+            serial_number: s,
+            product_id: productId,
+            location_id: bodegaId,
+            estado: 'disponible',
+          })) as any
+        );
+        if (insErr) throw insErr;
+      }
+
+      const existentes = seriales.filter((s) => existingSet.has(s));
+      if (existentes.length > 0) {
+        await supabase
+          .from('product_serials')
+          .update({ location_id: bodegaId, estado: 'disponible' } as any)
+          .in('serial_number', existentes);
+      }
+
+      const bodegaNombre = bodegas.find((b) => b.id === bodegaId)?.nombre ?? 'bodega';
+      toast({ title: 'Ingreso registrado', description: `${seriales.length} equipo(s) añadidos a ${bodegaNombre}.` });
+      setSerialInput('');
+      setProveedor('');
+      setNotas('');
+      onSuccess();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="max-w-lg space-y-5">
+      <p className="text-sm text-muted-foreground">
+        Registra equipos que llegan a bodega. Pega los números de serie (uno por línea).
+      </p>
+
+      <div className="space-y-2">
+        <Label>Producto *</Label>
+        <Select value={productId} onValueChange={setProductId}>
+          <SelectTrigger><SelectValue placeholder="Selecciona un producto" /></SelectTrigger>
+          <SelectContent>
+            {products.filter((p) => p.serializable).map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.sku} · {p.nombre}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Bodega de ingreso *</Label>
+        <Select value={bodegaId} onValueChange={setBodegaId}>
+          <SelectTrigger><SelectValue placeholder="Selecciona bodega" /></SelectTrigger>
+          <SelectContent>
+            {bodegas.map((b) => (
+              <SelectItem key={b.id} value={b.id}>{b.nombre}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>
+          Números de serie *
+          {seriales.length > 0 && (
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              ({seriales.length} detectado{seriales.length !== 1 ? 's' : ''})
+            </span>
+          )}
+        </Label>
+        <Textarea
+          placeholder={"SN-000001\nSN-000002\nSN-000003"}
+          value={serialInput}
+          onChange={(e) => setSerialInput(e.target.value)}
+          rows={6}
+          className="font-mono text-sm"
+        />
+        <p className="text-xs text-muted-foreground">Un serial por línea. Se ignoran espacios y se convierten a mayúsculas.</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Proveedor (opcional)</Label>
+        <Input value={proveedor} onChange={(e) => setProveedor(e.target.value)} placeholder="Ej: Distribuidora XYZ" />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Notas (opcional)</Label>
+        <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} placeholder="Ej: Factura #1234" />
+      </div>
+
+      <Button onClick={handleSubmit} disabled={!canSubmit || submitting} className="w-full">
+        {submitting ? 'Registrando...' : `Registrar ingreso${seriales.length > 0 ? ` (${seriales.length})` : ''}`}
+      </Button>
+    </div>
+  );
+}
+
 function AssignDialog({
   tech,
   products,
@@ -570,41 +713,73 @@ function AssignDialog({
   products: any[];
   bodegas: any[];
   onClose: () => void;
-  onSubmit: (v: { product_id: string; cantidad: number; bodega_id: string; serial?: string; notas?: string }) => void;
+  onSubmit: (v: { product_id: string; cantidad: number; bodega_id: string; serials: string[]; notas?: string }) => void;
   isPending: boolean;
 }) {
   const [productId, setProductId] = useState('');
-  const [serial, setSerial] = useState('');
   const [bodegaId, setBodegaId] = useState('');
-  const [cantidad, setCantidad] = useState(1);
   const [notas, setNotas] = useState('');
+  const [selectedSerials, setSelectedSerials] = useState<string[]>([]);
+  const [manualSerial, setManualSerial] = useState('');
+  const [cantidad, setCantidad] = useState(1);
 
   const product = products.find((p) => p.id === productId);
-  const serializable = !!product?.serializable;
+  const isSerializable = !!product?.serializable;
+
+  const { data: availableSerials = [], isLoading: loadingSerials } = useQuery({
+    queryKey: ['assign-available-serials', productId, bodegaId],
+    queryFn: async () => {
+      if (!productId || !bodegaId) return [];
+      const { data } = await supabase
+        .from('product_serials')
+        .select('id, serial_number')
+        .eq('product_id', productId)
+        .eq('location_id', bodegaId)
+        .eq('estado', 'disponible')
+        .order('serial_number');
+      return data ?? [];
+    },
+    enabled: !!productId && !!bodegaId && isSerializable,
+  });
+
+  const toggleSerial = (serial: string) => {
+    setSelectedSerials((prev) =>
+      prev.includes(serial) ? prev.filter((s) => s !== serial) : [...prev, serial]
+    );
+  };
+
+  const toggleAll = () => {
+    setSelectedSerials(
+      selectedSerials.length === availableSerials.length
+        ? []
+        : availableSerials.map((s: any) => s.serial_number)
+    );
+  };
 
   const reset = () => {
     setProductId('');
-    setSerial('');
     setBodegaId('');
-    setCantidad(1);
     setNotas('');
+    setSelectedSerials([]);
+    setManualSerial('');
+    setCantidad(1);
   };
 
-  const handleClose = () => {
-    reset();
-    onClose();
-  };
+  const handleClose = () => { reset(); onClose(); };
+
+  const canSubmit = productId && bodegaId &&
+    (isSerializable ? selectedSerials.length > 0 || manualSerial.trim() : cantidad > 0);
 
   const submit = () => {
-    if (!productId || !bodegaId) {
-      toast({ title: 'Datos incompletos', description: 'Selecciona producto y bodega de origen.', variant: 'destructive' });
-      return;
-    }
+    if (!canSubmit) return;
+    const serials = isSerializable
+      ? [...selectedSerials, ...(manualSerial.trim() ? [manualSerial.trim().toUpperCase()] : [])]
+      : [];
     onSubmit({
       product_id: productId,
-      cantidad: serializable ? 1 : Number(cantidad) || 1,
+      cantidad: isSerializable ? serials.length : cantidad,
       bodega_id: bodegaId,
-      serial: serializable && serial.trim() ? serial.trim() : undefined,
+      serials,
       notas: notas.trim() || undefined,
     });
     reset();
@@ -612,76 +787,105 @@ function AssignDialog({
 
   return (
     <Dialog open={!!tech} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="flex flex-col">
+      <DialogContent className="flex flex-col max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Asignar ítem a {tech ? fullName(tech.nombre, tech.apellido) : ''}</DialogTitle>
-          <DialogDescription>El ítem se traslada desde bodega a la camioneta del técnico.</DialogDescription>
+          <DialogTitle>Asignar a {tech ? fullName(tech.nombre, tech.apellido) : ''}</DialogTitle>
+          <DialogDescription>Selecciona los equipos a trasladar a la camioneta del técnico.</DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           <div className="space-y-2">
             <Label>Producto</Label>
-            <Select value={productId} onValueChange={setProductId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona un producto" />
-              </SelectTrigger>
+            <Select value={productId} onValueChange={(v) => { setProductId(v); setSelectedSerials([]); }}>
+              <SelectTrigger><SelectValue placeholder="Selecciona un producto" /></SelectTrigger>
               <SelectContent>
                 {products.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.sku} · {p.nombre}
-                  </SelectItem>
+                  <SelectItem key={p.id} value={p.id}>{p.sku} · {p.nombre}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
-          {serializable && (
-            <div className="space-y-2">
-              <Label>Número de serie (opcional)</Label>
-              <Input value={serial} onChange={(e) => setSerial(e.target.value)} placeholder="Ej: SN-000123" />
-            </div>
-          )}
 
           <div className="space-y-2">
             <Label>Desde bodega</Label>
-            <Select value={bodegaId} onValueChange={setBodegaId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona bodega de origen" />
-              </SelectTrigger>
+            <Select value={bodegaId} onValueChange={(v) => { setBodegaId(v); setSelectedSerials([]); }}>
+              <SelectTrigger><SelectValue placeholder="Selecciona bodega de origen" /></SelectTrigger>
               <SelectContent>
                 {bodegas.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.codigo} · {b.nombre}
-                  </SelectItem>
+                  <SelectItem key={b.id} value={b.id}>{b.nombre}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {!serializable && (
+          {isSerializable && productId && bodegaId && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Seriales disponibles en bodega</Label>
+                {availableSerials.length > 0 && (
+                  <Button variant="ghost" size="sm" className="text-xs h-6" onClick={toggleAll}>
+                    {selectedSerials.length === availableSerials.length ? 'Deseleccionar todos' : 'Seleccionar todos'}
+                  </Button>
+                )}
+              </div>
+
+              {loadingSerials ? (
+                <p className="text-sm text-muted-foreground py-2">Cargando seriales...</p>
+              ) : availableSerials.length === 0 ? (
+                <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
+                  No hay seriales disponibles en esta bodega. Usa el tab "Recepción" para ingresar equipos primero.
+                </p>
+              ) : (
+                <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
+                  {availableSerials.map((s: any) => (
+                    <label key={s.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-muted/40">
+                      <input
+                        type="checkbox"
+                        checked={selectedSerials.includes(s.serial_number)}
+                        onChange={() => toggleSerial(s.serial_number)}
+                        className="h-4 w-4 accent-primary"
+                      />
+                      <span className="font-mono text-sm">{s.serial_number}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-1 pt-1">
+                <Label className="text-xs text-muted-foreground">O ingresa un serial manualmente</Label>
+                <Input
+                  placeholder="Ej: SN-000099"
+                  value={manualSerial}
+                  onChange={(e) => setManualSerial(e.target.value.toUpperCase())}
+                  className="font-mono text-sm"
+                />
+              </div>
+
+              {(selectedSerials.length > 0 || manualSerial.trim()) && (
+                <p className="text-xs font-medium text-primary">
+                  {selectedSerials.length + (manualSerial.trim() ? 1 : 0)} equipo(s) seleccionado(s)
+                </p>
+              )}
+            </div>
+          )}
+
+          {!isSerializable && productId && (
             <div className="space-y-2">
               <Label>Cantidad</Label>
-              <Input
-                type="number"
-                min={1}
-                value={cantidad}
-                onChange={(e) => setCantidad(Number(e.target.value))}
-              />
+              <Input type="number" min={1} value={cantidad} onChange={(e) => setCantidad(Number(e.target.value))} />
             </div>
           )}
 
           <div className="space-y-2">
             <Label>Notas (opcional)</Label>
-            <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={3} />
+            <Textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} />
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>
-            Cancelar
-          </Button>
-          <Button onClick={submit} disabled={isPending}>
-            {isPending ? 'Asignando...' : 'Asignar'}
+          <Button variant="outline" onClick={handleClose}>Cancelar</Button>
+          <Button onClick={submit} disabled={!canSubmit || isPending}>
+            {isPending ? 'Asignando...' : `Asignar${isSerializable && (selectedSerials.length + (manualSerial.trim() ? 1 : 0)) > 0 ? ` (${selectedSerials.length + (manualSerial.trim() ? 1 : 0)})` : ''}`}
           </Button>
         </DialogFooter>
       </DialogContent>
