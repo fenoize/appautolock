@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { PageContainer } from '@/components/shared/PageContainer';
@@ -9,13 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { HardHat, PackagePlus, Undo2, Boxes, Barcode } from 'lucide-react';
+import { HardHat, PackagePlus, Undo2, Boxes, Barcode, Pencil, Truck } from 'lucide-react';
+
 
 interface Technician {
   id: string;
@@ -59,44 +61,121 @@ const initials = (nombre: string, apellido?: string | null) =>
 
 const fullName = (nombre: string, apellido?: string | null) => `${nombre} ${apellido ?? ''}`.trim();
 
-function useTechnicians() {
+function useTechnicianProfiles() {
   return useQuery({
-    queryKey: ['technician-inventory', 'technicians'],
-    queryFn: async (): Promise<Technician[]> => {
-      const { data: roles, error: rolesError } = await supabase
+    queryKey: ['technician-inventory', 'techs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
         .from('user_roles')
-        .select('user_id')
+        .select('user_id, profiles(id, nombre, apellido, email, estado)')
         .eq('role', 'tecnico');
-      if (rolesError) throw rolesError;
-      const ids = (roles ?? []).map((r: any) => r.user_id);
-      if (!ids.length) return [];
-
-      const [{ data: profiles, error: pErr }, { data: locations, error: lErr }] = await Promise.all([
-        supabase.from('profiles').select('id, nombre, apellido, email, estado').in('id', ids).eq('estado', 'activo'),
-        supabase.from('stock_locations').select('id, codigo, nombre, profile_id, tipo, activa').eq('tipo', 'camioneta').in('profile_id', ids),
-      ]);
-      if (pErr) throw pErr;
-      if (lErr) throw lErr;
-
-      return (profiles ?? [])
-        .map((p: any) => {
-          const loc = (locations ?? []).find((l: any) => l.profile_id === p.id);
-          if (!loc) return null;
-          return {
-            id: p.id,
-            nombre: p.nombre,
-            apellido: p.apellido,
-            email: p.email,
-            location_id: loc.id,
-            codigo: loc.codigo,
-            location_nombre: loc.nombre,
-          } as Technician;
-        })
-        .filter(Boolean)
-        .sort((a: any, b: any) => a.nombre.localeCompare(b.nombre)) as Technician[];
+      if (error) throw error;
+      return (data ?? []) as any[];
     },
   });
 }
+
+function useCamionetas() {
+  return useQuery({
+    queryKey: ['technician-inventory', 'camionetas'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stock_locations')
+        .select('*')
+        .eq('tipo', 'camioneta');
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+}
+
+function CamionetaDialog({
+  tecnico,
+  camioneta,
+  open,
+  onOpenChange,
+}: {
+  tecnico: any;
+  camioneta: any | null;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const isEdit = !!camioneta;
+  const [nombre, setNombre] = useState(camioneta?.nombre ?? '');
+  const [activa, setActiva] = useState(camioneta?.activa ?? true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!isEdit) setNombre(`Camioneta ${tecnico.nombre} ${tecnico.apellido ?? ''}`.trim());
+  }, [tecnico, isEdit]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (isEdit) {
+        const { error } = await supabase
+          .from('stock_locations')
+          .update({ nombre: nombre.trim(), activa })
+          .eq('id', camioneta.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('stock_locations').insert({
+          nombre: nombre.trim(),
+          tipo: 'camioneta',
+          profile_id: tecnico.id,
+          activa: true,
+          codigo: `CAM-${tecnico.id.slice(0, 6).toUpperCase()}`,
+        } as any);
+        if (error) throw error;
+      }
+      queryClient.invalidateQueries({ queryKey: ['technician-inventory'] });
+      toast({ title: isEdit ? 'Camioneta actualizada' : 'Camioneta asignada' });
+      onOpenChange(false);
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? 'Editar camioneta' : 'Asignar camioneta'}</DialogTitle>
+          <DialogDescription>
+            {tecnico.nombre} {tecnico.apellido ?? ''}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Nombre de la camioneta *</Label>
+            <Input value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Ej: Camioneta Norte" />
+          </div>
+          {isEdit && (
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <Label>Activa</Label>
+                <p className="text-xs text-muted-foreground">Las inactivas no aparecen en asignaciones.</p>
+              </div>
+              <Switch checked={activa} onCheckedChange={setActiva} />
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} disabled={!nombre.trim() || saving}>
+            {isEdit ? 'Guardar' : 'Asignar'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function useTechnicianStock() {
   return useQuery({
@@ -180,7 +259,28 @@ function useActiveProducts() {
 
 export default function TechnicianInventory() {
   const queryClient = useQueryClient();
-  const { data: technicians, isLoading: loadingTechs } = useTechnicians();
+  const { data: tecnicos, isLoading: loadingTechs } = useTechnicianProfiles();
+  const { data: camionetas } = useCamionetas();
+
+  const technicians: (Technician & { camioneta: any | null })[] = useMemo(() => {
+    return (tecnicos ?? [])
+      .filter((t: any) => t.profiles)
+      .map((t: any) => {
+        const cam = (camionetas ?? []).find((c: any) => c.profile_id === t.user_id) ?? null;
+        return {
+          id: t.profiles.id,
+          nombre: t.profiles.nombre,
+          apellido: t.profiles.apellido,
+          email: t.profiles.email,
+          location_id: cam?.id ?? '',
+          codigo: cam?.codigo ?? '',
+          location_nombre: cam?.nombre ?? '',
+          camioneta: cam,
+        };
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [tecnicos, camionetas]);
+
   const { data: stock } = useTechnicianStock();
   const { data: serials } = useAllSerials();
   const { data: bodegaData } = useBodegaStock();
@@ -188,7 +288,9 @@ export default function TechnicianInventory() {
   const { data: products } = useActiveProducts();
 
   const [search, setSearch] = useState('');
+  const [camionetaDialog, setCamionetaDialog] = useState<{ tecnico: any; camioneta: any | null } | null>(null);
   const [estadoFiltro, setEstadoFiltro] = useState<string>('todos');
+
   const [assignTech, setAssignTech] = useState<Technician | null>(null);
   const [returnCtx, setReturnCtx] = useState<{
     tech: Technician;
@@ -340,16 +442,16 @@ export default function TechnicianInventory() {
             <Card>
               <CardContent className="py-12 text-center">
                 <HardHat className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
-                <p className="font-medium">Sin técnicos con camioneta</p>
+                <p className="font-medium">Sin técnicos registrados</p>
                 <p className="text-sm text-muted-foreground">
-                  Asocia una ubicación de tipo camioneta a cada técnico para gestionar su inventario.
+                  Crea usuarios con rol técnico para gestionar su inventario.
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {technicians.map((t) => {
-                const items = itemsByLocation.get(t.location_id) ?? [];
+                const items = t.location_id ? itemsByLocation.get(t.location_id) ?? [] : [];
                 return (
                   <Card key={t.id} className="border-border/70">
                     <CardHeader className="pb-3">
@@ -360,8 +462,36 @@ export default function TechnicianInventory() {
                         <div className="min-w-0 flex-1">
                           <CardTitle className="text-base truncate">{fullName(t.nombre, t.apellido)}</CardTitle>
                           <p className="text-xs text-muted-foreground truncate">{t.email}</p>
+                          {t.camioneta ? (
+                            <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                              <Truck className="h-3 w-3" />
+                              <span className="truncate">{t.camioneta.nombre}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                onClick={() => setCamionetaDialog({ tecnico: t, camioneta: t.camioneta })}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="mt-1 flex items-center gap-2">
+                              <Badge variant="outline" className="border-amber-500 text-amber-600">
+                                Sin camioneta
+                              </Badge>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-xs"
+                                onClick={() => setCamionetaDialog({ tecnico: t, camioneta: null })}
+                              >
+                                + Asignar
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        <Badge variant="secondary">{t.codigo}</Badge>
+                        {t.codigo && <Badge variant="secondary">{t.codigo}</Badge>}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -401,9 +531,9 @@ export default function TechnicianInventory() {
                           ))}
                         </ul>
                       )}
-                      <Button className="w-full" onClick={() => setAssignTech(t)}>
+                      <Button className="w-full" onClick={() => setAssignTech(t)} disabled={!t.location_id}>
                         <PackagePlus className="mr-2 h-4 w-4" />
-                        Asignar ítem
+                        {t.location_id ? 'Asignar ítem' : 'Requiere camioneta'}
                       </Button>
                     </CardContent>
                   </Card>
@@ -411,6 +541,16 @@ export default function TechnicianInventory() {
               })}
             </div>
           )}
+
+          {camionetaDialog && (
+            <CamionetaDialog
+              tecnico={camionetaDialog.tecnico}
+              camioneta={camionetaDialog.camioneta}
+              open={!!camionetaDialog}
+              onOpenChange={(v) => !v && setCamionetaDialog(null)}
+            />
+          )}
+
         </TabsContent>
 
         <TabsContent value="bodegas" className="mt-6">
