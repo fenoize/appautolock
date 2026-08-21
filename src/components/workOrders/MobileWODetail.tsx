@@ -76,6 +76,17 @@ export default function MobileWODetail({ wo }: Props) {
     comentario: string;
   }>(wo.confirmacion_data ?? { urls: [], comentario: '' });
   const [uploadingSection, setUploadingSection] = useState<string | null>(null);
+  const [techLocationId, setTechLocationId] = useState<string | null>(null);
+  const [techSerials, setTechSerials] = useState<{ id: string; serial_number: string; product_id: string }[]>([]);
+  const [serialSelections, setSerialSelections] = useState<Record<string, string>>({});
+  const [confirmedSerials, setConfirmedSerials] = useState<Record<string, string>>(
+    Object.fromEntries(
+      (wo.items ?? [])
+        .filter((i) => i.serial_instalado)
+        .map((i) => [i.id, i.serial_instalado!])
+    )
+  );
+  const [confirmingSerial, setConfirmingSerial] = useState<string | null>(null);
   const [firmaData, setFirmaData] = useState<string>('');
   const [firmaNombre, setFirmaNombre] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
