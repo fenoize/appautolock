@@ -688,7 +688,7 @@ function AssignDialog({
                 <p className="text-sm text-muted-foreground py-2">Cargando seriales...</p>
               ) : availableSerials.length === 0 ? (
                 <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
-                  No hay seriales disponibles en esta bodega. Registra ingresos en Inventario > Recepciones.
+                  No hay seriales disponibles en esta bodega. Registra ingresos en Inventario / Recepciones.
                 </p>
               ) : (
                 <div className="border rounded-lg divide-y max-h-48 overflow-y-auto">
