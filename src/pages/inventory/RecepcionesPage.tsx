@@ -349,7 +349,21 @@ function NuevaRecepcionDialog({
             </Select>
           </div>
 
-          {esSerializable ? (
+          {esSerializable && (
+            <div className="flex items-center gap-3 rounded-lg border p-3">
+              <Switch id="sin-serial" checked={sinSerial} onCheckedChange={handleSinSerialChange} />
+              <div>
+                <Label htmlFor="sin-serial" className="cursor-pointer">
+                  Recibir sin serial
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Para cajas cerradas. El serial real se puede actualizar después desde Bodegas.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {esSerializable && !sinSerial ? (
             <div className="space-y-2">
               <Label>
                 Números de serie *
@@ -378,7 +392,7 @@ function NuevaRecepcionDialog({
                 min={1}
                 value={cantidad}
                 onChange={(e) => setCantidad(e.target.value)}
-                placeholder="Ej: 25"
+                placeholder={sinSerial ? 'Ej: 4' : 'Ej: 25'}
                 disabled={!productId}
               />
             </div>
