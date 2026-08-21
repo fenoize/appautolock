@@ -19,17 +19,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { REGIONES_CHILE, COMUNAS_POR_REGION } from '@/lib/chile-geo';
 import { toast } from '@/hooks/use-toast';
 import { Pencil, History, Truck } from 'lucide-react';
 
 interface Proveedor {
   id: string;
-  nombre: string;
+  razon_social: string;
+  nombre_fantasia: string | null;
   rut: string | null;
   contacto: string | null;
   email: string | null;
   telefono: string | null;
+  region: string | null;
+  comuna: string | null;
   direccion: string | null;
+  oficina: string | null;
   notas: string | null;
   activo: boolean;
   created_at: string;
@@ -47,7 +53,7 @@ function useProveedores() {
       const { data, error } = await supabase
         .from('proveedores')
         .select('*')
-        .order('nombre');
+        .order('razon_social');
       if (error) throw error;
       return (data ?? []) as unknown as Proveedor[];
     },
@@ -139,7 +145,8 @@ export default function ProveedoresPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nombre</TableHead>
+                    <TableHead>Razón Social</TableHead>
+                    <TableHead>Nombre fantasía</TableHead>
                     <TableHead>RUT</TableHead>
                     <TableHead>Contacto</TableHead>
                     <TableHead>Email</TableHead>
@@ -159,7 +166,8 @@ export default function ProveedoresPage() {
                         className="cursor-pointer"
                         onClick={() => setHistorialFor(p)}
                       >
-                        <TableCell className="font-medium">{p.nombre}</TableCell>
+                        <TableCell className="font-medium">{p.razon_social}</TableCell>
+                        <TableCell>{p.nombre_fantasia ?? '—'}</TableCell>
                         <TableCell className="font-mono text-xs">{p.rut ?? '—'}</TableCell>
                         <TableCell>{p.contacto ?? '—'}</TableCell>
                         <TableCell className="text-sm">{p.email ?? '—'}</TableCell>
@@ -225,27 +233,44 @@ function ProveedorFormDialog({
   const queryClient = useQueryClient();
   const isEdit = !!proveedor;
   const [form, setForm] = useState({
-    nombre: '',
+    razon_social: '',
+    nombre_fantasia: '',
     rut: '',
     contacto: '',
     email: '',
     telefono: '',
+    region: '',
+    comuna: '',
     direccion: '',
+    oficina: '',
     notas: '',
     activo: true,
   });
+
+  const formatRut = (raw: string) => {
+    const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+    if (clean.length <= 1) return clean;
+    const body = clean.slice(0, -1);
+    const dv = clean.slice(-1);
+    const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return `${formatted}-${dv}`;
+  };
   const [initializedFor, setInitializedFor] = useState<string | null>(null);
 
   const key = open ? proveedor?.id ?? 'new' : null;
   if (key && initializedFor !== key) {
     setInitializedFor(key);
     setForm({
-      nombre: proveedor?.nombre ?? '',
+      razon_social: proveedor?.razon_social ?? '',
+      nombre_fantasia: proveedor?.nombre_fantasia ?? '',
       rut: proveedor?.rut ?? '',
       contacto: proveedor?.contacto ?? '',
       email: proveedor?.email ?? '',
       telefono: proveedor?.telefono ?? '',
+      region: proveedor?.region ?? '',
+      comuna: proveedor?.comuna ?? '',
       direccion: proveedor?.direccion ?? '',
+      oficina: proveedor?.oficina ?? '',
       notas: proveedor?.notas ?? '',
       activo: proveedor?.activo ?? true,
     });
@@ -257,7 +282,11 @@ function ProveedorFormDialog({
   const mutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        nombre: form.nombre.trim(),
+        razon_social: form.razon_social.trim(),
+        nombre_fantasia: form.nombre_fantasia.trim() || null,
+        region: form.region || null,
+        comuna: form.comuna || null,
+        oficina: form.oficina.trim() || null,
         rut: form.rut.trim() || null,
         contacto: form.contacto.trim() || null,
         email: form.email.trim() || null,
@@ -295,13 +324,17 @@ function ProveedorFormDialog({
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Nombre *</Label>
-            <Input value={form.nombre} onChange={(e) => set('nombre', e.target.value)} placeholder="Ej: Distribuidora XYZ" />
+            <Label>Razón Social *</Label>
+            <Input value={form.razon_social} onChange={(e) => set('razon_social', e.target.value)} placeholder="Ej: Distribuidora XYZ SpA" />
+          </div>
+          <div className="space-y-2">
+            <Label>Nombre fantasía</Label>
+            <Input value={form.nombre_fantasia} onChange={(e) => set('nombre_fantasia', e.target.value)} placeholder="Ej: XYZ" />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>RUT</Label>
-              <Input value={form.rut} onChange={(e) => set('rut', e.target.value)} placeholder="76.123.456-7" />
+              <Input value={form.rut} maxLength={12} onChange={(e) => set('rut', formatRut(e.target.value))} placeholder="76.123.456-7" />
             </div>
             <div className="space-y-2">
               <Label>Contacto</Label>
@@ -316,10 +349,57 @@ function ProveedorFormDialog({
               <Input value={form.telefono} onChange={(e) => set('telefono', e.target.value)} placeholder="+56 9 1234 5678" />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Dirección</Label>
-            <Input value={form.direccion} onChange={(e) => set('direccion', e.target.value)} />
+
+          <div className="space-y-4 rounded-lg border p-3">
+            <p className="text-sm font-medium">Dirección</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Región</Label>
+                <Select
+                  value={form.region}
+                  onValueChange={(val) => {
+                    set('region', val);
+                    set('comuna', '');
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona región" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REGIONES_CHILE.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Comuna</Label>
+                <Select value={form.comuna} onValueChange={(val) => set('comuna', val)} disabled={!form.region}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={form.region ? 'Selecciona comuna' : 'Selecciona región primero'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(COMUNAS_POR_REGION[form.region] ?? []).map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Dirección (calle y número)</Label>
+              <Input value={form.direccion} onChange={(e) => set('direccion', e.target.value)} placeholder="Av. Siempre Viva 742" />
+            </div>
+            <div className="space-y-2">
+              <Label>Oficina / Depto (opcional)</Label>
+              <Input value={form.oficina} onChange={(e) => set('oficina', e.target.value)} placeholder="Of. 302" />
+            </div>
           </div>
+
           <div className="space-y-2">
             <Label>Notas</Label>
             <Textarea value={form.notas} onChange={(e) => set('notas', e.target.value)} rows={2} />
@@ -337,7 +417,7 @@ function ProveedorFormDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!form.nombre.trim() || mutation.isPending}>
+          <Button onClick={() => mutation.mutate()} disabled={!form.razon_social.trim() || mutation.isPending}>
             {mutation.isPending ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear proveedor'}
           </Button>
         </DialogFooter>
@@ -353,7 +433,7 @@ function HistorialDialog({ proveedor, onClose }: { proveedor: Proveedor | null; 
     <Dialog open={!!proveedor} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Historial de compras — {proveedor?.nombre}</DialogTitle>
+          <DialogTitle>Historial de compras — {proveedor?.razon_social}</DialogTitle>
           <DialogDescription>Recepciones de stock registradas para este proveedor.</DialogDescription>
         </DialogHeader>
 

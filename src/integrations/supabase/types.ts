@@ -1151,39 +1151,51 @@ export type Database = {
       proveedores: {
         Row: {
           activo: boolean
+          comuna: string | null
           contacto: string | null
           created_at: string
           direccion: string | null
           email: string | null
           id: string
-          nombre: string
+          nombre_fantasia: string | null
           notas: string | null
+          oficina: string | null
+          razon_social: string
+          region: string | null
           rut: string | null
           telefono: string | null
           updated_at: string
         }
         Insert: {
           activo?: boolean
+          comuna?: string | null
           contacto?: string | null
           created_at?: string
           direccion?: string | null
           email?: string | null
           id?: string
-          nombre: string
+          nombre_fantasia?: string | null
           notas?: string | null
+          oficina?: string | null
+          razon_social: string
+          region?: string | null
           rut?: string | null
           telefono?: string | null
           updated_at?: string
         }
         Update: {
           activo?: boolean
+          comuna?: string | null
           contacto?: string | null
           created_at?: string
           direccion?: string | null
           email?: string | null
           id?: string
-          nombre?: string
+          nombre_fantasia?: string | null
           notas?: string | null
+          oficina?: string | null
+          razon_social?: string
+          region?: string | null
           rut?: string | null
           telefono?: string | null
           updated_at?: string
