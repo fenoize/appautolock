@@ -688,6 +688,36 @@ export default function MobileWODetail({ wo }: Props) {
                             </Button>
                           </div>
                         )}
+
+                        {/* Entrada manual de serial — siempre disponible si no está confirmado */}
+                        {!confirmed && (
+                          <div className="border-t pt-3 space-y-2">
+                            <p className="text-xs text-muted-foreground">
+                              ¿El serial no está en la lista o lo tienes en mano? Ingrésalo manualmente:
+                            </p>
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder="Ej: ABC123456789"
+                                value={manualSerials[item.id] || ''}
+                                onChange={(e) =>
+                                  setManualSerials((prev) => ({
+                                    ...prev,
+                                    [item.id]: e.target.value.toUpperCase(),
+                                  }))
+                                }
+                                className="h-11 font-mono text-sm flex-1"
+                              />
+                              <Button
+                                variant="outline"
+                                className="shrink-0 h-11"
+                                disabled={!manualSerials[item.id]?.trim() || confirmingSerial === item.id}
+                                onClick={() => handleConfirmManualSerial(item.id, item.ref_id)}
+                              >
+                                {confirmingSerial === item.id ? '...' : 'Registrar'}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </Card>
                     );
                   })}
