@@ -210,7 +210,7 @@ export default function TechnicianInventory() {
       product_id: string;
       cantidad: number;
       bodega_id: string;
-      serial?: string;
+      serials: string[];
       notas?: string;
     }) => {
       const { error } = await supabase.from('stock_moves').insert({
@@ -225,27 +225,24 @@ export default function TechnicianInventory() {
       } as any);
       if (error) throw error;
 
-      if (v.serial) {
+      for (const serial of v.serials) {
         const { data: existing } = await supabase
           .from('product_serials')
           .select('id')
-          .eq('serial_number', v.serial)
-          .eq('product_id', v.product_id)
+          .eq('serial_number', serial)
           .maybeSingle();
         if (existing) {
-          const { error: uErr } = await supabase
+          await supabase
             .from('product_serials')
-            .update({ location_id: v.tech.location_id, estado: 'reservado' })
+            .update({ location_id: v.tech.location_id, estado: 'disponible' } as any)
             .eq('id', existing.id);
-          if (uErr) throw uErr;
         } else {
-          const { error: iErr } = await supabase.from('product_serials').insert({
+          await supabase.from('product_serials').insert({
             product_id: v.product_id,
-            serial_number: v.serial,
+            serial_number: serial,
             location_id: v.tech.location_id,
-            estado: 'reservado',
+            estado: 'disponible',
           } as any);
-          if (iErr) throw iErr;
         }
       }
     },
