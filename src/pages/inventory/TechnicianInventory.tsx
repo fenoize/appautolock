@@ -331,6 +331,7 @@ export default function TechnicianInventory() {
             <TabsTrigger value="tecnicos">Por Técnico</TabsTrigger>
             <TabsTrigger value="bodegas">Bodegas</TabsTrigger>
             <TabsTrigger value="seriales">Por Serial</TabsTrigger>
+            <TabsTrigger value="recepcion">Recepción</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tecnicos" className="mt-6">
