@@ -36,8 +36,18 @@ Deno.serve(async (req) => {
       .single();
 
     if (woError) throw woError;
+
+    // El técnico asignado, o un admin/operador, pueden cerrar la OT
     if (wo.tecnico_id !== user.id) {
-      throw new Error('Solo el técnico asignado puede cerrar esta OT');
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      const isPrivileged = (roles ?? []).some((r: any) => r.role === 'admin' || r.role === 'operador');
+      if (!isPrivileged) {
+        throw new Error('Solo el técnico asignado o un administrador puede cerrar esta OT');
+      }
     }
 
     // Validar GPS pendientes de suscripción
