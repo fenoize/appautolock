@@ -105,8 +105,7 @@ export default function NewClient() {
   };
 
   const handleRutChange = (value: string) => {
-    const cleaned = value.replace(/[.\-]/g, '');
-    setFormData({ ...formData, rut: cleaned });
+    setFormData({ ...formData, rut: formatRutBody(value) });
   };
 
   return (
