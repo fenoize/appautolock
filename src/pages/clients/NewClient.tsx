@@ -147,9 +147,10 @@ export default function NewClient() {
                   <Label>RUT</Label>
                   <div className="flex gap-2">
                     <Input
-                      value={formatRUT(formData.rut)}
+                      value={formData.rut}
                       onChange={(e) => handleRutChange(e.target.value)}
                       placeholder="12345678"
+                      maxLength={10}
                       className="flex-1"
                     />
                     <Input
