@@ -29,7 +29,7 @@ export const useVehicleCatalog = (search?: string) => {
   return useQuery({
     queryKey: ["vehicle_catalog", search],
     queryFn: async () => {
-      let q = (supabase as any).from("vehicle_catalog").select("*").order("marca").order("modelo").limit(5000);
+      let q = (supabase as any).from("vehicle_catalog").select("*").order("marca").order("modelo");
       const { data, error } = await q;
       if (error) throw error;
       let rows = (data ?? []) as VehicleCatalog[];
