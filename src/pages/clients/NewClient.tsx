@@ -10,7 +10,7 @@ import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useCreateClient } from '@/hooks/useClients';
 import { ClientType, ClientStatus } from '@/types/clients';
-import { validateRUT, formatRUT } from '@/lib/rut-validation';
+import { validateRUT } from '@/lib/rut-validation';
 import { toast } from 'sonner';
 
 const STORAGE_KEY = 'newClientFormData';
