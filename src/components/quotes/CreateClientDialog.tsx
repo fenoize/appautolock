@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { validateRUT } from '@/lib/rut-validation';
+import { validateRUT, formatRutInput, splitRutInput } from '@/lib/rut-validation';
 import { toast } from 'sonner';
 
 interface CreateClientDialogProps {
@@ -22,19 +22,6 @@ interface CreateClientDialogProps {
   branchId?: string;
 }
 
-const formatRut = (raw: string) => {
-  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
-  if (clean.length <= 1) return clean;
-  const body = clean.slice(0, -1);
-  const dv = clean.slice(-1);
-  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${formatted}-${dv}`;
-};
-
-const formatRutBody = (raw: string) => {
-  const clean = raw.replace(/[^0-9]/g, '');
-  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-};
 
 export function CreateClientDialog({
   open, 
@@ -48,7 +35,6 @@ export function CreateClientDialog({
     nombre_comercial: '',
     razon_social: '',
     rut: '',
-    dv: '',
     pasaporte: '',
     giro: '',
     email_principal: '',
@@ -61,9 +47,11 @@ export function CreateClientDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const { rut, dv } = splitRutInput(formData.rut);
+
     // Validar RUT si se proporciona
-    if (formData.rut && formData.dv) {
-      if (!validateRUT(formData.rut, formData.dv)) {
+    if (formData.rut) {
+      if (!validateRUT(rut, dv)) {
         toast.error('RUT inválido');
         return;
       }
@@ -78,6 +66,8 @@ export function CreateClientDialog({
     try {
       const dataToSend = {
         ...formData,
+        rut,
+        dv,
         telefonos: formData.telefonos.filter(t => t.trim() !== ''),
         branch_id: formData.branch_id || undefined,
       };
@@ -153,25 +143,14 @@ export function CreateClientDialog({
             />
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
-            <div className="col-span-3">
-              <Label>RUT</Label>
-              <Input
-                value={formData.rut}
-                onChange={(e) => setFormData({ ...formData, rut: formatRutBody(e.target.value) })}
-                placeholder="12345678"
-                maxLength={10}
-              />
-            </div>
-            <div>
-              <Label>DV</Label>
-              <Input
-                value={formData.dv}
-                onChange={(e) => setFormData({ ...formData, dv: e.target.value.toUpperCase() })}
-                placeholder="9"
-                maxLength={1}
-              />
-            </div>
+          <div>
+            <Label>RUT</Label>
+            <Input
+              value={formData.rut}
+              onChange={(e) => setFormData({ ...formData, rut: formatRutInput(e.target.value) })}
+              placeholder="19.974.581-6"
+              maxLength={12}
+            />
           </div>
 
           <div>
