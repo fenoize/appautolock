@@ -11,8 +11,23 @@ import { useClient, useUpdateClient } from '@/hooks/useClients';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ClientType, ClientStatus } from '@/types/clients';
+import { validateRUT } from '@/lib/rut-validation';
 import { toast } from 'sonner';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
+
+const formatRut = (raw: string) => {
+  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length <= 1) return clean;
+  const body = clean.slice(0, -1);
+  const dv = clean.slice(-1);
+  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${formatted}-${dv}`;
+};
+
+const formatRutBody = (raw: string) => {
+  const clean = raw.replace(/[^0-9]/g, '');
+  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
 
 
 
@@ -45,8 +60,8 @@ export default function EditClient() {
     if (client) {
       setFormData({
         tipo: client.tipo || 'empresa',
-        rut: client.rut || '',
-        dv: client.dv || '',
+        rut: formatRutBody(client.rut || ''),
+        dv: (client.dv || '').toUpperCase(),
         pasaporte: client.pasaporte || '',
         razon_social: client.razon_social || '',
         giro: client.giro || '',
@@ -65,6 +80,18 @@ export default function EditClient() {
     e.preventDefault();
 
     if (!id) return;
+
+    if (formData.rut && formData.dv) {
+      if (!validateRUT(formData.rut, formData.dv)) {
+        toast.error('RUT inválido');
+        return;
+      }
+    }
+
+    if (!formData.rut && !formData.pasaporte) {
+      toast.error('Debe ingresar RUT o Pasaporte');
+      return;
+    }
 
     try {
       await updateClient.mutateAsync({
@@ -212,8 +239,9 @@ export default function EditClient() {
                     <Input
                       id="rut"
                       value={formData.rut}
-                      onChange={(e) => setFormData(prev => ({ ...prev, rut: e.target.value }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, rut: formatRutBody(e.target.value) }))}
                       placeholder="12345678"
+                      maxLength={10}
                     />
                   </div>
                   <div className="space-y-2">
@@ -221,7 +249,7 @@ export default function EditClient() {
                     <Input
                       id="dv"
                       value={formData.dv}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dv: e.target.value }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, dv: e.target.value.toUpperCase() }))}
                       placeholder="9"
                       maxLength={1}
                     />

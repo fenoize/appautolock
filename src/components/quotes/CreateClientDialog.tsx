@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { validateRUT, formatRUT } from '@/lib/rut-validation';
+import { validateRUT } from '@/lib/rut-validation';
 import { toast } from 'sonner';
 
 interface CreateClientDialogProps {
@@ -22,7 +22,21 @@ interface CreateClientDialogProps {
   branchId?: string;
 }
 
-export function CreateClientDialog({ 
+const formatRut = (raw: string) => {
+  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length <= 1) return clean;
+  const body = clean.slice(0, -1);
+  const dv = clean.slice(-1);
+  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${formatted}-${dv}`;
+};
+
+const formatRutBody = (raw: string) => {
+  const clean = raw.replace(/[^0-9]/g, '');
+  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+export function CreateClientDialog({
   open, 
   onOpenChange, 
   onClientCreated,
@@ -144,11 +158,9 @@ export function CreateClientDialog({
               <Label>RUT</Label>
               <Input
                 value={formData.rut}
-                onChange={(e) => {
-                  const cleaned = e.target.value.replace(/[.\-]/g, '');
-                  setFormData({ ...formData, rut: cleaned });
-                }}
+                onChange={(e) => setFormData({ ...formData, rut: formatRutBody(e.target.value) })}
                 placeholder="12345678"
+                maxLength={10}
               />
             </div>
             <div>

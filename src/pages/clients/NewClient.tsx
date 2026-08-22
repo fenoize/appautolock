@@ -10,8 +10,22 @@ import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useCreateClient } from '@/hooks/useClients';
 import { ClientType, ClientStatus } from '@/types/clients';
-import { validateRUT, formatRUT } from '@/lib/rut-validation';
+import { validateRUT } from '@/lib/rut-validation';
 import { toast } from 'sonner';
+
+const formatRut = (raw: string) => {
+  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length <= 1) return clean;
+  const body = clean.slice(0, -1);
+  const dv = clean.slice(-1);
+  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${formatted}-${dv}`;
+};
+
+const formatRutBody = (raw: string) => {
+  const clean = raw.replace(/[^0-9]/g, '');
+  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
 
 const STORAGE_KEY = 'newClientFormData';
 
@@ -91,8 +105,7 @@ export default function NewClient() {
   };
 
   const handleRutChange = (value: string) => {
-    const cleaned = value.replace(/[.\-]/g, '');
-    setFormData({ ...formData, rut: cleaned });
+    setFormData({ ...formData, rut: formatRutBody(value) });
   };
 
   return (
@@ -134,9 +147,10 @@ export default function NewClient() {
                   <Label>RUT</Label>
                   <div className="flex gap-2">
                     <Input
-                      value={formatRUT(formData.rut)}
+                      value={formData.rut}
                       onChange={(e) => handleRutChange(e.target.value)}
                       placeholder="12345678"
+                      maxLength={10}
                       className="flex-1"
                     />
                     <Input
