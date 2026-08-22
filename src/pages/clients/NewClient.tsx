@@ -13,6 +13,20 @@ import { ClientType, ClientStatus } from '@/types/clients';
 import { validateRUT } from '@/lib/rut-validation';
 import { toast } from 'sonner';
 
+const formatRut = (raw: string) => {
+  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length <= 1) return clean;
+  const body = clean.slice(0, -1);
+  const dv = clean.slice(-1);
+  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${formatted}-${dv}`;
+};
+
+const formatRutBody = (raw: string) => {
+  const clean = raw.replace(/[^0-9]/g, '');
+  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
 const STORAGE_KEY = 'newClientFormData';
 
 export default function NewClient() {
