@@ -158,11 +158,9 @@ export function CreateClientDialog({
               <Label>RUT</Label>
               <Input
                 value={formData.rut}
-                onChange={(e) => {
-                  const cleaned = e.target.value.replace(/[.\-]/g, '');
-                  setFormData({ ...formData, rut: cleaned });
-                }}
+                onChange={(e) => setFormData({ ...formData, rut: formatRutBody(e.target.value) })}
                 placeholder="12345678"
+                maxLength={10}
               />
             </div>
             <div>
