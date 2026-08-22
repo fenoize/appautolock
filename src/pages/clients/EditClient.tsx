@@ -239,8 +239,9 @@ export default function EditClient() {
                     <Input
                       id="rut"
                       value={formData.rut}
-                      onChange={(e) => setFormData(prev => ({ ...prev, rut: e.target.value }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, rut: formatRutBody(e.target.value) }))}
                       placeholder="12345678"
+                      maxLength={10}
                     />
                   </div>
                   <div className="space-y-2">
@@ -248,7 +249,7 @@ export default function EditClient() {
                     <Input
                       id="dv"
                       value={formData.dv}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dv: e.target.value }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, dv: e.target.value.toUpperCase() }))}
                       placeholder="9"
                       maxLength={1}
                     />
