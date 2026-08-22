@@ -11,23 +11,10 @@ import { useClient, useUpdateClient } from '@/hooks/useClients';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ClientType, ClientStatus } from '@/types/clients';
-import { validateRUT } from '@/lib/rut-validation';
+import { validateRUT, formatRutInput, splitRutInput } from '@/lib/rut-validation';
 import { toast } from 'sonner';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
 
-const formatRut = (raw: string) => {
-  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
-  if (clean.length <= 1) return clean;
-  const body = clean.slice(0, -1);
-  const dv = clean.slice(-1);
-  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${formatted}-${dv}`;
-};
-
-const formatRutBody = (raw: string) => {
-  const clean = raw.replace(/[^0-9]/g, '');
-  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-};
 
 
 
@@ -40,7 +27,6 @@ export default function EditClient() {
   const [formData, setFormData] = useState({
     tipo: 'empresa' as ClientType,
     rut: '',
-    dv: '',
     pasaporte: '',
     razon_social: '',
     giro: '',
@@ -60,8 +46,7 @@ export default function EditClient() {
     if (client) {
       setFormData({
         tipo: client.tipo || 'empresa',
-        rut: formatRutBody(client.rut || ''),
-        dv: (client.dv || '').toUpperCase(),
+        rut: formatRutInput(`${client.rut || ''}${client.dv || ''}`),
         pasaporte: client.pasaporte || '',
         razon_social: client.razon_social || '',
         giro: client.giro || '',
@@ -81,8 +66,10 @@ export default function EditClient() {
 
     if (!id) return;
 
-    if (formData.rut && formData.dv) {
-      if (!validateRUT(formData.rut, formData.dv)) {
+    const { rut, dv } = splitRutInput(formData.rut);
+
+    if (formData.rut) {
+      if (!validateRUT(rut, dv)) {
         toast.error('RUT inválido');
         return;
       }
@@ -96,7 +83,9 @@ export default function EditClient() {
     try {
       await updateClient.mutateAsync({
         id,
-        ...formData
+        ...formData,
+        rut,
+        dv
       });
 
 
@@ -233,27 +222,15 @@ export default function EditClient() {
 
             {formData.tipo === 'empresa' ? (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-2 space-y-2">
-                    <Label htmlFor="rut">RUT</Label>
-                    <Input
-                      id="rut"
-                      value={formData.rut}
-                      onChange={(e) => setFormData(prev => ({ ...prev, rut: formatRutBody(e.target.value) }))}
-                      placeholder="12345678"
-                      maxLength={10}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dv">DV</Label>
-                    <Input
-                      id="dv"
-                      value={formData.dv}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dv: e.target.value.toUpperCase() }))}
-                      placeholder="9"
-                      maxLength={1}
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rut">RUT</Label>
+                  <Input
+                    id="rut"
+                    value={formData.rut}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rut: formatRutInput(e.target.value) }))}
+                    placeholder="19.974.581-6"
+                    maxLength={12}
+                  />
                 </div>
 
                 <div className="space-y-2">

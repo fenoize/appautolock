@@ -10,22 +10,9 @@ import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { useCreateClient } from '@/hooks/useClients';
 import { ClientType, ClientStatus } from '@/types/clients';
-import { validateRUT } from '@/lib/rut-validation';
+import { validateRUT, formatRutInput, splitRutInput } from '@/lib/rut-validation';
 import { toast } from 'sonner';
 
-const formatRut = (raw: string) => {
-  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
-  if (clean.length <= 1) return clean;
-  const body = clean.slice(0, -1);
-  const dv = clean.slice(-1);
-  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  return `${formatted}-${dv}`;
-};
-
-const formatRutBody = (raw: string) => {
-  const clean = raw.replace(/[^0-9]/g, '');
-  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-};
 
 const STORAGE_KEY = 'newClientFormData';
 
@@ -42,7 +29,6 @@ export default function NewClient() {
         return {
           tipo: 'empresa' as ClientType,
           rut: '',
-          dv: '',
           pasaporte: '',
           razon_social: '',
           giro: '',
@@ -57,7 +43,6 @@ export default function NewClient() {
     return {
       tipo: 'empresa' as ClientType,
       rut: '',
-      dv: '',
       pasaporte: '',
       razon_social: '',
       giro: '',
@@ -77,9 +62,11 @@ export default function NewClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const { rut, dv } = splitRutInput(formData.rut);
+
     // Validar RUT si se proporciona
-    if (formData.rut && formData.dv) {
-      if (!validateRUT(formData.rut, formData.dv)) {
+    if (formData.rut) {
+      if (!validateRUT(rut, dv)) {
         toast.error('RUT inválido');
         return;
       }
@@ -94,6 +81,8 @@ export default function NewClient() {
     try {
       const result = await createClient.mutateAsync({
         ...formData,
+        rut,
+        dv,
         telefonos: formData.telefonos.filter(t => t.trim() !== '')
       });
       // Limpiar localStorage después de guardar exitosamente
@@ -105,7 +94,7 @@ export default function NewClient() {
   };
 
   const handleRutChange = (value: string) => {
-    setFormData({ ...formData, rut: formatRutBody(value) });
+    setFormData({ ...formData, rut: formatRutInput(value) });
   };
 
   return (
@@ -145,22 +134,12 @@ export default function NewClient() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>RUT</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      value={formData.rut}
-                      onChange={(e) => handleRutChange(e.target.value)}
-                      placeholder="12345678"
-                      maxLength={10}
-                      className="flex-1"
-                    />
-                    <Input
-                      value={formData.dv}
-                      onChange={(e) => setFormData({ ...formData, dv: e.target.value.toUpperCase() })}
-                      placeholder="K"
-                      maxLength={1}
-                      className="w-16"
-                    />
-                  </div>
+                  <Input
+                    value={formData.rut}
+                    onChange={(e) => handleRutChange(e.target.value)}
+                    placeholder="19.974.581-6"
+                    maxLength={12}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Pasaporte (alternativo)</Label>

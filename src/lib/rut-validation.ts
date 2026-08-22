@@ -93,3 +93,26 @@ export function splitRUT(fullRut: string): { rut: string; dv: string } | null {
     dv: match[2]
   };
 }
+
+/**
+ * Formatea en vivo un RUT completo: 19.974.581-6
+ */
+export function formatRutInput(raw: string): string {
+  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length <= 1) return clean;
+  const body = clean.slice(0, -1);
+  const dv = clean.slice(-1);
+  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${formatted}-${dv}`;
+}
+
+/**
+ * Separa un RUT completo formateado en cuerpo (con puntos) y DV
+ */
+export function splitRutInput(fullRut: string): { rut: string; dv: string } {
+  const clean = (fullRut || '').replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length < 2) return { rut: '', dv: '' };
+  const body = clean.slice(0, -1);
+  const dv = clean.slice(-1);
+  return { rut: body.replace(/\B(?=(\d{3})+(?!\d))/g, '.'), dv };
+}
