@@ -11,8 +11,23 @@ import { useClient, useUpdateClient } from '@/hooks/useClients';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { ClientType, ClientStatus } from '@/types/clients';
+import { validateRUT } from '@/lib/rut-validation';
 import { toast } from 'sonner';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
+
+const formatRut = (raw: string) => {
+  const clean = raw.replace(/[^0-9kK]/g, '').toUpperCase();
+  if (clean.length <= 1) return clean;
+  const body = clean.slice(0, -1);
+  const dv = clean.slice(-1);
+  const formatted = body.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${formatted}-${dv}`;
+};
+
+const formatRutBody = (raw: string) => {
+  const clean = raw.replace(/[^0-9]/g, '');
+  return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
 
 
 
