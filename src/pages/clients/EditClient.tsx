@@ -60,8 +60,8 @@ export default function EditClient() {
     if (client) {
       setFormData({
         tipo: client.tipo || 'empresa',
-        rut: client.rut || '',
-        dv: client.dv || '',
+        rut: formatRutBody(client.rut || ''),
+        dv: (client.dv || '').toUpperCase(),
         pasaporte: client.pasaporte || '',
         razon_social: client.razon_social || '',
         giro: client.giro || '',
@@ -80,6 +80,18 @@ export default function EditClient() {
     e.preventDefault();
 
     if (!id) return;
+
+    if (formData.rut && formData.dv) {
+      if (!validateRUT(formData.rut, formData.dv)) {
+        toast.error('RUT inválido');
+        return;
+      }
+    }
+
+    if (!formData.rut && !formData.pasaporte) {
+      toast.error('Debe ingresar RUT o Pasaporte');
+      return;
+    }
 
     try {
       await updateClient.mutateAsync({
