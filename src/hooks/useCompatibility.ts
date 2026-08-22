@@ -1,8 +1,8 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export type CompatEstado = 'verde' | 'amarillo' | 'rojo';
+export type CompatEstado = "verde" | "amarillo" | "rojo";
 
 export interface VehicleCatalog {
   id: string;
@@ -27,9 +27,9 @@ export interface ProductCompatibility {
 
 export const useVehicleCatalog = (search?: string) => {
   return useQuery({
-    queryKey: ['vehicle_catalog', search],
+    queryKey: ["vehicle_catalog", search],
     queryFn: async () => {
-      let q = (supabase as any).from('vehicle_catalog').select('*').order('marca').order('modelo');
+      let q = (supabase as any).from("vehicle_catalog").select("*").order("marca").order("modelo").limit(5000);
       const { data, error } = await q;
       if (error) throw error;
       let rows = (data ?? []) as VehicleCatalog[];
@@ -39,8 +39,8 @@ export const useVehicleCatalog = (search?: string) => {
           (r) =>
             r.marca.toLowerCase().includes(s) ||
             r.modelo.toLowerCase().includes(s) ||
-            String(r.anio_desde ?? '').includes(s) ||
-            String(r.anio_hasta ?? '').includes(s),
+            String(r.anio_desde ?? "").includes(s) ||
+            String(r.anio_hasta ?? "").includes(s),
         );
       }
       return rows;
@@ -52,17 +52,13 @@ export const useCreateVehicleCatalog = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (payload: Partial<VehicleCatalog>) => {
-      const { data, error } = await (supabase as any)
-        .from('vehicle_catalog')
-        .insert(payload)
-        .select()
-        .single();
+      const { data, error } = await (supabase as any).from("vehicle_catalog").insert(payload).select().single();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['vehicle_catalog'] });
-      toast.success('Modelo agregado al catálogo');
+      qc.invalidateQueries({ queryKey: ["vehicle_catalog"] });
+      toast.success("Modelo agregado al catálogo");
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -70,13 +66,13 @@ export const useCreateVehicleCatalog = () => {
 
 export const useProductCompatibility = (productId?: string) => {
   return useQuery({
-    queryKey: ['product_compatibility', productId],
+    queryKey: ["product_compatibility", productId],
     enabled: !!productId,
     queryFn: async () => {
       const { data, error } = await (supabase as any)
-        .from('product_compatibility')
-        .select('*')
-        .eq('product_id', productId);
+        .from("product_compatibility")
+        .select("*")
+        .eq("product_id", productId);
       if (error) throw error;
       return (data ?? []) as ProductCompatibility[];
     },
@@ -95,7 +91,7 @@ export const useUpsertCompatibility = () => {
       const { data: session } = await supabase.auth.getSession();
       const userId = session.session?.user?.id;
       const { data, error } = await (supabase as any)
-        .from('product_compatibility')
+        .from("product_compatibility")
         .upsert(
           {
             product_id: payload.product_id,
@@ -105,7 +101,7 @@ export const useUpsertCompatibility = () => {
             updated_by: userId,
             updated_at: new Date().toISOString(),
           },
-          { onConflict: 'product_id,vehicle_catalog_id' },
+          { onConflict: "product_id,vehicle_catalog_id" },
         )
         .select()
         .single();
@@ -113,9 +109,9 @@ export const useUpsertCompatibility = () => {
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['product_compatibility'] });
-      qc.invalidateQueries({ queryKey: ['compatibility_for_vehicle'] });
-      toast.success('Compatibilidad actualizada');
+      qc.invalidateQueries({ queryKey: ["product_compatibility"] });
+      qc.invalidateQueries({ queryKey: ["compatibility_for_vehicle"] });
+      toast.success("Compatibilidad actualizada");
     },
     onError: (e: any) => toast.error(e.message),
   });
@@ -131,14 +127,14 @@ export const useCompatibilityForVehicle = (vehicle?: {
   anio?: number | null;
 }) => {
   return useQuery({
-    queryKey: ['compatibility_for_vehicle', vehicle?.marca, vehicle?.modelo, vehicle?.anio],
+    queryKey: ["compatibility_for_vehicle", vehicle?.marca, vehicle?.modelo, vehicle?.anio],
     enabled: !!vehicle?.marca && !!vehicle?.modelo,
     queryFn: async () => {
       const { data: cats, error: e1 } = await (supabase as any)
-        .from('vehicle_catalog')
-        .select('*')
-        .ilike('marca', vehicle!.marca!)
-        .ilike('modelo', vehicle!.modelo!);
+        .from("vehicle_catalog")
+        .select("*")
+        .ilike("marca", vehicle!.marca!)
+        .ilike("modelo", vehicle!.modelo!);
       if (e1) throw e1;
       const matching = ((cats ?? []) as VehicleCatalog[]).filter((c) => {
         if (!vehicle!.anio) return true;
@@ -149,9 +145,9 @@ export const useCompatibilityForVehicle = (vehicle?: {
       if (matching.length === 0) return [] as (ProductCompatibility & { vehicle_catalog: VehicleCatalog })[];
       const ids = matching.map((m) => m.id);
       const { data: comps, error: e2 } = await (supabase as any)
-        .from('product_compatibility')
-        .select('*')
-        .in('vehicle_catalog_id', ids);
+        .from("product_compatibility")
+        .select("*")
+        .in("vehicle_catalog_id", ids);
       if (e2) throw e2;
       const catById = new Map(matching.map((m) => [m.id, m]));
       return ((comps ?? []) as ProductCompatibility[]).map((c) => ({
