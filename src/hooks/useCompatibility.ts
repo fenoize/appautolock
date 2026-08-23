@@ -29,7 +29,12 @@ export const useVehicleCatalog = (search?: string) => {
   return useQuery({
     queryKey: ["vehicle_catalog", search],
     queryFn: async () => {
-      let q = (supabase as any).from("vehicle_catalog").select("*").order("marca").order("modelo");
+      let q = (supabase as any)
+        .from("vehicle_catalog")
+        .select("*")
+        .order("marca")
+        .order("modelo")
+        .limit(5000);
       const { data, error } = await q;
       if (error) throw error;
       let rows = (data ?? []) as VehicleCatalog[];
@@ -44,6 +49,40 @@ export const useVehicleCatalog = (search?: string) => {
         );
       }
       return rows;
+    },
+  });
+};
+
+export const useVehicleMarcas = () => {
+  return useQuery({
+    queryKey: ["vehicle_marcas"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("vehicle_catalog")
+        .select("marca")
+        .order("marca");
+      if (error) throw error;
+      const set = new Map<string, string>();
+      for (const row of (data ?? [])) set.set(row.marca.trim().toLowerCase(), row.marca);
+      return Array.from(set.values()).sort((a, b) => a.localeCompare(b));
+    },
+  });
+};
+
+export const useVehicleModelos = (marca?: string) => {
+  return useQuery({
+    queryKey: ["vehicle_modelos", marca],
+    enabled: !!marca,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("vehicle_catalog")
+        .select("modelo")
+        .eq("marca", marca)
+        .order("modelo");
+      if (error) throw error;
+      const set = new Map<string, string>();
+      for (const row of (data ?? [])) set.set(row.modelo.trim().toLowerCase(), row.modelo);
+      return Array.from(set.values()).sort((a, b) => a.localeCompare(b));
     },
   });
 };
