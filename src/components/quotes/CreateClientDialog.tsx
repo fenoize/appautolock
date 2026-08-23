@@ -82,7 +82,6 @@ export function CreateClientDialog({
         nombre_comercial: '',
         razon_social: '',
         rut: '',
-        dv: '',
         pasaporte: '',
         giro: '',
         email_principal: '',

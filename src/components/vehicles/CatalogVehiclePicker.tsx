@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import {
   Popover,
@@ -18,7 +18,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { useVehicleCatalog, type VehicleCatalog } from '@/hooks/useCompatibility';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  useVehicleMarcas,
+  useVehicleModelos,
+  type VehicleCatalog,
+} from '@/hooks/useCompatibility';
 import { AddCatalogEntryDialog } from './AddCatalogEntryDialog';
 
 export interface CatalogVehicleValue {
@@ -40,50 +46,32 @@ interface Props {
 const normalize = (s?: string | null) => (s ?? '').trim().toLowerCase();
 
 export function CatalogVehiclePicker({ value, onChange, allowAdd = true, className }: Props) {
-  const { data: catalog = [], isLoading } = useVehicleCatalog();
+  const { data: marcas = [], isLoading: isLoadingMarcas } = useVehicleMarcas();
+  const { data: modelosForMarca = [], isLoading: isLoadingModelos } = useVehicleModelos(
+    value.marca,
+  );
   const [marcaOpen, setMarcaOpen] = useState(false);
   const [modeloOpen, setModeloOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
   const [addSeed, setAddSeed] = useState<{ marca?: string; modelo?: string }>({});
 
-  const marcas = useMemo(() => {
-    const set = new Map<string, string>();
-    for (const c of catalog) set.set(normalize(c.marca), c.marca);
-    return Array.from(set.values()).sort((a, b) => a.localeCompare(b));
-  }, [catalog]);
+  const { data: catalogEntry } = useQuery({
+    queryKey: ['vehicle_entry', value.marca, value.modelo],
+    enabled: !!value.marca && !!value.modelo,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('vehicle_catalog')
+        .select('*')
+        .eq('marca', value.marca)
+        .eq('modelo', value.modelo)
+        .limit(1)
+        .single();
+      if (error) return null;
+      return data as VehicleCatalog;
+    },
+  });
 
-  const modelosForMarca = useMemo(() => {
-    if (!value.marca) return [] as string[];
-    const set = new Map<string, string>();
-    for (const c of catalog) {
-      if (normalize(c.marca) === normalize(value.marca)) {
-        set.set(normalize(c.modelo), c.modelo);
-      }
-    }
-    return Array.from(set.values()).sort((a, b) => a.localeCompare(b));
-  }, [catalog, value.marca]);
-
-  /** Best-match catalog entry for current marca/modelo/anio. */
-  const matchedEntry = useMemo<VehicleCatalog | undefined>(() => {
-    if (!value.marca || !value.modelo) return undefined;
-    const candidates = catalog.filter(
-      (c) =>
-        normalize(c.marca) === normalize(value.marca) &&
-        normalize(c.modelo) === normalize(value.modelo),
-    );
-    if (candidates.length === 0) return undefined;
-    if (value.anio) {
-      const fit = candidates.find(
-        (c) =>
-          (c.anio_desde == null || value.anio! >= c.anio_desde) &&
-          (c.anio_hasta == null || value.anio! <= c.anio_hasta),
-      );
-      if (fit) return fit;
-    }
-    return candidates[0];
-  }, [catalog, value.marca, value.modelo, value.anio]);
-
-  const applyEntry = (entry: VehicleCatalog | undefined, partial: Partial<CatalogVehicleValue>) => {
+  const applyEntry = (entry: VehicleCatalog | undefined | null, partial: Partial<CatalogVehicleValue>) => {
     const next: CatalogVehicleValue = { ...value, ...partial };
     if (entry) {
       if (entry.tipo_combustible && entry.tipo_combustible !== 'Cualquiera') {
@@ -98,17 +86,21 @@ export function CatalogVehiclePicker({ value, onChange, allowAdd = true, classNa
     onChange(next);
   };
 
+  // Apply catalog metadata whenever the targeted entry loads/changes.
+  useEffect(() => {
+    if (value.marca && value.modelo && catalogEntry) {
+      applyEntry(catalogEntry, {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalogEntry?.id]);
+
   const handleMarcaSelect = (marca: string) => {
-    const entry = catalog.find((c) => normalize(c.marca) === normalize(marca));
-    applyEntry(entry, { marca, modelo: '', anio: value.anio });
+    applyEntry(undefined, { marca, modelo: '', anio: value.anio });
     setMarcaOpen(false);
   };
 
   const handleModeloSelect = (modelo: string) => {
-    const entry = catalog.find(
-      (c) => normalize(c.marca) === normalize(value.marca) && normalize(c.modelo) === normalize(modelo),
-    );
-    applyEntry(entry, { modelo });
+    applyEntry(undefined, { modelo });
     setModeloOpen(false);
   };
 
@@ -127,6 +119,8 @@ export function CatalogVehiclePicker({ value, onChange, allowAdd = true, classNa
 
   const currentYear = new Date().getFullYear();
 
+  const isLoading = isLoadingMarcas || isLoadingModelos;
+
   return (
     <div className={cn('space-y-4', className)}>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -142,7 +136,7 @@ export function CatalogVehiclePicker({ value, onChange, allowAdd = true, classNa
                 className="w-full justify-between font-normal"
               >
                 <span className={cn(!value.marca && 'text-muted-foreground')}>
-                  {value.marca || (isLoading ? 'Cargando...' : 'Seleccionar marca')}
+                  {value.marca || (isLoadingMarcas ? 'Cargando...' : 'Seleccionar marca')}
                 </span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -200,7 +194,7 @@ export function CatalogVehiclePicker({ value, onChange, allowAdd = true, classNa
                 className="w-full justify-between font-normal"
               >
                 <span className={cn(!value.modelo && 'text-muted-foreground')}>
-                  {value.modelo || (value.marca ? 'Seleccionar modelo' : 'Elige una marca primero')}
+                  {value.modelo || (value.marca ? (isLoadingModelos ? 'Cargando...' : 'Seleccionar modelo') : 'Elige una marca primero')}
                 </span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
               </Button>
@@ -256,20 +250,13 @@ export function CatalogVehiclePicker({ value, onChange, allowAdd = true, classNa
             onChange={(e) => {
               const raw = e.target.value;
               const next = raw ? parseInt(raw, 10) : undefined;
-              const entry = catalog.find(
-                (c) =>
-                  normalize(c.marca) === normalize(value.marca) &&
-                  normalize(c.modelo) === normalize(value.modelo) &&
-                  (c.anio_desde == null || (next ?? 0) >= c.anio_desde) &&
-                  (c.anio_hasta == null || (next ?? 0) <= c.anio_hasta),
-              );
-              applyEntry(entry ?? matchedEntry, { anio: next });
+              applyEntry(catalogEntry, { anio: next });
             }}
             placeholder={String(currentYear)}
           />
-          {matchedEntry?.anio_desde && matchedEntry?.anio_hasta && (
+          {catalogEntry?.anio_desde && catalogEntry?.anio_hasta && (
             <p className="text-xs text-muted-foreground">
-              Rango catálogo: {matchedEntry.anio_desde}–{matchedEntry.anio_hasta}
+              Rango catálogo: {catalogEntry.anio_desde}–{catalogEntry.anio_hasta}
             </p>
           )}
         </div>
