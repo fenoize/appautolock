@@ -47,6 +47,7 @@ export default function SubscriptionList() {
     const term = search.trim().toLowerCase();
     return (subscriptions || []).filter((sub) => {
       if (!showArchived && sub.estado === 'archivada') return false;
+      if (term) {
         const haystack = [
           sub.folio,
           sub.client?.razon_social,
