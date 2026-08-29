@@ -7,6 +7,7 @@ import { SubscriptionStatusBadge } from '@/components/subscriptions/Subscription
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,6 +24,7 @@ export default function SubscriptionList() {
   const [search, setSearch] = useState('');
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
 
   const filters: SubscriptionFilters = useMemo(() => ({
     ...(estado !== 'todos' ? { estado: estado as SubscriptionStatus } : {}),
@@ -38,12 +40,13 @@ export default function SubscriptionList() {
     setSearch('');
     setDesde('');
     setHasta('');
+    setShowArchived(false);
   };
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return (subscriptions || []).filter((sub) => {
-      if (term) {
+      if (!showArchived && sub.estado === 'archivada') return false;
         const haystack = [
           sub.folio,
           sub.client?.razon_social,
