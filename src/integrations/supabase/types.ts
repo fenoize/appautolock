@@ -3544,7 +3544,12 @@ export type Database = {
         | "consumo"
         | "devolucion"
         | "ajuste"
-      subscription_status: "activa" | "mora" | "suspendida" | "cancelada"
+      subscription_status:
+        | "activa"
+        | "mora"
+        | "suspendida"
+        | "cancelada"
+        | "archivada"
       user_status: "activo" | "inactivo" | "invitado"
       wo_status:
         | "programada"
@@ -3716,7 +3721,13 @@ export const Constants = {
         "devolucion",
         "ajuste",
       ],
-      subscription_status: ["activa", "mora", "suspendida", "cancelada"],
+      subscription_status: [
+        "activa",
+        "mora",
+        "suspendida",
+        "cancelada",
+        "archivada",
+      ],
       user_status: ["activo", "inactivo", "invitado"],
       wo_status: [
         "programada",
