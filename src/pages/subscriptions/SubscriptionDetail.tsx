@@ -438,6 +438,24 @@ export default function SubscriptionDetail() {
         </TabsContent>
       </Tabs>
 
+      {/* Archivar confirmación */}
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Archivar esta suscripción?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El registro se mantendrá pero no aparecerá en la lista principal.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={archiving}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchive} disabled={archiving}>
+              {archiving ? 'Archivando...' : 'Archivar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Cliente quick modal */}
       <Dialog open={showClientModal} onOpenChange={setShowClientModal}>
         <DialogContent className="sm:max-w-md">
