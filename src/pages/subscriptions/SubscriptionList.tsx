@@ -64,7 +64,7 @@ export default function SubscriptionList() {
       if (hasta && (!venc || venc > hasta)) return false;
       return true;
     });
-  }, [subscriptions, search, desde, hasta]);
+  }, [subscriptions, search, desde, hasta, showArchived]);
 
   const clientName = (sub: any) => sub.client?.razon_social || sub.client?.nombre_comercial || '-';
 
@@ -136,7 +136,17 @@ export default function SubscriptionList() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={(checked) => setShowArchived(checked === true)}
+              />
+              <Label htmlFor="show-archived" className="cursor-pointer font-normal">
+                Mostrar archivadas
+              </Label>
+            </div>
             <Button variant="outline" size="sm" onClick={clearFilters}>
               <X className="h-4 w-4 mr-2" />
               Limpiar filtros
