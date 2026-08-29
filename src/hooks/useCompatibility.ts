@@ -60,7 +60,8 @@ export const useVehicleMarcas = () => {
       const { data, error } = await (supabase as any)
         .from("vehicle_catalog")
         .select("marca")
-        .order("marca");
+        .order("marca")
+        .limit(5000);
       if (error) throw error;
       const set = new Map<string, string>();
       for (const row of (data ?? [])) set.set(row.marca.trim().toLowerCase(), row.marca);
