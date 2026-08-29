@@ -157,7 +157,33 @@ export default function SubscriptionDetail() {
     }
   };
 
-  const actions = (
+  const handleArchive = async () => {
+    setArchiving(true);
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ estado: 'archivada' })
+        .eq('id', subscription.id);
+      if (error) throw error;
+      await supabase.from('subscription_events').insert({
+        subscription_id: subscription.id,
+        tipo: 'archivada',
+        notas: 'Suscripción archivada'
+      });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscription.id] });
+      toast.success('Suscripción archivada');
+      setShowArchiveDialog(false);
+    } catch (e: any) {
+      toast.error(e.message || 'Error al archivar la suscripción');
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const isArchived = subscription.estado === 'archivada';
+
+  const actions = isArchived ? null : (
     <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:pb-0">
       {(subscription.estado === 'activa' || subscription.estado === 'mora') && (
         <>
@@ -175,6 +201,12 @@ export default function SubscriptionDetail() {
         <Button className="shrink-0" onClick={handleReactivateClick}>
           <Play className="h-4 w-4 mr-2" />
           Reactivar
+        </Button>
+      )}
+      {subscription.estado === 'cancelada' && isAdmin && (
+        <Button className="shrink-0" variant="outline" onClick={() => setShowArchiveDialog(true)}>
+          <Archive className="h-4 w-4 mr-2" />
+          Archivar
         </Button>
       )}
       {subscription.estado !== 'cancelada' && (
