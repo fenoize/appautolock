@@ -72,6 +72,8 @@ function getTelefono(client: any): string {
 export default function SubscriptionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isAdmin } = usePermissions();
   const { data: subscription, isLoading } = useSubscription(id!);
   const pauseMutation = usePauseSubscription();
   const reactivateMutation = useReactivateSubscription();
@@ -84,6 +86,8 @@ export default function SubscriptionDetail() {
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [sending, setSending] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   if (isLoading) {
     return (
