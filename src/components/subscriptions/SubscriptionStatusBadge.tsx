@@ -5,14 +5,15 @@ interface Props {
   status: SubscriptionStatus;
 }
 
-const statusConfig: Record<SubscriptionStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const statusConfig: Record<SubscriptionStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
   activa: { label: "Activa", variant: "default" },
   mora: { label: "En Mora", variant: "outline" },
   suspendida: { label: "Suspendida", variant: "destructive" },
-  cancelada: { label: "Cancelada", variant: "secondary" }
+  cancelada: { label: "Cancelada", variant: "secondary" },
+  archivada: { label: "Archivada", variant: "outline", className: "text-muted-foreground border-dashed" }
 };
 
 export function SubscriptionStatusBadge({ status }: Props) {
   const config = statusConfig[status];
-  return <Badge variant={config.variant}>{config.label}</Badge>;
+  return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
 }

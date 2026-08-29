@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSubscription, usePauseSubscription, useReactivateSubscription, useCancelSubscription } from '@/hooks/useSubscriptions';
+import { usePermissions } from '@/hooks/usePermissions';
 import { SubscriptionStatusBadge } from '@/components/subscriptions/SubscriptionStatusBadge';
 import { RenewalActionModal } from '@/components/subscriptions/RenewalActionModal';
 import { Button } from '@/components/ui/button';
@@ -11,13 +13,14 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
   RefreshCw, Pause, Play, X, Cpu, Smartphone, User, Settings,
-  Copy, Send, Mail, Phone, ExternalLink, CalendarDays, ClipboardList
+  Copy, Send, Mail, Phone, ExternalLink, CalendarDays, ClipboardList, Archive
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -69,6 +72,8 @@ function getTelefono(client: any): string {
 export default function SubscriptionDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isAdmin } = usePermissions();
   const { data: subscription, isLoading } = useSubscription(id!);
   const pauseMutation = usePauseSubscription();
   const reactivateMutation = useReactivateSubscription();
@@ -81,6 +86,8 @@ export default function SubscriptionDetail() {
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [sending, setSending] = useState(false);
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   if (isLoading) {
     return (
@@ -150,7 +157,33 @@ export default function SubscriptionDetail() {
     }
   };
 
-  const actions = (
+  const handleArchive = async () => {
+    setArchiving(true);
+    try {
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ estado: 'archivada' })
+        .eq('id', subscription.id);
+      if (error) throw error;
+      await supabase.from('subscription_events').insert({
+        subscription_id: subscription.id,
+        tipo: 'archivada',
+        notas: 'Suscripción archivada'
+      });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscription.id] });
+      toast.success('Suscripción archivada');
+      setShowArchiveDialog(false);
+    } catch (e: any) {
+      toast.error(e.message || 'Error al archivar la suscripción');
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const isArchived = subscription.estado === 'archivada';
+
+  const actions = isArchived ? null : (
     <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:pb-0">
       {(subscription.estado === 'activa' || subscription.estado === 'mora') && (
         <>
@@ -168,6 +201,12 @@ export default function SubscriptionDetail() {
         <Button className="shrink-0" onClick={handleReactivateClick}>
           <Play className="h-4 w-4 mr-2" />
           Reactivar
+        </Button>
+      )}
+      {subscription.estado === 'cancelada' && isAdmin && (
+        <Button className="shrink-0" variant="outline" onClick={() => setShowArchiveDialog(true)}>
+          <Archive className="h-4 w-4 mr-2" />
+          Archivar
         </Button>
       )}
       {subscription.estado !== 'cancelada' && (
@@ -398,6 +437,24 @@ export default function SubscriptionDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Archivar confirmación */}
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Archivar esta suscripción?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El registro se mantendrá pero no aparecerá en la lista principal.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={archiving}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchive} disabled={archiving}>
+              {archiving ? 'Archivando...' : 'Archivar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Cliente quick modal */}
       <Dialog open={showClientModal} onOpenChange={setShowClientModal}>

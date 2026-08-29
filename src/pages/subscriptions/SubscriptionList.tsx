@@ -7,6 +7,7 @@ import { SubscriptionStatusBadge } from '@/components/subscriptions/Subscription
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,6 +24,7 @@ export default function SubscriptionList() {
   const [search, setSearch] = useState('');
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
 
   const filters: SubscriptionFilters = useMemo(() => ({
     ...(estado !== 'todos' ? { estado: estado as SubscriptionStatus } : {}),
@@ -38,11 +40,13 @@ export default function SubscriptionList() {
     setSearch('');
     setDesde('');
     setHasta('');
+    setShowArchived(false);
   };
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return (subscriptions || []).filter((sub) => {
+      if (!showArchived && sub.estado === 'archivada') return false;
       if (term) {
         const haystack = [
           sub.folio,
@@ -60,7 +64,7 @@ export default function SubscriptionList() {
       if (hasta && (!venc || venc > hasta)) return false;
       return true;
     });
-  }, [subscriptions, search, desde, hasta]);
+  }, [subscriptions, search, desde, hasta, showArchived]);
 
   const clientName = (sub: any) => sub.client?.razon_social || sub.client?.nombre_comercial || '-';
 
@@ -132,7 +136,17 @@ export default function SubscriptionList() {
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={(checked) => setShowArchived(checked === true)}
+              />
+              <Label htmlFor="show-archived" className="cursor-pointer font-normal">
+                Mostrar archivadas
+              </Label>
+            </div>
             <Button variant="outline" size="sm" onClick={clearFilters}>
               <X className="h-4 w-4 mr-2" />
               Limpiar filtros
