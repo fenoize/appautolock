@@ -123,8 +123,9 @@ export function AppSidebar() {
           badgeVariant: expiringCount > 0 ? 'destructive' : 'default',
           show: isAdmin || can('view', 'subscriptions'),
           items: [
+            { title: 'Dashboard', path: '/subscriptions/dashboard' },
             { title: 'Nueva', path: '/subscriptions/new' },
-            { title: 'Listado', path: '/subscriptions' },
+            { title: 'Listado', path: '/subscriptions/list' },
             { title: 'Vencimientos', path: '/subscriptions/expiring', badge: expiringCount },
             { title: 'Planes', path: '/subscriptions/plans' },
           ],
