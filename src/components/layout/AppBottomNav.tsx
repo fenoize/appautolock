@@ -1,3 +1,4 @@
+import type { ElementType } from 'react';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -34,7 +35,16 @@ const mainItems = [
   { icon: Users, label: 'Clientes', path: '/clients' },
 ];
 
-const moreSections = [
+type MoreItem = {
+  icon: ElementType;
+  label: string;
+  path: string;
+  show?: boolean;
+  showKey?: string;
+  badge?: 'expiring';
+};
+
+const moreSections: Array<{ label: string; items: MoreItem[] }> = [
   {
     label: 'Consultas',
     items: [
