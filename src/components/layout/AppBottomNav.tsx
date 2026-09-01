@@ -1,56 +1,96 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
-  Car,
-  FileText,
   Wrench,
-  Radio,
-  Package,
-  UserCog,
-  Briefcase,
-  Settings,
-  SearchCheck,
+  Plus,
   MoreHorizontal,
+  SearchCheck,
+  FileText,
+  Car,
+  Radio,
+  AlertTriangle,
+  Briefcase,
+  Package,
+  Truck,
+  UserCog,
+  Settings,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
   SheetContent,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useExpiringSubscriptions } from '@/hooks/useSubscriptions';
 
 const mainItems = [
   { icon: LayoutDashboard, label: 'Escritorio', path: '/dashboard' },
   { icon: Users, label: 'Clientes', path: '/clients' },
-  { icon: Wrench, label: 'OTs', path: '/work-orders' },
 ];
 
-const moreItems = [
-  { label: 'Consultar', path: '/consultar', icon: SearchCheck },
-  { label: 'Vehículos', path: '/vehicles', icon: Car },
-  { label: 'Cotizaciones', path: '/quotes', icon: FileText },
-  { label: 'Suscripciones', path: '/subscriptions', icon: Radio },
-  { label: 'Vencimientos', path: '/subscriptions/expiring', icon: Radio },
-  { label: 'Servicios', path: '/services', icon: Briefcase },
-  { label: 'Inventario', path: '/inventory', icon: Package },
-  { label: 'Usuarios', path: '/admin/users', icon: UserCog },
-  { label: 'Configuración', path: '/settings', icon: Settings },
+const moreSections = [
+  {
+    label: 'Consultas',
+    items: [
+      { icon: SearchCheck, label: 'Consultar', path: '/consultar', show: true },
+      { icon: FileText, label: 'Cotizaciones', path: '/quotes', showKey: 'quotes' },
+      { icon: Car, label: 'Vehículos', path: '/vehicles', showKey: 'vehicles' },
+    ],
+  },
+  {
+    label: 'GPS',
+    items: [
+      { icon: Radio, label: 'Suscripciones', path: '/subscriptions/dashboard', showKey: 'subscriptions' },
+      { icon: AlertTriangle, label: 'Vencimientos', path: '/subscriptions/expiring', showKey: 'subscriptions', badge: 'expiring' },
+    ],
+  },
+  {
+    label: 'Catálogo',
+    items: [
+      { icon: Briefcase, label: 'Servicios', path: '/services', showKey: 'services' },
+      { icon: Package, label: 'Inventario', path: '/inventory', showKey: 'inventory' },
+      { icon: Truck, label: 'Proveedores', path: '/proveedores', showKey: 'inventory' },
+    ],
+  },
 ];
 
 export function AppBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAdmin } = usePermissions();
+  const [open, setOpen] = useState(false);
+  const { isAdmin, can } = usePermissions();
+  const { data: expiring } = useExpiringSubscriptions(10);
+  const expiringCount = expiring?.length ?? 0;
 
   const isActive = (path: string) => location.pathname.startsWith(path);
 
-  const visibleMoreItems = moreItems.filter(
-    (item) => item.path !== '/admin/users' || isAdmin
-  );
+  const canShow = (showKey?: string) => {
+    if (!showKey) return true;
+    return isAdmin || can('view', showKey as any);
+  };
+
+  const visibleMoreSections = moreSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        if (item.showKey === 'subscriptions' && !isAdmin && !can('view', 'subscriptions')) {
+          return false;
+        }
+        return canShow(item.showKey);
+      }),
+    }))
+    .filter((section) => section.items.length > 0);
+
+  const handleNavigate = (path: string) => {
+    setOpen(false);
+    navigate(path);
+  };
 
   return (
     <div
@@ -61,50 +101,129 @@ export function AppBottomNav() {
         zIndex: 'var(--z-header)',
       }}
     >
-      <div className="flex items-center justify-around h-full">
+      <div className="flex items-end justify-around h-full px-1">
         {mainItems.map((item) => (
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
             className={cn(
-              'flex flex-col items-center justify-center flex-1 h-full gap-1',
+              'flex flex-col items-center justify-center flex-1 h-full gap-1 pb-1',
               isActive(item.path) ? 'text-primary' : 'text-muted-foreground'
             )}
           >
             <item.icon className="h-5 w-5" />
-            <span className="text-xs">{item.label}</span>
+            <span className="text-[10px]">{item.label}</span>
           </button>
         ))}
 
-        <Sheet>
+        <div className="flex flex-col items-center justify-end flex-1 h-full">
+          <button
+            onClick={() => navigate('/work-orders/new')}
+            className="flex items-center justify-center rounded-full shadow-md"
+            style={{
+              width: 52,
+              height: 52,
+              marginTop: -20,
+              backgroundColor: 'hsl(var(--primary))',
+              color: 'hsl(var(--primary-foreground))',
+            }}
+            aria-label="Nueva OT"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+          <span className="text-[10px] text-primary mt-0.5">Nueva OT</span>
+        </div>
+
+        <button
+          onClick={() => navigate('/work-orders')}
+          className={cn(
+            'flex flex-col items-center justify-center flex-1 h-full gap-1 pb-1',
+            isActive('/work-orders') ? 'text-primary' : 'text-muted-foreground'
+          )}
+        >
+          <Wrench className="h-5 w-5" />
+          <span className="text-[10px]">OTs</span>
+        </button>
+
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <button className="flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground">
+            <button
+              className={cn(
+                'flex flex-col items-center justify-center flex-1 h-full gap-1 pb-1',
+                open ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
               <MoreHorizontal className="h-5 w-5" />
-              <span className="text-xs">Más</span>
+              <span className="text-[10px]">Más</span>
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-auto max-h-[85vh] flex flex-col">
-            <SheetHeader className="shrink-0">
-              <SheetTitle>Menú</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 grid grid-cols-3 gap-3 pb-6 overflow-y-auto flex-1 min-h-0">
-              {visibleMoreItems.map((item) => (
+          <SheetContent side="bottom" className="h-auto max-h-[82vh] flex flex-col px-0 pb-0">
+            <div className="flex flex-col h-full">
+              <div className="px-4 pt-2 pb-3 shrink-0">
+                <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-muted" />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Menú</span>
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="rounded-full bg-muted p-1 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label="Cerrar menú"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <Separator />
+              <div className="flex-1 overflow-y-auto px-4 py-3">
+                {visibleMoreSections.map((section) => (
+                  <div key={section.label}>
+                    <p className="mb-1 mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 first:mt-0">
+                      {section.label}
+                    </p>
+                    <div className="space-y-0.5">
+                      {section.items.map((item) => (
+                        <button
+                          key={item.path}
+                          onClick={() => handleNavigate(item.path)}
+                          className="flex w-full items-center gap-3 px-1 py-[11px] text-left hover:bg-muted/50 rounded-lg transition-colors"
+                        >
+                          <item.icon className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />
+                          <span className="text-sm">{item.label}</span>
+                          {item.badge === 'expiring' && expiringCount > 0 && (
+                            <Badge variant="destructive" className="ml-auto text-[10px] px-1.5">
+                              {expiringCount}
+                            </Badge>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {isAdmin && (
+                  <div>
+                    <p className="mb-1 mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+                      Administración
+                    </p>
+                    <button
+                      onClick={() => handleNavigate('/admin/users')}
+                      className="flex w-full items-center gap-3 px-1 py-[11px] text-left hover:bg-muted/50 rounded-lg transition-colors"
+                    >
+                      <UserCog className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />
+                      <span className="text-sm">Usuarios</span>
+                    </button>
+                  </div>
+                )}
+
+                <Separator className="my-3" />
+
                 <button
-                  key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                  }}
-                  className={cn(
-                    'flex flex-col items-center justify-center gap-2 rounded-xl border p-4 text-center transition-colors',
-                    isActive(item.path)
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-card text-foreground hover:bg-accent'
-                  )}
+                  onClick={() => handleNavigate('/settings')}
+                  className="flex w-full items-center gap-3 px-1 py-[11px] text-left hover:bg-muted/50 rounded-lg transition-colors text-muted-foreground"
                 >
-                  <item.icon className="h-6 w-6" />
-                  <span className="text-xs font-medium leading-tight">{item.label}</span>
+                  <Settings className="h-[18px] w-[18px] shrink-0" />
+                  <span className="text-sm">Configuración</span>
                 </button>
-              ))}
+              </div>
             </div>
           </SheetContent>
         </Sheet>
