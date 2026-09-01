@@ -53,9 +53,14 @@ export function AppTopbar() {
     navigate('/login');
   };
 
-  const userInitials = profile
-    ? `${profile.nombre?.[0] || ''}${profile.apellido?.[0] || ''}`
-    : session?.user?.email?.[0]?.toUpperCase() || 'U';
+  const getInitials = () => {
+    if (profile?.nombre || profile?.apellido) {
+      return `${profile.nombre?.[0] || ''}${profile.apellido?.[0] || ''}`.toUpperCase();
+    }
+    const emailLocal = session?.user?.email?.split('@')[0] ?? '';
+    return emailLocal.slice(0, 2).toUpperCase() || 'U';
+  };
+  const userInitials = getInitials();
 
   return (
     <header
@@ -203,7 +208,7 @@ export function AppTopbar() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 gap-2 px-2 ml-1 rounded-full hover:bg-muted">
                 <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-primary-soft text-primary text-xs font-semibold">
+                  <AvatarFallback className="bg-muted text-foreground text-xs font-semibold">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>
