@@ -10,6 +10,7 @@ import {
   ArrowRight,
   RefreshCw,
   Loader2,
+  Info,
 } from 'lucide-react';
 import { PageContainer } from '@/components/shared/PageContainer';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -18,6 +19,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { RenewalActionModal } from '@/components/subscriptions/RenewalActionModal';
 import {
@@ -55,6 +62,22 @@ function Delta({ value, label }: { value: number; label: string }) {
       {sign}
       {value} {label}
     </p>
+  );
+}
+
+function InfoLabel({ label, tooltip }: { label: string; tooltip: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {label}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs">
+          {tooltip}
+        </TooltipContent>
+      </Tooltip>
+    </span>
   );
 }
 
@@ -283,31 +306,48 @@ export default function SubscriptionsDashboard() {
               <CardHeader>
                 <CardTitle className="text-base">Métricas financieras</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">MRR total</p>
-                  <p className="text-3xl font-bold">{clp(m.mrr)}</p>
-                  <p
-                    className={cn(
-                      'text-xs mt-1',
-                      m.mrrDeltaPct >= 0 ? 'text-emerald-600' : 'text-destructive'
-                    )}
-                  >
-                    {m.mrrDeltaPct >= 0 ? '+' : ''}
-                    {m.mrrDeltaPct.toFixed(1)}% vs {periodLabel}
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="rounded-lg border p-3">
-                    <p className="text-xs text-muted-foreground">ARR proyectado</p>
-                    <p className="text-lg font-semibold">{clp(m.arr)}</p>
+              <TooltipProvider>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                      <InfoLabel
+                        label="MRR total"
+                        tooltip="Ingreso Recurrente Mensual. Es la suma del precio de todas las suscripciones activas en un mes."
+                      />
+                    </p>
+                    <p className="text-3xl font-bold">{clp(m.mrr)}</p>
+                    <p
+                      className={cn(
+                        'text-xs mt-1',
+                        m.mrrDeltaPct >= 0 ? 'text-emerald-600' : 'text-destructive'
+                      )}
+                    >
+                      {m.mrrDeltaPct >= 0 ? '+' : ''}
+                      {m.mrrDeltaPct.toFixed(1)}% vs {periodLabel}
+                    </p>
                   </div>
-                  <div className="rounded-lg border p-3">
-                    <p className="text-xs text-muted-foreground">Tasa de renovación</p>
-                    <p className="text-lg font-semibold">{m.renovacion.toFixed(1)}%</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">
+                        <InfoLabel
+                          label="ARR proyectado"
+                          tooltip="Ingreso Recurrente Anual proyectado. Es el MRR multiplicado por 12."
+                        />
+                      </p>
+                      <p className="text-lg font-semibold">{clp(m.arr)}</p>
+                    </div>
+                    <div className="rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">
+                        <InfoLabel
+                          label="Tasa de renovación"
+                          tooltip="Porcentaje de suscripciones que se renuevan al vencer. Se calcula sobre las suscripciones vencidas en el período seleccionado."
+                        />
+                      </p>
+                      <p className="text-lg font-semibold">{m.renovacion.toFixed(1)}%</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
+                </CardContent>
+              </TooltipProvider>
             </Card>
 
             <Card>
