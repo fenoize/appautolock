@@ -237,76 +237,76 @@ export default function SubscriptionsDashboard() {
         : 'año anterior';
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="Dashboard Suscripciones GPS"
-        description={format(new Date(), "MMMM yyyy", { locale: es }).replace(/^\w/, c => c.toUpperCase())}
-        action={
-          <Tabs value={period} onValueChange={v => setPeriod(v as DashboardPeriod)}>
-            <TabsList>
-              <TabsTrigger value="mes">Este mes</TabsTrigger>
-              <TabsTrigger value="3meses">Últimos 3 meses</TabsTrigger>
-              <TabsTrigger value="anio">Este año</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        }
-      />
+    <TooltipProvider delayDuration={300}>
+      <PageContainer>
+        <PageHeader
+          title="Dashboard Suscripciones GPS"
+          description={format(new Date(), "MMMM yyyy", { locale: es }).replace(/^\w/, c => c.toUpperCase())}
+          action={
+            <Tabs value={period} onValueChange={v => setPeriod(v as DashboardPeriod)}>
+              <TabsList>
+                <TabsTrigger value="mes">Este mes</TabsTrigger>
+                <TabsTrigger value="3meses">Últimos 3 meses</TabsTrigger>
+                <TabsTrigger value="anio">Este año</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          }
+        />
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <KpiCard
-              title="Activas"
-              icon={Radio}
-              stripe="bg-emerald-500"
-              count={m.activas.length}
-              amount={m.mrr}
-              amountLabel="/mes"
-              delta={m.nuevasDelta}
-              deltaLabel={`vs ${periodLabel}`}
-            />
-            <KpiCard
-              title="Nuevas"
-              icon={TrendingUp}
-              stripe="bg-blue-500"
-              count={m.nuevas.length}
-              amount={m.sum(m.nuevas)}
-              amountLabel="ingresados"
-              delta={m.nuevasDelta}
-              deltaLabel={`vs ${periodLabel}`}
-            />
-            <KpiCard
-              title="Próximas a vencer"
-              icon={AlertTriangle}
-              stripe="bg-amber-500"
-              count={m.porVencer.length}
-              amount={m.sum(m.porVencer)}
-              amountLabel="en riesgo"
-              delta={0}
-              deltaLabel="próximos 7 días"
-            />
-            <KpiCard
-              title="Vencidas / Mora"
-              icon={XCircle}
-              stripe="bg-destructive"
-              count={m.vencidas.length}
-              amount={m.sum(m.vencidas)}
-              amountLabel="sin renovar"
-              delta={0}
-              deltaLabel="acumuladas"
-            />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
           </div>
+        ) : (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <KpiCard
+                title="Activas"
+                icon={Radio}
+                stripe="bg-emerald-500"
+                count={m.activas.length}
+                amount={m.mrr}
+                amountLabel="/mes"
+                delta={m.nuevasDelta}
+                deltaLabel={`vs ${periodLabel}`}
+              />
+              <KpiCard
+                title="Nuevas"
+                icon={TrendingUp}
+                stripe="bg-blue-500"
+                count={m.nuevas.length}
+                amount={m.sum(m.nuevas)}
+                amountLabel="ingresados"
+                delta={m.nuevasDelta}
+                deltaLabel={`vs ${periodLabel}`}
+              />
+              <KpiCard
+                title="Próximas a vencer"
+                icon={AlertTriangle}
+                stripe="bg-amber-500"
+                count={m.porVencer.length}
+                amount={m.sum(m.porVencer)}
+                amountLabel="en riesgo"
+                delta={0}
+                deltaLabel="próximos 7 días"
+              />
+              <KpiCard
+                title="Vencidas / Mora"
+                icon={XCircle}
+                stripe="bg-destructive"
+                count={m.vencidas.length}
+                amount={m.sum(m.vencidas)}
+                amountLabel="sin renovar"
+                delta={0}
+                deltaLabel="acumuladas"
+              />
+            </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Métricas financieras</CardTitle>
-              </CardHeader>
-              <TooltipProvider>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Métricas financieras</CardTitle>
+                </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -347,129 +347,129 @@ export default function SubscriptionsDashboard() {
                     </div>
                   </div>
                 </CardContent>
-              </TooltipProvider>
-            </Card>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Distribución por plan</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {m.porPlan.length === 0 && (
-                  <p className="text-sm text-muted-foreground">Sin suscripciones activas.</p>
-                )}
-                {m.porPlan.map(p => (
-                  <div key={p.nombre} className="space-y-1">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="truncate font-medium">{p.nombre}</span>
-                      <span className="text-muted-foreground">
-                        {p.count} · {clp(p.monto)}
-                      </span>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Distribución por plan</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {m.porPlan.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Sin suscripciones activas.</p>
+                  )}
+                  {m.porPlan.map(p => (
+                    <div key={p.nombre} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="truncate font-medium">{p.nombre}</span>
+                        <span className="text-muted-foreground">
+                          {p.count} · {clp(p.monto)}
+                        </span>
+                      </div>
+                      <Progress value={(p.count / m.maxPlan) * 100} className="h-2" />
                     </div>
-                    <Progress value={(p.count / m.maxPlan) * 100} className="h-2" />
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Nuevas del período</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {m.nuevasLista.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin nuevas suscripciones.</p>
-                ) : (
-                  m.nuevasLista.map(s => (
-                    <Row
-                      key={s.id}
-                      sub={s}
-                      right={
-                        <Badge variant="secondary">
-                          Hace {Math.max(0, daysBetween(m.now, new Date(s.fecha_inicio)))}d
-                        </Badge>
-                      }
-                      action={
-                        <Button size="sm" variant="outline" onClick={() => navigate(`/subscriptions/${s.id}`)}>
-                          Ver
-                        </Button>
-                      }
-                    />
-                  ))
-                )}
-                <Button
-                  variant="link"
-                  className="mt-2 px-0"
-                  onClick={() => navigate('/subscriptions/list')}
-                >
-                  Ver todas <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Próximas a vencer (7 días)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {m.porVencerLista.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin vencimientos próximos.</p>
-                ) : (
-                  m.porVencerLista.map(s => {
-                    const dias = Math.max(0, daysBetween(new Date(s.fecha_vencimiento), m.now));
-                    return (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Nuevas del período</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {m.nuevasLista.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin nuevas suscripciones.</p>
+                  ) : (
+                    m.nuevasLista.map(s => (
                       <Row
                         key={s.id}
                         sub={s}
                         right={
-                          <span
-                            className={cn(
-                              'rounded-md px-2 py-1 text-xs font-medium text-white',
-                              dias <= 1 ? 'bg-destructive' : dias <= 5 ? 'bg-amber-500' : 'bg-emerald-500'
-                            )}
-                          >
-                            {dias}d
-                          </span>
+                          <Badge variant="secondary">
+                            Hace {Math.max(0, daysBetween(m.now, new Date(s.fecha_inicio)))}d
+                          </Badge>
                         }
                         action={
-                          <Button size="sm" variant="outline" onClick={() => setRenewTarget(s)}>
-                            <RefreshCw className="mr-1 h-3.5 w-3.5" /> Renovar
+                          <Button size="sm" variant="outline" onClick={() => navigate(`/subscriptions/${s.id}`)}>
+                            Ver
                           </Button>
                         }
                       />
-                    );
-                  })
-                )}
-                <Button
-                  variant="link"
-                  className="mt-2 px-0"
-                  onClick={() => navigate('/subscriptions/expiring')}
-                >
-                  Ver todas <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </>
-      )}
+                    ))
+                  )}
+                  <Button
+                    variant="link"
+                    className="mt-2 px-0"
+                    onClick={() => navigate('/subscriptions/list')}
+                  >
+                    Ver todas <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
 
-      {renewTarget && (
-        <RenewalActionModal
-          open={!!renewTarget}
-          onOpenChange={open => !open && setRenewTarget(null)}
-          mode="renovar"
-          subscription={{
-            id: renewTarget.id,
-            folio: renewTarget.folio,
-            fecha_vencimiento: renewTarget.fecha_vencimiento,
-            client: renewTarget.client ?? undefined,
-            vehicle: renewTarget.vehicle ?? undefined,
-            plan: renewTarget.plan ?? undefined,
-          } as any}
-        />
-      )}
-    </PageContainer>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Próximas a vencer (7 días)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {m.porVencerLista.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin vencimientos próximos.</p>
+                  ) : (
+                    m.porVencerLista.map(s => {
+                      const dias = Math.max(0, daysBetween(new Date(s.fecha_vencimiento), m.now));
+                      return (
+                        <Row
+                          key={s.id}
+                          sub={s}
+                          right={
+                            <span
+                              className={cn(
+                                'rounded-md px-2 py-1 text-xs font-medium text-white',
+                                dias <= 1 ? 'bg-destructive' : dias <= 5 ? 'bg-amber-500' : 'bg-emerald-500'
+                              )}
+                            >
+                              {dias}d
+                            </span>
+                          }
+                          action={
+                            <Button size="sm" variant="outline" onClick={() => setRenewTarget(s)}>
+                              <RefreshCw className="mr-1 h-3.5 w-3.5" /> Renovar
+                            </Button>
+                          }
+                        />
+                      );
+                    })
+                  )}
+                  <Button
+                    variant="link"
+                    className="mt-2 px-0"
+                    onClick={() => navigate('/subscriptions/expiring')}
+                  >
+                    Ver todas <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
+
+        {renewTarget && (
+          <RenewalActionModal
+            open={!!renewTarget}
+            onOpenChange={open => !open && setRenewTarget(null)}
+            mode="renovar"
+            subscription={{
+              id: renewTarget.id,
+              folio: renewTarget.folio,
+              fecha_vencimiento: renewTarget.fecha_vencimiento,
+              client: renewTarget.client ?? undefined,
+              vehicle: renewTarget.vehicle ?? undefined,
+              plan: renewTarget.plan ?? undefined,
+            } as any}
+          />
+        )}
+      </PageContainer>
+    </TooltipProvider>
   );
 }
