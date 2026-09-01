@@ -9,16 +9,27 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-export function StockAlertsTable() {
-  const { data: alerts, isLoading } = useStockAlerts(false);
+interface StockAlertsTableProps {
+  /** Máximo de filas a mostrar */
+  limit?: number;
+  /** Renderiza solo la tabla, sin Card ni header (para embeber) */
+  bare?: boolean;
+}
+
+export function StockAlertsTable({ limit, bare = false }: StockAlertsTableProps = {}) {
+  const { data: allAlerts, isLoading } = useStockAlerts(false);
   const navigate = useNavigate();
+  const alerts = limit ? allAlerts?.slice(0, limit) : allAlerts;
+
 
   const handleExport = () => {
-    if (!alerts || alerts.length === 0) return;
+    if (!allAlerts || allAlerts.length === 0) return;
+
     
     const csv = [
       ['Producto', 'Ubicación', 'Stock Actual', 'Stock Mínimo', 'Tipo'],
-      ...alerts.map(a => [
+      ...allAlerts.map(a => [
+
         a.product?.nombre || '-',
         a.location?.nombre || '-',
         a.stock_actual.toString(),
@@ -37,29 +48,22 @@ export function StockAlertsTable() {
   };
 
   if (isLoading) {
+    const skeleton = <Skeleton className="h-40 w-full" />;
+    if (bare) return skeleton;
     return (
       <Card>
         <CardHeader>
           <CardTitle>Stock Crítico</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Skeleton className="h-40 w-full" />
-        </CardContent>
+        <CardContent>{skeleton}</CardContent>
       </Card>
     );
   }
 
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Stock Crítico</CardTitle>
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-2" />
-          Exportar
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {alerts && alerts.length > 0 ? (
+  const body = (
+    <>
+      {alerts && alerts.length > 0 ? (
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -100,8 +104,23 @@ export function StockAlertsTable() {
           <p className="text-center text-muted-foreground py-8">
             No hay alertas de stock crítico
           </p>
-        )}
-      </CardContent>
+      )}
+    </>
+  );
+
+  if (bare) return body;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Stock Crítico</CardTitle>
+        <Button variant="outline" size="sm" onClick={handleExport}>
+          <Download className="h-4 w-4 mr-2" />
+          Exportar
+        </Button>
+      </CardHeader>
+      <CardContent>{body}</CardContent>
     </Card>
   );
 }
+
