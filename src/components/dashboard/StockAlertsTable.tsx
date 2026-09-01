@@ -23,7 +23,8 @@ export function StockAlertsTable({ limit, bare = false }: StockAlertsTableProps 
 
 
   const handleExport = () => {
-    if (!alerts || alerts.length === 0) return;
+    if (!allAlerts || allAlerts.length === 0) return;
+
     
     const csv = [
       ['Producto', 'Ubicación', 'Stock Actual', 'Stock Mínimo', 'Tipo'],
