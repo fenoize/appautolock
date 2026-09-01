@@ -48,29 +48,22 @@ export function StockAlertsTable({ limit, bare = false }: StockAlertsTableProps 
   };
 
   if (isLoading) {
+    const skeleton = <Skeleton className="h-40 w-full" />;
+    if (bare) return skeleton;
     return (
       <Card>
         <CardHeader>
           <CardTitle>Stock Crítico</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Skeleton className="h-40 w-full" />
-        </CardContent>
+        <CardContent>{skeleton}</CardContent>
       </Card>
     );
   }
 
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Stock Crítico</CardTitle>
-        <Button variant="outline" size="sm" onClick={handleExport}>
-          <Download className="h-4 w-4 mr-2" />
-          Exportar
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {alerts && alerts.length > 0 ? (
+  const body = (
+    <>
+      {alerts && alerts.length > 0 ? (
+
           <Table>
             <TableHeader>
               <TableRow>
