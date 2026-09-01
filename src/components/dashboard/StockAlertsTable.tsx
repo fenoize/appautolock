@@ -104,8 +104,23 @@ export function StockAlertsTable({ limit, bare = false }: StockAlertsTableProps 
           <p className="text-center text-muted-foreground py-8">
             No hay alertas de stock crítico
           </p>
-        )}
-      </CardContent>
+      )}
+    </>
+  );
+
+  if (bare) return body;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Stock Crítico</CardTitle>
+        <Button variant="outline" size="sm" onClick={handleExport}>
+          <Download className="h-4 w-4 mr-2" />
+          Exportar
+        </Button>
+      </CardHeader>
+      <CardContent>{body}</CardContent>
     </Card>
   );
 }
+
