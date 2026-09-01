@@ -111,8 +111,6 @@ function Row({
   action: React.ReactNode;
 }) {
   const name = clientName(sub);
-  const tecnico = sub.work_order?.tecnico;
-  const tecnicoName = tecnico ? `${tecnico.nombre ?? ''} ${tecnico.apellido ?? ''}`.trim() : null;
   return (
     <div className="flex items-center gap-3 py-3 border-b last:border-0">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
@@ -122,7 +120,6 @@ function Row({
         <p className="truncate text-sm font-medium">{name}</p>
         <p className="truncate text-xs text-muted-foreground">
           {sub.vehicle?.patente || 'Sin patente'}
-          {tecnicoName ? ` · ${tecnicoName}` : ''}
         </p>
         <p className="truncate text-xs text-muted-foreground">
           {sub.plan?.nombre ?? '-'} · {clp(sub.plan?.precio ?? 0)}

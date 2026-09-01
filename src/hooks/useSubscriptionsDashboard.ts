@@ -13,7 +13,6 @@ export interface DashboardSubscription {
   plan?: { id: string; nombre: string; precio: number } | null;
   client?: { id: string; razon_social?: string | null; nombre_comercial?: string | null; email_principal?: string | null } | null;
   vehicle?: { id: string; patente?: string | null; marca?: string | null; modelo?: string | null } | null;
-  work_order?: { id: string; folio: string; tecnico?: { nombre?: string | null; apellido?: string | null } | null } | null;
 }
 
 export function periodRange(period: DashboardPeriod) {
@@ -32,14 +31,13 @@ export function useSubscriptionsDashboardData() {
   return useQuery({
     queryKey: ['dashboard_suscripciones'],
     queryFn: async () => {
-      const { data, error } = await supabase
+    const { data, error } = await supabase
         .from('subscriptions')
         .select(`
           id, folio, estado, fecha_inicio, fecha_vencimiento, plan_id,
           plan:subscription_plans(id, nombre, precio),
           client:clients(id, razon_social, nombre_comercial, email_principal),
-          vehicle:vehicles(id, patente, marca, modelo),
-          work_order:work_orders!subscriptions_wo_id_fkey(id, folio, tecnico:profiles(nombre, apellido))
+          vehicle:vehicles(id, patente, marca, modelo)
         `)
         .limit(5000);
       if (error) throw error;
