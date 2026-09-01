@@ -28,7 +28,8 @@ export function StockAlertsTable({ limit, bare = false }: StockAlertsTableProps 
     
     const csv = [
       ['Producto', 'Ubicación', 'Stock Actual', 'Stock Mínimo', 'Tipo'],
-      ...alerts.map(a => [
+      ...allAlerts.map(a => [
+
         a.product?.nombre || '-',
         a.location?.nombre || '-',
         a.stock_actual.toString(),
