@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -26,6 +26,7 @@ import WODetail from "./pages/workOrders/WODetail";
 import WOCalendar from "./pages/workOrders/WOCalendar";
 import EditWO from "./pages/workOrders/EditWO";
 import SubscriptionList from "./pages/subscriptions/SubscriptionList";
+import SubscriptionsDashboard from "./pages/subscriptions/SubscriptionsDashboard";
 import SubscriptionDetail from "./pages/subscriptions/SubscriptionDetail";
 import NewSubscription from "./pages/subscriptions/NewSubscription";
 import SubscriptionPlans from "./pages/subscriptions/SubscriptionPlans";
@@ -105,7 +106,9 @@ const App = () => (
           <Route path="/work-orders/new" element={<ProtectedRoute><AppLayout><NewWO /></AppLayout></ProtectedRoute>} />
           <Route path="/work-orders/:id" element={<ProtectedRoute><AppLayout><WODetail /></AppLayout></ProtectedRoute>} />
           <Route path="/work-orders/:id/edit" element={<ProtectedRoute><AppLayout><EditWO /></AppLayout></ProtectedRoute>} />
-          <Route path="/subscriptions" element={<ProtectedRoute><AppLayout><SubscriptionList /></AppLayout></ProtectedRoute>} />
+          <Route path="/subscriptions" element={<Navigate to="/subscriptions/dashboard" replace />} />
+          <Route path="/subscriptions/dashboard" element={<ProtectedRoute><AppLayout><SubscriptionsDashboard /></AppLayout></ProtectedRoute>} />
+          <Route path="/subscriptions/list" element={<ProtectedRoute><AppLayout><SubscriptionList /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/new" element={<ProtectedRoute><AppLayout><NewSubscription /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/expiring" element={<ProtectedRoute><AppLayout><SubscriptionExpiring /></AppLayout></ProtectedRoute>} />
           <Route path="/subscriptions/:id" element={<ProtectedRoute><AppLayout><SubscriptionDetail /></AppLayout></ProtectedRoute>} />
