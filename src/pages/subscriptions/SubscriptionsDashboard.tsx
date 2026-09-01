@@ -65,6 +65,22 @@ function Delta({ value, label }: { value: number; label: string }) {
   );
 }
 
+function InfoLabel({ label, tooltip }: { label: string; tooltip: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      {label}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Info className="h-3 w-3 text-muted-foreground cursor-help" />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs">
+          {tooltip}
+        </TooltipContent>
+      </Tooltip>
+    </span>
+  );
+}
+
 function KpiCard({
   title,
   icon: Icon,
