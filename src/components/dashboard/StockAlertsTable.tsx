@@ -9,9 +9,18 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-export function StockAlertsTable() {
-  const { data: alerts, isLoading } = useStockAlerts(false);
+interface StockAlertsTableProps {
+  /** Máximo de filas a mostrar */
+  limit?: number;
+  /** Renderiza solo la tabla, sin Card ni header (para embeber) */
+  bare?: boolean;
+}
+
+export function StockAlertsTable({ limit, bare = false }: StockAlertsTableProps = {}) {
+  const { data: allAlerts, isLoading } = useStockAlerts(false);
   const navigate = useNavigate();
+  const alerts = limit ? allAlerts?.slice(0, limit) : allAlerts;
+
 
   const handleExport = () => {
     if (!alerts || alerts.length === 0) return;
