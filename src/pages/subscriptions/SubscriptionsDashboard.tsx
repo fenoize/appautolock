@@ -169,19 +169,26 @@ export default function SubscriptionsDashboard() {
     const price = (s: DashboardSubscription) => s.plan?.precio ?? 0;
     const sum = (arr: DashboardSubscription[]) => arr.reduce((t, s) => t + price(s), 0);
 
-    const activas = list.filter(s => s.estado === 'activa');
+    // Activas reales: estado activa Y fecha_vencimiento en el futuro
+    const activas = list.filter(
+      s => s.estado === 'activa' && new Date(s.fecha_vencimiento) >= now
+    );
     const nuevas = list.filter(s => new Date(s.fecha_inicio) >= start);
     const nuevasPrev = list.filter(s => {
       const d = new Date(s.fecha_inicio);
       return d >= prevStart && d < prevEnd;
     });
+    // Por vencer: activa y vence dentro de los próximos 7 días
     const porVencer = activas.filter(s => {
       const d = new Date(s.fecha_vencimiento);
       return d >= now && d <= in7;
     });
-    const vencidas = list.filter(
-      s => ['mora', 'cancelada'].includes(s.estado) && new Date(s.fecha_vencimiento) < now
-    );
+    // Vencidas/Mora: estado mora, suspendida, o activa con fecha ya vencida
+    const vencidas = list.filter(s => {
+      if (['mora', 'suspendida'].includes(s.estado)) return true;
+      if (s.estado === 'activa' && new Date(s.fecha_vencimiento) < now) return true;
+      return false;
+    });
     const vencidasPeriodo = vencidas.filter(s => new Date(s.fecha_vencimiento) >= start);
 
     const mrr = sum(activas);
