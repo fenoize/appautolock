@@ -501,6 +501,44 @@ export default function SubscriptionDetail() {
         </TabsContent>
       </Tabs>
 
+      {/* Editar fechas (solo admin) */}
+      <Dialog open={showEditDates} onOpenChange={setShowEditDates}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar fechas de la suscripción</DialogTitle>
+            <DialogDescription>
+              El cambio queda registrado en el historial con tu nombre, la fecha y el motivo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-inicio">Fecha de inicio</Label>
+              <Input id="edit-inicio" type="date" value={editInicio} onChange={(e) => setEditInicio(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-venc">Fecha de vencimiento</Label>
+              <Input id="edit-venc" type="date" value={editVencimiento} onChange={(e) => setEditVencimiento(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-motivo">Motivo de la edición</Label>
+              <Textarea
+                id="edit-motivo"
+                rows={3}
+                placeholder="Ej: la fecha de inicio se ingresó mal al crear la suscripción"
+                value={editMotivo}
+                onChange={(e) => setEditMotivo(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDates(false)} disabled={savingDates}>Cancelar</Button>
+            <Button onClick={saveDates} disabled={savingDates}>
+              {savingDates ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Archivar confirmación */}
       <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
         <AlertDialogContent>
