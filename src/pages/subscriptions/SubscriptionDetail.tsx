@@ -186,6 +186,55 @@ export default function SubscriptionDetail() {
     }
   };
 
+  const openEditDates = () => {
+    setEditInicio(subscription.fecha_inicio?.slice(0, 10) || '');
+    setEditVencimiento(subscription.fecha_vencimiento?.slice(0, 10) || '');
+    setEditMotivo('');
+    setShowEditDates(true);
+  };
+
+  const saveDates = async () => {
+    if (!editInicio || !editVencimiento) {
+      toast.error('Ingresa ambas fechas');
+      return;
+    }
+    if (new Date(editVencimiento) <= new Date(editInicio)) {
+      toast.error('El vencimiento debe ser posterior al inicio');
+      return;
+    }
+    if (editMotivo.trim().length < 5) {
+      toast.error('Describe el motivo de la edición');
+      return;
+    }
+    setSavingDates(true);
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('subscriptions')
+        .update({ fecha_inicio: editInicio, fecha_vencimiento: editVencimiento })
+        .eq('id', subscription.id);
+      if (error) throw error;
+
+      const antes = `${format(new Date(subscription.fecha_inicio), 'dd/MM/yyyy')} → ${format(new Date(subscription.fecha_vencimiento), 'dd/MM/yyyy')}`;
+      const despues = `${format(new Date(editInicio), 'dd/MM/yyyy')} → ${format(new Date(editVencimiento), 'dd/MM/yyyy')}`;
+      await supabase.from('subscription_events').insert({
+        subscription_id: subscription.id,
+        tipo: 'edicion_fechas',
+        user_id: authData?.user?.id ?? null,
+        notas: `Fechas modificadas: ${antes} a ${despues}. Motivo: ${editMotivo.trim()}`
+      });
+
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['subscription', subscription.id] });
+      toast.success('Fechas actualizadas');
+      setShowEditDates(false);
+    } catch (e: any) {
+      toast.error(e.message || 'Error al actualizar las fechas');
+    } finally {
+      setSavingDates(false);
+    }
+  };
+
   const isArchived = subscription.estado === 'archivada';
 
   const actions = isArchived ? null : (
