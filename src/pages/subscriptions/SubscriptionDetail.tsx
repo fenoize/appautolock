@@ -20,7 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
   RefreshCw, Pause, Play, X, Cpu, Smartphone, User, Settings,
-  Copy, Send, Mail, Phone, ExternalLink, CalendarDays, ClipboardList, Archive
+  Copy, Send, Mail, Phone, ExternalLink, CalendarDays, ClipboardList, Archive, Pencil
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -88,6 +88,11 @@ export default function SubscriptionDetail() {
   const [sending, setSending] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [showEditDates, setShowEditDates] = useState(false);
+  const [editInicio, setEditInicio] = useState('');
+  const [editVencimiento, setEditVencimiento] = useState('');
+  const [editMotivo, setEditMotivo] = useState('');
+  const [savingDates, setSavingDates] = useState(false);
 
   if (isLoading) {
     return (
