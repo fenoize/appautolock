@@ -239,6 +239,12 @@ export default function SubscriptionDetail() {
 
   const actions = isArchived ? null : (
     <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:pb-0">
+      {isAdmin && (
+        <Button className="shrink-0" variant="outline" onClick={openEditDates}>
+          <Pencil className="h-4 w-4 mr-2" />
+          Editar fechas
+        </Button>
+      )}
       {(subscription.estado === 'activa' || subscription.estado === 'mora') && (
         <>
           <Button className="shrink-0" onClick={() => { setRenewalModalMode('renovar'); setShowRenewalModal(true); }}>
@@ -481,6 +487,9 @@ export default function SubscriptionDetail() {
                         {event.notas && <p className="text-sm text-muted-foreground">{event.notas}</p>}
                         <p className="text-xs text-muted-foreground mt-1">
                           {format(new Date(event.fecha), 'dd/MM/yyyy HH:mm')}
+                          {(event as any).user
+                            ? ` · ${[(event as any).user.nombre, (event as any).user.apellido].filter(Boolean).join(' ') || (event as any).user.email}`
+                            : ''}
                         </p>
                       </div>
                     </div>
