@@ -207,6 +207,7 @@ export default function SubscriptionList() {
                       <TableHead>Vehículo</TableHead>
                       <TableHead>Plan</TableHead>
                       <TableHead>Vencimiento</TableHead>
+                      <TableHead>Última renovación</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead>Acciones</TableHead>
                     </TableRow>
@@ -223,6 +224,11 @@ export default function SubscriptionList() {
                             <CalendarDays className="h-4 w-4 text-muted-foreground" />
                             {format(new Date(sub.fecha_vencimiento), 'dd/MM/yyyy')}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {lastRenewalOf(sub.id)
+                            ? format(new Date(lastRenewalOf(sub.id)!), 'dd/MM/yyyy')
+                            : <span className="text-muted-foreground">-</span>}
                         </TableCell>
                         <TableCell>
                           <SubscriptionStatusBadge status={sub.estado} />
