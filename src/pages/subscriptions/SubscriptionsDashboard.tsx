@@ -17,7 +17,10 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Tooltip,
@@ -33,6 +36,7 @@ import {
   type DashboardPeriod,
   type DashboardSubscription,
 } from '@/hooks/useSubscriptionsDashboard';
+import { useSubscriptionRenewals } from '@/hooks/useSubscriptionRenewals';
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
@@ -161,6 +165,12 @@ export default function SubscriptionsDashboard() {
   const [period, setPeriod] = useState<DashboardPeriod>('mes');
   const { data: subs, isLoading } = useSubscriptionsDashboardData();
   const [renewTarget, setRenewTarget] = useState<DashboardSubscription | null>(null);
+  const [desde, setDesde] = useState('');
+  const [hasta, setHasta] = useState('');
+  const { data: renewals, isLoading: loadingRenewals } = useSubscriptionRenewals(
+    desde || undefined,
+    hasta || undefined
+  );
 
   const m = useMemo(() => {
     const list = subs ?? [];
@@ -458,6 +468,107 @@ export default function SubscriptionsDashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle className="text-base inline-flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                    Últimas Renovaciones
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="date"
+                      value={desde}
+                      onChange={e => setDesde(e.target.value)}
+                      className="w-auto min-w-[140px] text-sm"
+                      placeholder="Desde"
+                    />
+                    <span className="text-muted-foreground">-</span>
+                    <Input
+                      type="date"
+                      value={hasta}
+                      onChange={e => setHasta(e.target.value)}
+                      className="w-auto min-w-[140px] text-sm"
+                      placeholder="Hasta"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setDesde('');
+                        setHasta('');
+                      }}
+                    >
+                      Limpiar
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loadingRenewals ? (
+                  <div className="space-y-2">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
+                ) : renewals && renewals.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead>Patente</TableHead>
+                          <TableHead>Plan</TableHead>
+                          <TableHead>Fecha Anterior</TableHead>
+                          <TableHead>Fecha Nueva</TableHead>
+                          <TableHead>Renovado por</TableHead>
+                          <TableHead>Fecha de Renovación</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {renewals.map(r => {
+                          const client = r.subscription?.client;
+                          const clientDisplay =
+                            client?.razon_social || client?.nombre_comercial || 'Sin cliente';
+                          return (
+                            <TableRow key={r.id}>
+                              <TableCell className="font-medium">{clientDisplay}</TableCell>
+                              <TableCell>{r.subscription?.vehicle?.patente || '-'}</TableCell>
+                              <TableCell>{r.subscription?.plan?.nombre || '-'}</TableCell>
+                              <TableCell>
+                                {r.fecha_anterior
+                                  ? format(new Date(r.fecha_anterior), 'dd/MM/yyyy')
+                                  : '-'}
+                              </TableCell>
+                              <TableCell>
+                                {r.fecha_nueva
+                                  ? format(new Date(r.fecha_nueva), 'dd/MM/yyyy')
+                                  : '-'}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">
+                                {r.renovado_por
+                                  ? `${r.renovado_por.slice(0, 8)}…`
+                                  : '-'}
+                              </TableCell>
+                              <TableCell>
+                                {r.renewed_at
+                                  ? format(new Date(r.renewed_at), 'dd/MM/yyyy HH:mm')
+                                  : '-'}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <p className="py-8 text-center text-sm text-muted-foreground">
+                    Sin renovaciones registradas en el período seleccionado
+                  </p>
+                )}
+              </CardContent>
+            </Card>
           </>
         )}
 
