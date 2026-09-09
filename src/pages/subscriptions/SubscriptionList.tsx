@@ -37,6 +37,9 @@ export default function SubscriptionList() {
 
   const { data: subscriptions, isLoading } = useSubscriptions(filters);
   const { data: plans } = useSubscriptionPlans(false);
+  const { data: latestRenewals } = useLatestRenewals();
+
+  const lastRenewalOf = (subId: string): string | null => latestRenewals?.get(subId) ?? null;
 
   const clearFilters = () => {
     setEstado('todos');
@@ -45,6 +48,9 @@ export default function SubscriptionList() {
     setDesde('');
     setHasta('');
     setShowArchived(false);
+    setRenovFilter('todas');
+    setRenovDesde('');
+    setRenovHasta('');
   };
 
   const filtered = useMemo(() => {
