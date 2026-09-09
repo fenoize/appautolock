@@ -167,10 +167,54 @@ export default function SubscriptionsDashboard() {
   const [renewTarget, setRenewTarget] = useState<DashboardSubscription | null>(null);
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
+  const [renewalDetail, setRenewalDetail] = useState<SubscriptionRenewal | null>(null);
   const { data: renewals, isLoading: loadingRenewals } = useSubscriptionRenewals(
     desde || undefined,
     hasta || undefined
   );
+
+  const copyImeis = async () => {
+    const imeis = (renewals ?? [])
+      .map(r => r.subscription?.imei_gps)
+      .filter((v): v is string => !!v);
+    if (imeis.length === 0) {
+      toast.error('No hay números IMEI para copiar');
+      return;
+    }
+    await navigator.clipboard.writeText(imeis.join('\n'));
+    toast.success(`${imeis.length} IMEI copiados al portapapeles`);
+  };
+
+  const exportExcel = async () => {
+    const rows = (renewals ?? []).map(r => ({
+      Nombre:
+        r.subscription?.client?.razon_social ||
+        r.subscription?.client?.nombre_comercial ||
+        'Sin cliente',
+      Patente: r.subscription?.vehicle?.patente ?? '',
+      Plan: r.subscription?.plan?.nombre ?? '',
+      Precio: r.subscription?.plan?.precio ?? '',
+      'Fecha anterior': r.fecha_anterior
+        ? format(new Date(r.fecha_anterior), 'dd/MM/yyyy')
+        : '',
+      'Fecha nueva': r.fecha_nueva ? format(new Date(r.fecha_nueva), 'dd/MM/yyyy') : '',
+      'Fecha de renovación': r.renewed_at
+        ? format(new Date(r.renewed_at), 'dd/MM/yyyy HH:mm')
+        : '',
+      'Nº IMEI': r.subscription?.imei_gps ?? '',
+      'Nº PCS': r.subscription?.imei_pcs || r.subscription?.numero_pcs || '',
+      Folio: r.subscription?.folio ?? '',
+    }));
+    if (rows.length === 0) {
+      toast.error('No hay datos para exportar');
+      return;
+    }
+    const XLSX = await import('xlsx');
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Renovaciones');
+    XLSX.writeFile(wb, `renovaciones-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    toast.success('Archivo Excel generado');
+  };
 
   const m = useMemo(() => {
     const list = subs ?? [];
