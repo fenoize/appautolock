@@ -150,6 +150,28 @@ export default function SubscriptionList() {
               <Label htmlFor="sub-hasta">Vence hasta</Label>
               <Input id="sub-hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
             </div>
+
+            <div className="space-y-1.5">
+              <Label>Renovación</Label>
+              <Select value={renovFilter} onValueChange={setRenovFilter}>
+                <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  <SelectItem value="con">Con renovaciones</SelectItem>
+                  <SelectItem value="sin">Sin renovaciones</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="renov-desde">Renovada desde</Label>
+              <Input id="renov-desde" type="date" value={renovDesde} onChange={(e) => setRenovDesde(e.target.value)} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="renov-hasta">Renovada hasta</Label>
+              <Input id="renov-hasta" type="date" value={renovHasta} onChange={(e) => setRenovHasta(e.target.value)} />
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-4">
