@@ -5,6 +5,8 @@ import { useSubscription, usePauseSubscription, useReactivateSubscription, useCa
 import { usePermissions } from '@/hooks/usePermissions';
 import { SubscriptionStatusBadge } from '@/components/subscriptions/SubscriptionStatusBadge';
 import { RenewalActionModal } from '@/components/subscriptions/RenewalActionModal';
+import { EditSubscriptionDialog } from '@/components/subscriptions/EditSubscriptionDialog';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -88,11 +90,10 @@ export default function SubscriptionDetail() {
   const [sending, setSending] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [archiving, setArchiving] = useState(false);
-  const [showEditDates, setShowEditDates] = useState(false);
-  const [editInicio, setEditInicio] = useState('');
-  const [editVencimiento, setEditVencimiento] = useState('');
-  const [editMotivo, setEditMotivo] = useState('');
-  const [savingDates, setSavingDates] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showPausePrompt, setShowPausePrompt] = useState(false);
+  const [showReactivatePrompt, setShowReactivatePrompt] = useState(false);
+
 
   if (isLoading) {
     return (
@@ -186,52 +187,21 @@ export default function SubscriptionDetail() {
     }
   };
 
-  const openEditDates = () => {
-    setEditInicio(subscription.fecha_inicio?.slice(0, 10) || '');
-    setEditVencimiento(subscription.fecha_vencimiento?.slice(0, 10) || '');
-    setEditMotivo('');
-    setShowEditDates(true);
+  const handleEditClick = () => {
+    if (subscription.estado === 'suspendida') {
+      setShowEdit(true);
+    } else {
+      setShowPausePrompt(true);
+    }
   };
 
-  const saveDates = async () => {
-    if (!editInicio || !editVencimiento) {
-      toast.error('Ingresa ambas fechas');
-      return;
-    }
-    if (new Date(editVencimiento) <= new Date(editInicio)) {
-      toast.error('El vencimiento debe ser posterior al inicio');
-      return;
-    }
-    if (editMotivo.trim().length < 5) {
-      toast.error('Describe el motivo de la edición');
-      return;
-    }
-    setSavingDates(true);
+  const pauseAndEdit = async () => {
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({ fecha_inicio: editInicio, fecha_vencimiento: editVencimiento })
-        .eq('id', subscription.id);
-      if (error) throw error;
-
-      const antes = `${format(new Date(subscription.fecha_inicio), 'dd/MM/yyyy')} → ${format(new Date(subscription.fecha_vencimiento), 'dd/MM/yyyy')}`;
-      const despues = `${format(new Date(editInicio), 'dd/MM/yyyy')} → ${format(new Date(editVencimiento), 'dd/MM/yyyy')}`;
-      await supabase.from('subscription_events').insert({
-        subscription_id: subscription.id,
-        tipo: 'edicion_fechas',
-        user_id: authData?.user?.id ?? null,
-        notas: `Fechas modificadas: ${antes} a ${despues}. Motivo: ${editMotivo.trim()}`
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription', subscription.id] });
-      toast.success('Fechas actualizadas');
-      setShowEditDates(false);
-    } catch (e: any) {
-      toast.error(e.message || 'Error al actualizar las fechas');
-    } finally {
-      setSavingDates(false);
+      await pauseMutation.mutateAsync({ id: subscription.id, notas: 'Pausada para edición' });
+      setShowPausePrompt(false);
+      setShowEdit(true);
+    } catch {
+      /* el hook ya muestra el error */
     }
   };
 
@@ -240,11 +210,12 @@ export default function SubscriptionDetail() {
   const actions = isArchived ? null : (
     <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:pb-0">
       {isAdmin && (
-        <Button className="shrink-0" variant="outline" onClick={openEditDates}>
+        <Button className="shrink-0" variant="outline" onClick={handleEditClick}>
           <Pencil className="h-4 w-4 mr-2" />
-          Editar fechas
+          Editar
         </Button>
       )}
+
       {(subscription.estado === 'activa' || subscription.estado === 'mora') && (
         <>
           <Button className="shrink-0" onClick={() => { setRenewalModalMode('renovar'); setShowRenewalModal(true); }}>
@@ -501,43 +472,54 @@ export default function SubscriptionDetail() {
         </TabsContent>
       </Tabs>
 
-      {/* Editar fechas (solo admin) */}
-      <Dialog open={showEditDates} onOpenChange={setShowEditDates}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar fechas de la suscripción</DialogTitle>
-            <DialogDescription>
-              El cambio queda registrado en el historial con tu nombre, la fecha y el motivo.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-inicio">Fecha de inicio</Label>
-              <Input id="edit-inicio" type="date" value={editInicio} onChange={(e) => setEditInicio(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-venc">Fecha de vencimiento</Label>
-              <Input id="edit-venc" type="date" value={editVencimiento} onChange={(e) => setEditVencimiento(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-motivo">Motivo de la edición</Label>
-              <Textarea
-                id="edit-motivo"
-                rows={3}
-                placeholder="Ej: la fecha de inicio se ingresó mal al crear la suscripción"
-                value={editMotivo}
-                onChange={(e) => setEditMotivo(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDates(false)} disabled={savingDates}>Cancelar</Button>
-            <Button onClick={saveDates} disabled={savingDates}>
-              {savingDates ? 'Guardando...' : 'Guardar cambios'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Editar suscripción (solo admin, requiere pausa) */}
+      <EditSubscriptionDialog
+        open={showEdit}
+        onOpenChange={setShowEdit}
+        subscription={subscription}
+        onSaved={() => setShowReactivatePrompt(true)}
+      />
+
+      {/* Pausar antes de editar */}
+      <AlertDialog open={showPausePrompt} onOpenChange={setShowPausePrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pausar para editar</AlertDialogTitle>
+            <AlertDialogDescription>
+              Para editar la suscripción primero debe quedar pausada. La pausamos ahora, luego editas y al terminar
+              podrás reactivarla.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={pauseAndEdit}>Pausar y editar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reactivar después de editar */}
+      <AlertDialog open={showReactivatePrompt} onOpenChange={setShowReactivatePrompt}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Reactivar la suscripción?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Los cambios quedaron guardados y registrados en el historial. Puedes reactivarla ahora o dejarla pausada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Dejar pausada</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                reactivateMutation.mutate(subscription.id);
+                setShowReactivatePrompt(false);
+              }}
+            >
+              Reactivar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {/* Archivar confirmación */}
       <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
