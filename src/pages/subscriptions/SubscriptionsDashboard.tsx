@@ -558,6 +558,21 @@ export default function SubscriptionsDashboard() {
                     >
                       Limpiar
                     </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Download className="mr-1 h-4 w-4" /> Exportar
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={copyImeis}>
+                          <ClipboardCopy className="mr-2 h-4 w-4" /> Portapapeles (IMEI)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={exportExcel}>
+                          <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel (tabla completa)
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </CardHeader>
