@@ -88,11 +88,10 @@ export default function SubscriptionDetail() {
   const [sending, setSending] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [archiving, setArchiving] = useState(false);
-  const [showEditDates, setShowEditDates] = useState(false);
-  const [editInicio, setEditInicio] = useState('');
-  const [editVencimiento, setEditVencimiento] = useState('');
-  const [editMotivo, setEditMotivo] = useState('');
-  const [savingDates, setSavingDates] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showPausePrompt, setShowPausePrompt] = useState(false);
+  const [showReactivatePrompt, setShowReactivatePrompt] = useState(false);
+
 
   if (isLoading) {
     return (
