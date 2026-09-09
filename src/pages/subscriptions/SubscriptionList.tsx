@@ -72,9 +72,15 @@ export default function SubscriptionList() {
       const venc = sub.fecha_vencimiento?.slice(0, 10);
       if (desde && (!venc || venc < desde)) return false;
       if (hasta && (!venc || venc > hasta)) return false;
+      const lastRenov = lastRenewalOf(sub.id);
+      const renovDate = lastRenov?.slice(0, 10);
+      if (renovFilter === 'con' && !lastRenov) return false;
+      if (renovFilter === 'sin' && lastRenov) return false;
+      if (renovDesde && (!renovDate || renovDate < renovDesde)) return false;
+      if (renovHasta && (!renovDate || renovDate > renovHasta)) return false;
       return true;
     });
-  }, [subscriptions, search, desde, hasta, showArchived]);
+  }, [subscriptions, search, desde, hasta, showArchived, renovFilter, renovDesde, renovHasta, latestRenewals]);
 
   const clientName = (sub: any) => sub.client?.razon_social || sub.client?.nombre_comercial || '-';
 
@@ -97,7 +103,7 @@ export default function SubscriptionList() {
           <CardDescription>Todas las suscripciones del sistema</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
               <Label htmlFor="sub-search">Buscar</Label>
               <Input
