@@ -36,7 +36,19 @@ import {
   type DashboardPeriod,
   type DashboardSubscription,
 } from '@/hooks/useSubscriptionsDashboard';
-import { useSubscriptionRenewals } from '@/hooks/useSubscriptionRenewals';
+import {
+  useSubscriptionRenewals,
+  type SubscriptionRenewal,
+} from '@/hooks/useSubscriptionRenewals';
+import { RenewalDetailDialog } from '@/components/subscriptions/RenewalDetailDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Download, ClipboardCopy, FileSpreadsheet } from 'lucide-react';
+import { toast } from 'sonner';
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
