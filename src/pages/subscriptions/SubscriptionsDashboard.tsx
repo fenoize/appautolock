@@ -165,6 +165,12 @@ export default function SubscriptionsDashboard() {
   const [period, setPeriod] = useState<DashboardPeriod>('mes');
   const { data: subs, isLoading } = useSubscriptionsDashboardData();
   const [renewTarget, setRenewTarget] = useState<DashboardSubscription | null>(null);
+  const [desde, setDesde] = useState('');
+  const [hasta, setHasta] = useState('');
+  const { data: renewals, isLoading: loadingRenewals } = useSubscriptionRenewals(
+    desde || undefined,
+    hasta || undefined
+  );
 
   const m = useMemo(() => {
     const list = subs ?? [];
