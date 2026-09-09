@@ -17,7 +17,10 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Tooltip,
@@ -33,6 +36,7 @@ import {
   type DashboardPeriod,
   type DashboardSubscription,
 } from '@/hooks/useSubscriptionsDashboard';
+import { useSubscriptionRenewals } from '@/hooks/useSubscriptionRenewals';
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
