@@ -272,6 +272,11 @@ export default function SubscriptionList() {
                         </div>
                         <SubscriptionStatusBadge status={sub.estado} />
                       </div>
+                      {lastRenewalOf(sub.id) && (
+                        <p className="text-xs text-muted-foreground">
+                          Última renovación: {format(new Date(lastRenewalOf(sub.id)!), 'dd/MM/yyyy')}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
