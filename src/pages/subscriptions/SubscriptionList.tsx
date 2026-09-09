@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSubscriptions } from '@/hooks/useSubscriptions';
+import { useLatestRenewals } from '@/hooks/useLatestRenewals';
 import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 import { SubscriptionFilters, SubscriptionStatus } from '@/types/subscriptions';
 import { SubscriptionStatusBadge } from '@/components/subscriptions/SubscriptionStatusBadge';
@@ -25,6 +26,9 @@ export default function SubscriptionList() {
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
   const [showArchived, setShowArchived] = useState(false);
+  const [renovFilter, setRenovFilter] = useState<string>('todas');
+  const [renovDesde, setRenovDesde] = useState('');
+  const [renovHasta, setRenovHasta] = useState('');
 
   const filters: SubscriptionFilters = useMemo(() => ({
     ...(estado !== 'todos' ? { estado: estado as SubscriptionStatus } : {}),
@@ -33,6 +37,9 @@ export default function SubscriptionList() {
 
   const { data: subscriptions, isLoading } = useSubscriptions(filters);
   const { data: plans } = useSubscriptionPlans(false);
+  const { data: latestRenewals } = useLatestRenewals();
+
+  const lastRenewalOf = (subId: string): string | null => latestRenewals?.get(subId) ?? null;
 
   const clearFilters = () => {
     setEstado('todos');
@@ -41,6 +48,9 @@ export default function SubscriptionList() {
     setDesde('');
     setHasta('');
     setShowArchived(false);
+    setRenovFilter('todas');
+    setRenovDesde('');
+    setRenovHasta('');
   };
 
   const filtered = useMemo(() => {
@@ -62,9 +72,15 @@ export default function SubscriptionList() {
       const venc = sub.fecha_vencimiento?.slice(0, 10);
       if (desde && (!venc || venc < desde)) return false;
       if (hasta && (!venc || venc > hasta)) return false;
+      const lastRenov = lastRenewalOf(sub.id);
+      const renovDate = lastRenov?.slice(0, 10);
+      if (renovFilter === 'con' && !lastRenov) return false;
+      if (renovFilter === 'sin' && lastRenov) return false;
+      if (renovDesde && (!renovDate || renovDate < renovDesde)) return false;
+      if (renovHasta && (!renovDate || renovDate > renovHasta)) return false;
       return true;
     });
-  }, [subscriptions, search, desde, hasta, showArchived]);
+  }, [subscriptions, search, desde, hasta, showArchived, renovFilter, renovDesde, renovHasta, latestRenewals]);
 
   const clientName = (sub: any) => sub.client?.razon_social || sub.client?.nombre_comercial || '-';
 
@@ -87,7 +103,7 @@ export default function SubscriptionList() {
           <CardDescription>Todas las suscripciones del sistema</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
               <Label htmlFor="sub-search">Buscar</Label>
               <Input
@@ -134,6 +150,28 @@ export default function SubscriptionList() {
               <Label htmlFor="sub-hasta">Vence hasta</Label>
               <Input id="sub-hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
             </div>
+
+            <div className="space-y-1.5">
+              <Label>Renovación</Label>
+              <Select value={renovFilter} onValueChange={setRenovFilter}>
+                <SelectTrigger><SelectValue placeholder="Todas" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  <SelectItem value="con">Con renovaciones</SelectItem>
+                  <SelectItem value="sin">Sin renovaciones</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="renov-desde">Renovada desde</Label>
+              <Input id="renov-desde" type="date" value={renovDesde} onChange={(e) => setRenovDesde(e.target.value)} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="renov-hasta">Renovada hasta</Label>
+              <Input id="renov-hasta" type="date" value={renovHasta} onChange={(e) => setRenovHasta(e.target.value)} />
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-4">
@@ -169,6 +207,7 @@ export default function SubscriptionList() {
                       <TableHead>Vehículo</TableHead>
                       <TableHead>Plan</TableHead>
                       <TableHead>Vencimiento</TableHead>
+                      <TableHead>Última renovación</TableHead>
                       <TableHead>Estado</TableHead>
                       <TableHead>Acciones</TableHead>
                     </TableRow>
@@ -185,6 +224,11 @@ export default function SubscriptionList() {
                             <CalendarDays className="h-4 w-4 text-muted-foreground" />
                             {format(new Date(sub.fecha_vencimiento), 'dd/MM/yyyy')}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {lastRenewalOf(sub.id)
+                            ? format(new Date(lastRenewalOf(sub.id)!), 'dd/MM/yyyy')
+                            : <span className="text-muted-foreground">-</span>}
                         </TableCell>
                         <TableCell>
                           <SubscriptionStatusBadge status={sub.estado} />
@@ -228,6 +272,11 @@ export default function SubscriptionList() {
                         </div>
                         <SubscriptionStatusBadge status={sub.estado} />
                       </div>
+                      {lastRenewalOf(sub.id) && (
+                        <p className="text-xs text-muted-foreground">
+                          Última renovación: {format(new Date(lastRenewalOf(sub.id)!), 'dd/MM/yyyy')}
+                        </p>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
