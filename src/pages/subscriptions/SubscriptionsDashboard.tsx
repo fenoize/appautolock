@@ -517,44 +517,41 @@ export default function SubscriptionsDashboard() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Cliente</TableHead>
+                          <TableHead>Nombre</TableHead>
                           <TableHead>Patente</TableHead>
-                          <TableHead>Plan</TableHead>
-                          <TableHead>Fecha Anterior</TableHead>
-                          <TableHead>Fecha Nueva</TableHead>
-                          <TableHead>Renovado por</TableHead>
+                          <TableHead>Plan / Precio</TableHead>
                           <TableHead>Fecha de Renovación</TableHead>
+                          <TableHead>Nº IMEI</TableHead>
+                          <TableHead>Nº PCS</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {renewals.map(r => {
-                          const client = r.subscription?.client;
+                          const s = r.subscription;
                           const clientDisplay =
-                            client?.razon_social || client?.nombre_comercial || 'Sin cliente';
+                            s?.client?.razon_social || s?.client?.nombre_comercial || 'Sin cliente';
                           return (
-                            <TableRow key={r.id}>
+                            <TableRow
+                              key={r.id}
+                              className="cursor-pointer"
+                              onClick={() => setRenewalDetail(r)}
+                            >
                               <TableCell className="font-medium">{clientDisplay}</TableCell>
-                              <TableCell>{r.subscription?.vehicle?.patente || '-'}</TableCell>
-                              <TableCell>{r.subscription?.plan?.nombre || '-'}</TableCell>
+                              <TableCell>{s?.vehicle?.patente || '-'}</TableCell>
                               <TableCell>
-                                {r.fecha_anterior
-                                  ? format(new Date(r.fecha_anterior), 'dd/MM/yyyy')
-                                  : '-'}
-                              </TableCell>
-                              <TableCell>
-                                {r.fecha_nueva
-                                  ? format(new Date(r.fecha_nueva), 'dd/MM/yyyy')
-                                  : '-'}
-                              </TableCell>
-                              <TableCell className="font-mono text-xs">
-                                {r.renovado_por
-                                  ? `${r.renovado_por.slice(0, 8)}…`
-                                  : '-'}
+                                {s?.plan?.nombre || '-'}
+                                {s?.plan?.precio != null && (
+                                  <span className="text-muted-foreground"> · {clp(s.plan.precio)}</span>
+                                )}
                               </TableCell>
                               <TableCell>
                                 {r.renewed_at
                                   ? format(new Date(r.renewed_at), 'dd/MM/yyyy HH:mm')
                                   : '-'}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">{s?.imei_gps || '-'}</TableCell>
+                              <TableCell className="font-mono text-xs">
+                                {s?.imei_pcs || s?.numero_pcs || '-'}
                               </TableCell>
                             </TableRow>
                           );
@@ -568,6 +565,7 @@ export default function SubscriptionsDashboard() {
                   </p>
                 )}
               </CardContent>
+
             </Card>
           </>
         )}
