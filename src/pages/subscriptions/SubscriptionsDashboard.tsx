@@ -656,6 +656,13 @@ export default function SubscriptionsDashboard() {
             } as any}
           />
         )}
+
+        <RenewalDetailDialog
+          renewal={renewalDetail}
+          open={!!renewalDetail}
+          onOpenChange={open => !open && setRenewalDetail(null)}
+        />
+
       </PageContainer>
     </TooltipProvider>
   );
