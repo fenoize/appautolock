@@ -5,6 +5,8 @@ import { useSubscription, usePauseSubscription, useReactivateSubscription, useCa
 import { usePermissions } from '@/hooks/usePermissions';
 import { SubscriptionStatusBadge } from '@/components/subscriptions/SubscriptionStatusBadge';
 import { RenewalActionModal } from '@/components/subscriptions/RenewalActionModal';
+import { EditSubscriptionDialog } from '@/components/subscriptions/EditSubscriptionDialog';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
