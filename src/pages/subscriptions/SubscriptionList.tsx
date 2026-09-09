@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSubscriptions } from '@/hooks/useSubscriptions';
+import { useLatestRenewals } from '@/hooks/useLatestRenewals';
 import { useSubscriptionPlans } from '@/hooks/useSubscriptionPlans';
 import { SubscriptionFilters, SubscriptionStatus } from '@/types/subscriptions';
 import { SubscriptionStatusBadge } from '@/components/subscriptions/SubscriptionStatusBadge';
@@ -25,6 +26,9 @@ export default function SubscriptionList() {
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
   const [showArchived, setShowArchived] = useState(false);
+  const [renovFilter, setRenovFilter] = useState<string>('todas');
+  const [renovDesde, setRenovDesde] = useState('');
+  const [renovHasta, setRenovHasta] = useState('');
 
   const filters: SubscriptionFilters = useMemo(() => ({
     ...(estado !== 'todos' ? { estado: estado as SubscriptionStatus } : {}),
