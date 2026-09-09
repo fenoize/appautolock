@@ -2354,6 +2354,44 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_renewals: {
+        Row: {
+          created_at: string
+          fecha_anterior: string
+          fecha_nueva: string
+          id: string
+          renewed_at: string
+          renovado_por: string | null
+          subscription_id: string
+        }
+        Insert: {
+          created_at?: string
+          fecha_anterior: string
+          fecha_nueva: string
+          id?: string
+          renewed_at?: string
+          renovado_por?: string | null
+          subscription_id: string
+        }
+        Update: {
+          created_at?: string
+          fecha_anterior?: string
+          fecha_nueva?: string
+          id?: string
+          renewed_at?: string
+          renovado_por?: string | null
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_renewals_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           app_alojada: string | null
