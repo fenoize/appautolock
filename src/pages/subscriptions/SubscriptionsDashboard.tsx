@@ -36,7 +36,19 @@ import {
   type DashboardPeriod,
   type DashboardSubscription,
 } from '@/hooks/useSubscriptionsDashboard';
-import { useSubscriptionRenewals } from '@/hooks/useSubscriptionRenewals';
+import {
+  useSubscriptionRenewals,
+  type SubscriptionRenewal,
+} from '@/hooks/useSubscriptionRenewals';
+import { RenewalDetailDialog } from '@/components/subscriptions/RenewalDetailDialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Download, ClipboardCopy, FileSpreadsheet } from 'lucide-react';
+import { toast } from 'sonner';
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
 
@@ -167,10 +179,54 @@ export default function SubscriptionsDashboard() {
   const [renewTarget, setRenewTarget] = useState<DashboardSubscription | null>(null);
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
+  const [renewalDetail, setRenewalDetail] = useState<SubscriptionRenewal | null>(null);
   const { data: renewals, isLoading: loadingRenewals } = useSubscriptionRenewals(
     desde || undefined,
     hasta || undefined
   );
+
+  const copyImeis = async () => {
+    const imeis = (renewals ?? [])
+      .map(r => r.subscription?.imei_gps)
+      .filter((v): v is string => !!v);
+    if (imeis.length === 0) {
+      toast.error('No hay números IMEI para copiar');
+      return;
+    }
+    await navigator.clipboard.writeText(imeis.join('\n'));
+    toast.success(`${imeis.length} IMEI copiados al portapapeles`);
+  };
+
+  const exportExcel = async () => {
+    const rows = (renewals ?? []).map(r => ({
+      Nombre:
+        r.subscription?.client?.razon_social ||
+        r.subscription?.client?.nombre_comercial ||
+        'Sin cliente',
+      Patente: r.subscription?.vehicle?.patente ?? '',
+      Plan: r.subscription?.plan?.nombre ?? '',
+      Precio: r.subscription?.plan?.precio ?? '',
+      'Fecha anterior': r.fecha_anterior
+        ? format(new Date(r.fecha_anterior), 'dd/MM/yyyy')
+        : '',
+      'Fecha nueva': r.fecha_nueva ? format(new Date(r.fecha_nueva), 'dd/MM/yyyy') : '',
+      'Fecha de renovación': r.renewed_at
+        ? format(new Date(r.renewed_at), 'dd/MM/yyyy HH:mm')
+        : '',
+      'Nº IMEI': r.subscription?.imei_gps ?? '',
+      'Nº PCS': r.subscription?.imei_pcs || r.subscription?.numero_pcs || '',
+      Folio: r.subscription?.folio ?? '',
+    }));
+    if (rows.length === 0) {
+      toast.error('No hay datos para exportar');
+      return;
+    }
+    const XLSX = await import('xlsx');
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Renovaciones');
+    XLSX.writeFile(wb, `renovaciones-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    toast.success('Archivo Excel generado');
+  };
 
   const m = useMemo(() => {
     const list = subs ?? [];
@@ -502,6 +558,21 @@ export default function SubscriptionsDashboard() {
                     >
                       Limpiar
                     </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Download className="mr-1 h-4 w-4" /> Exportar
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={copyImeis}>
+                          <ClipboardCopy className="mr-2 h-4 w-4" /> Portapapeles (IMEI)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={exportExcel}>
+                          <FileSpreadsheet className="mr-2 h-4 w-4" /> Excel (tabla completa)
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </CardHeader>
@@ -517,44 +588,41 @@ export default function SubscriptionsDashboard() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Cliente</TableHead>
+                          <TableHead>Nombre</TableHead>
                           <TableHead>Patente</TableHead>
-                          <TableHead>Plan</TableHead>
-                          <TableHead>Fecha Anterior</TableHead>
-                          <TableHead>Fecha Nueva</TableHead>
-                          <TableHead>Renovado por</TableHead>
+                          <TableHead>Plan / Precio</TableHead>
                           <TableHead>Fecha de Renovación</TableHead>
+                          <TableHead>Nº IMEI</TableHead>
+                          <TableHead>Nº PCS</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {renewals.map(r => {
-                          const client = r.subscription?.client;
+                          const s = r.subscription;
                           const clientDisplay =
-                            client?.razon_social || client?.nombre_comercial || 'Sin cliente';
+                            s?.client?.razon_social || s?.client?.nombre_comercial || 'Sin cliente';
                           return (
-                            <TableRow key={r.id}>
+                            <TableRow
+                              key={r.id}
+                              className="cursor-pointer"
+                              onClick={() => setRenewalDetail(r)}
+                            >
                               <TableCell className="font-medium">{clientDisplay}</TableCell>
-                              <TableCell>{r.subscription?.vehicle?.patente || '-'}</TableCell>
-                              <TableCell>{r.subscription?.plan?.nombre || '-'}</TableCell>
+                              <TableCell>{s?.vehicle?.patente || '-'}</TableCell>
                               <TableCell>
-                                {r.fecha_anterior
-                                  ? format(new Date(r.fecha_anterior), 'dd/MM/yyyy')
-                                  : '-'}
-                              </TableCell>
-                              <TableCell>
-                                {r.fecha_nueva
-                                  ? format(new Date(r.fecha_nueva), 'dd/MM/yyyy')
-                                  : '-'}
-                              </TableCell>
-                              <TableCell className="font-mono text-xs">
-                                {r.renovado_por
-                                  ? `${r.renovado_por.slice(0, 8)}…`
-                                  : '-'}
+                                {s?.plan?.nombre || '-'}
+                                {s?.plan?.precio != null && (
+                                  <span className="text-muted-foreground"> · {clp(s.plan.precio)}</span>
+                                )}
                               </TableCell>
                               <TableCell>
                                 {r.renewed_at
                                   ? format(new Date(r.renewed_at), 'dd/MM/yyyy HH:mm')
                                   : '-'}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs">{s?.imei_gps || '-'}</TableCell>
+                              <TableCell className="font-mono text-xs">
+                                {s?.imei_pcs || s?.numero_pcs || '-'}
                               </TableCell>
                             </TableRow>
                           );
@@ -568,6 +636,7 @@ export default function SubscriptionsDashboard() {
                   </p>
                 )}
               </CardContent>
+
             </Card>
           </>
         )}
@@ -587,6 +656,13 @@ export default function SubscriptionsDashboard() {
             } as any}
           />
         )}
+
+        <RenewalDetailDialog
+          renewal={renewalDetail}
+          open={!!renewalDetail}
+          onOpenChange={open => !open && setRenewalDetail(null)}
+        />
+
       </PageContainer>
     </TooltipProvider>
   );
