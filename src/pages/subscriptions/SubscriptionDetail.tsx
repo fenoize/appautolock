@@ -185,52 +185,21 @@ export default function SubscriptionDetail() {
     }
   };
 
-  const openEditDates = () => {
-    setEditInicio(subscription.fecha_inicio?.slice(0, 10) || '');
-    setEditVencimiento(subscription.fecha_vencimiento?.slice(0, 10) || '');
-    setEditMotivo('');
-    setShowEditDates(true);
+  const handleEditClick = () => {
+    if (subscription.estado === 'suspendida') {
+      setShowEdit(true);
+    } else {
+      setShowPausePrompt(true);
+    }
   };
 
-  const saveDates = async () => {
-    if (!editInicio || !editVencimiento) {
-      toast.error('Ingresa ambas fechas');
-      return;
-    }
-    if (new Date(editVencimiento) <= new Date(editInicio)) {
-      toast.error('El vencimiento debe ser posterior al inicio');
-      return;
-    }
-    if (editMotivo.trim().length < 5) {
-      toast.error('Describe el motivo de la edición');
-      return;
-    }
-    setSavingDates(true);
+  const pauseAndEdit = async () => {
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({ fecha_inicio: editInicio, fecha_vencimiento: editVencimiento })
-        .eq('id', subscription.id);
-      if (error) throw error;
-
-      const antes = `${format(new Date(subscription.fecha_inicio), 'dd/MM/yyyy')} → ${format(new Date(subscription.fecha_vencimiento), 'dd/MM/yyyy')}`;
-      const despues = `${format(new Date(editInicio), 'dd/MM/yyyy')} → ${format(new Date(editVencimiento), 'dd/MM/yyyy')}`;
-      await supabase.from('subscription_events').insert({
-        subscription_id: subscription.id,
-        tipo: 'edicion_fechas',
-        user_id: authData?.user?.id ?? null,
-        notas: `Fechas modificadas: ${antes} a ${despues}. Motivo: ${editMotivo.trim()}`
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-      queryClient.invalidateQueries({ queryKey: ['subscription', subscription.id] });
-      toast.success('Fechas actualizadas');
-      setShowEditDates(false);
-    } catch (e: any) {
-      toast.error(e.message || 'Error al actualizar las fechas');
-    } finally {
-      setSavingDates(false);
+      await pauseMutation.mutateAsync({ id: subscription.id, notas: 'Pausada para edición' });
+      setShowPausePrompt(false);
+      setShowEdit(true);
+    } catch {
+      /* el hook ya muestra el error */
     }
   };
 
@@ -239,11 +208,12 @@ export default function SubscriptionDetail() {
   const actions = isArchived ? null : (
     <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:overflow-visible sm:pb-0">
       {isAdmin && (
-        <Button className="shrink-0" variant="outline" onClick={openEditDates}>
+        <Button className="shrink-0" variant="outline" onClick={handleEditClick}>
           <Pencil className="h-4 w-4 mr-2" />
-          Editar fechas
+          Editar
         </Button>
       )}
+
       {(subscription.estado === 'activa' || subscription.estado === 'mora') && (
         <>
           <Button className="shrink-0" onClick={() => { setRenewalModalMode('renovar'); setShowRenewalModal(true); }}>
