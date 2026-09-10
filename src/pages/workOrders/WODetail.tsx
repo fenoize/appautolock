@@ -65,6 +65,7 @@ export default function WODetail() {
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('items');
   const [pendingGpsDialog, setPendingGpsDialog] = useState<{ open: boolean; items: string[] }>({ open: false, items: [] });
+  const [showPreCheck, setShowPreCheck] = useState(false);
   const [consumingStock, setConsumingStock] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
