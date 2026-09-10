@@ -598,6 +598,68 @@ export default function NewQuote() {
             </CardContent>
           </Card>
 
+          {/* Card: Carga de Trabajo */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <CalendarDays className="h-4 w-4" />
+                Carga de trabajo — próximos 14 días
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: 14 }).map((_, i) => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + i);
+                  const key = d.toISOString().split('T')[0];
+                  const count = woLoad[key] ?? 0;
+                  const dayNames = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá'];
+                  const bgColor =
+                    count === 0
+                      ? 'bg-muted'
+                      : count <= 2
+                      ? 'bg-green-100 dark:bg-green-900/30'
+                      : count <= 4
+                      ? 'bg-amber-100 dark:bg-amber-900/30'
+                      : 'bg-red-100 dark:bg-red-900/30';
+                  const textColor =
+                    count === 0
+                      ? 'text-muted-foreground'
+                      : count <= 2
+                      ? 'text-green-700 dark:text-green-400'
+                      : count <= 4
+                      ? 'text-amber-700 dark:text-amber-400'
+                      : 'text-red-700 dark:text-red-400';
+                  return (
+                    <div key={key} className={`${bgColor} rounded p-1 text-center`}>
+                      <div className="text-[10px] text-muted-foreground leading-tight">
+                        {dayNames[d.getDay()]}
+                      </div>
+                      <div className="text-xs font-medium leading-tight">{d.getDate()}</div>
+                      <div className={`text-xs font-bold leading-tight ${textColor}`}>
+                        {count > 0 ? count : '–'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground justify-center">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded bg-green-400 inline-block" />
+                  1–2 OTs
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded bg-amber-400 inline-block" />
+                  3–4 OTs
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded bg-red-400 inline-block" />
+                  5+ OTs
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Card: Acciones */}
           <Card>
             <CardHeader>
