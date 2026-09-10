@@ -3411,6 +3411,7 @@ export type Database = {
         Returns: string
       }
       expirar_cotizaciones_vencidas: { Args: never; Returns: undefined }
+      fn_auto_expire_quotes: { Args: never; Returns: undefined }
       generar_folio: { Args: { prefijo: string }; Returns: string }
       generar_token_aprobacion: {
         Args: { quote_id_param: string }
