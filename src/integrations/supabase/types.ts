@@ -3600,6 +3600,7 @@ export type Database = {
         | "suspendida"
         | "cancelada"
         | "archivada"
+        | "pendiente_activacion"
       user_status: "activo" | "inactivo" | "invitado"
       wo_status:
         | "programada"
@@ -3777,6 +3778,7 @@ export const Constants = {
         "suspendida",
         "cancelada",
         "archivada",
+        "pendiente_activacion",
       ],
       user_status: ["activo", "inactivo", "invitado"],
       wo_status: [
