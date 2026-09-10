@@ -186,10 +186,21 @@ export default function WODetail() {
         );
       case 'programada':
         return (
-          <Button onClick={() => handleChangeStatus('en_ruta')}>
-            <MapPin className="mr-2 h-4 w-4" />
-            Iniciar Ruta
-          </Button>
+          <>
+            <Button onClick={() => setShowPreCheck(true)}>
+              <MapPin className="mr-2 h-4 w-4" />
+              Iniciar Ruta
+            </Button>
+            <WOPreCheckDialog
+              open={showPreCheck}
+              onOpenChange={setShowPreCheck}
+              woId={wo.id}
+              onConfirm={() => {
+                setShowPreCheck(false);
+                handleChangeStatus('en_ruta');
+              }}
+            />
+          </>
         );
       case 'en_ruta':
         return (
