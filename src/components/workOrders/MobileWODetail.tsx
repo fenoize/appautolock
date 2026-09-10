@@ -565,7 +565,16 @@ export default function MobileWODetail({ wo }: Props) {
               </Card>
             )}
 
-            <Button onClick={goNext} className="w-full h-14 text-base">
+            <Button
+              onClick={() => {
+                if (isTecnico && wo.estado === 'programada') {
+                  setShowPreCheck(true);
+                } else {
+                  goNext();
+                }
+              }}
+              className="w-full h-14 text-base"
+            >
               {isTecnico ? 'Iniciar trabajo' : 'Continuar'} <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </>
