@@ -1090,6 +1090,14 @@ export default function MobileWODetail({ wo }: Props) {
             </div>
             {/* Mensajes de validación */}
             <div className="space-y-1">
+              {(wo as any).pago_pendiente && (
+                <p className="text-xs text-red-700 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                  Hay un pago pendiente antes de cerrar esta OT
+                  {(wo as any).monto_pendiente > 0 &&
+                    `: $${Number((wo as any).monto_pendiente).toLocaleString('es-CL')}`}
+                </p>
+              )}
               {!observaciones.trim() && (
                 <p className="text-xs text-amber-600 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 flex items-center gap-2">
                   <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
@@ -1113,6 +1121,7 @@ export default function MobileWODetail({ wo }: Props) {
               onClick={handleClose}
               disabled={
                 closeWO.isPending ||
+                (wo as any).pago_pendiente ||
                 !observaciones.trim() ||
                 pendingGPS.length > 0 ||
                 (subscriptionItems.length > 0 && !gpsConfirmado)
