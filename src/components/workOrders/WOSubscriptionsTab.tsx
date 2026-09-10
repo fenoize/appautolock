@@ -114,6 +114,12 @@ export function WOSubscriptionsTab({ woId, woStatus }: WOSubscriptionsTabProps) 
                     <CardTitle className="text-lg">{item.nombre}</CardTitle>
                     {getStatusBadge(item)}
                   </div>
+                  {item.subscription?.estado === 'pendiente_activacion' && (
+                    <p className="text-xs text-amber-700 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2 py-1 inline-flex items-center gap-1 mt-1">
+                      <Clock className="h-3 w-3" />
+                      Suscripción configurada — se activará al cerrar la OT
+                    </p>
+                  )}
                   <p className="text-sm text-muted-foreground">
                     Tipo: <span className="capitalize">{item.item_tipo}</span>
                   </p>

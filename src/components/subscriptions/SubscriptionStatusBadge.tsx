@@ -7,6 +7,7 @@ interface Props {
 
 const statusConfig: Record<SubscriptionStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
   activa: { label: "Activa", variant: "default" },
+  pendiente_activacion: { label: "Pendiente activación", variant: "outline" },
   mora: { label: "En Mora", variant: "outline" },
   suspendida: { label: "Suspendida", variant: "destructive" },
   cancelada: { label: "Cancelada", variant: "secondary" },

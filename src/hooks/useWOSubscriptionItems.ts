@@ -134,7 +134,9 @@ export function useCreateSubscriptionFromWOItem() {
 
       // Update subscription with wo_id and GPS data if provided
       if (subscriptionId) {
-        const updateFields: Record<string, any> = {};
+        const updateFields: Record<string, any> = {
+          estado: 'pendiente_activacion',
+        };
         if (woId) updateFields.wo_id = woId;
 
         if (gpsData) {
