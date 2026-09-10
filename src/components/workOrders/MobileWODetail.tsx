@@ -124,6 +124,7 @@ export default function MobileWODetail({ wo }: Props) {
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
   const [assignOpen, setAssignOpen] = useState(false);
   const [gpsConfirmado, setGpsConfirmado] = useState(false);
+  const [showPreCheck, setShowPreCheck] = useState(false);
   const [selectedSubscriptionItem, setSelectedSubscriptionItem] = useState<any>(null);
 
   const { data: subscriptionItems = [] } = useQuery({
