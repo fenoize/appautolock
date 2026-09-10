@@ -2994,9 +2994,11 @@ export type Database = {
           inventario_consumido: boolean | null
           inventario_consumido_at: string | null
           inventario_reservado: boolean | null
+          monto_pendiente: number
           notas: string | null
           observaciones_cierre: string | null
           original_wo_id: string | null
+          pago_pendiente: boolean
           pdf_informe_url: string | null
           puede_editar: boolean | null
           quote_id: string | null
@@ -3038,9 +3040,11 @@ export type Database = {
           inventario_consumido?: boolean | null
           inventario_consumido_at?: string | null
           inventario_reservado?: boolean | null
+          monto_pendiente?: number
           notas?: string | null
           observaciones_cierre?: string | null
           original_wo_id?: string | null
+          pago_pendiente?: boolean
           pdf_informe_url?: string | null
           puede_editar?: boolean | null
           quote_id?: string | null
@@ -3082,9 +3086,11 @@ export type Database = {
           inventario_consumido?: boolean | null
           inventario_consumido_at?: string | null
           inventario_reservado?: boolean | null
+          monto_pendiente?: number
           notas?: string | null
           observaciones_cierre?: string | null
           original_wo_id?: string | null
+          pago_pendiente?: boolean
           pdf_informe_url?: string | null
           puede_editar?: boolean | null
           quote_id?: string | null

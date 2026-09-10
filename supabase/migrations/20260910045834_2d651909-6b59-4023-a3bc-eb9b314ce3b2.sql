@@ -1,0 +1,3 @@
+ALTER TABLE public.work_orders
+  ADD COLUMN IF NOT EXISTS pago_pendiente BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS monto_pendiente NUMERIC(12,2) NOT NULL DEFAULT 0;
