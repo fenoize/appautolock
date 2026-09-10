@@ -12,7 +12,7 @@ export function useWOLoad() {
       const { data, error } = await supabase
         .from('work_orders')
         .select('fecha_programada')
-        .not('estado', 'in', '("completada","cancelada")')
+        .not('estado', 'in', '(completada,cancelada)')
         .gte('fecha_programada', today.toISOString().split('T')[0])
         .lte('fecha_programada', end.toISOString().split('T')[0]);
 

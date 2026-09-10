@@ -195,12 +195,6 @@ export default function WODetail() {
             <Button variant="outline" onClick={() => handleChangeStatus('pendiente')}>
               Devolver a Pendiente
             </Button>
-            <AssignTechnicianDialog
-              open={showAssignDialog}
-              onOpenChange={setShowAssignDialog}
-              workOrderId={wo.id}
-              branchId={wo.branch_id}
-            />
           </>
         );
       case 'asignada':
