@@ -194,6 +194,20 @@ export default function WOList() {
                       <h3 className="text-lg font-semibold">{wo.folio}</h3>
                       <WOStatusBadge status={wo.estado} />
                       <WOTipoBadge tipo={(wo as any).tipo} />
+                      {(wo as any).pago_pendiente && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge variant="destructive">No Pago</Badge>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Hay un pago pendiente antes de cerrar esta OT
+                              {(wo as any).monto_pendiente > 0 &&
+                                `: $${Number((wo as any).monto_pendiente).toLocaleString('es-CL')}`}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                       {pendingGpsWoIds.has(wo.id) && (
                         <TooltipProvider>
                           <Tooltip>

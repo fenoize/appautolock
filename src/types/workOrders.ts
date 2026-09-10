@@ -56,6 +56,8 @@ export interface WorkOrder {
   inventario_reservado: boolean;
   inventario_consumido: boolean;
   inventario_consumido_at?: string;
+  pago_pendiente?: boolean;
+  monto_pendiente?: number;
   ubicacion_lat?: number;
   ubicacion_lng?: number;
   created_at: string;
