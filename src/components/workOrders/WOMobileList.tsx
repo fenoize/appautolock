@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { MoreVertical, Eye, Edit, User, Car, Calendar as CalIcon, UserCog, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +48,11 @@ export function WOMobileList({ workOrders, pendingGpsWoIds, onAssign }: Props) {
                 </span>
                 <WOStatusBadge status={wo.estado} />
                 <WOTipoBadge tipo={(wo as any).tipo} />
+                {(wo as any).pago_pendiente && (
+                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-5">
+                    No Pago
+                  </Badge>
+                )}
                 {pendingGpsWoIds.has(wo.id) && (
                   <AlertTriangle className="h-3.5 w-3.5 text-orange-500 shrink-0" />
                 )}

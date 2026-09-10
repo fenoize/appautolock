@@ -1,9 +1,10 @@
-import { ClipboardList, Calendar, Clock, MapPin } from 'lucide-react';
+import { ClipboardList, Calendar, Clock, MapPin, AlertTriangle } from 'lucide-react';
 import { WorkOrder } from '@/types/workOrders';
 import { Separator } from '@/components/ui/separator';
 import { WOStatusBadge } from './WOStatusBadge';
 import { WOTipoBadge } from './WOTipoBadge';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -33,6 +34,17 @@ export function WODetailHeader({ workOrder }: WODetailHeaderProps) {
           <Badge variant="outline">📋 Generada desde Cotización</Badge>
         )}
       </div>
+
+      {(workOrder as any).pago_pendiente && (
+        <Alert variant="destructive" className="mt-2">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="font-semibold">
+            ⚠ PAGO PENDIENTE
+            {(workOrder as any).monto_pendiente > 0 &&
+              ` — $${Number((workOrder as any).monto_pendiente).toLocaleString('es-CL')}`}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Separator />
 
