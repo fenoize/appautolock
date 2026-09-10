@@ -127,6 +127,9 @@ export default function NewQuote() {
     [allProducts],
   );
 
+  // Carga de trabajo
+  const { data: woLoad = {} } = useWOLoad();
+
   // Mutaciones
   const createQuote = useCreateQuote();
   const createQuoteItem = useCreateQuoteItem();
