@@ -22,6 +22,7 @@ import {
 import { WOStatusBadge } from './WOStatusBadge';
 import { WOTipoBadge } from './WOTipoBadge';
 import { WOSubscriptionConfig } from './WOSubscriptionConfig';
+import WOPreCheckDialog from './WOPreCheckDialog';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AssignTechnicianDialog } from './AssignTechnicianDialog';
 import {
