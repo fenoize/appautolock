@@ -12,6 +12,7 @@ interface Props {
 
 const statusColors: Record<WOStatus, string> = {
   pendiente: '#94a3b8',
+  en_revision_tecnica: '#f59e0b',
   asignada: '#3b82f6',
   programada: '#8b5cf6',
   en_ruta: '#f59e0b',
