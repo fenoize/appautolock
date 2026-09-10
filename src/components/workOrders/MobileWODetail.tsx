@@ -22,6 +22,7 @@ import {
 import { WOStatusBadge } from './WOStatusBadge';
 import { WOTipoBadge } from './WOTipoBadge';
 import { WOSubscriptionConfig } from './WOSubscriptionConfig';
+import WOPreCheckDialog from './WOPreCheckDialog';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AssignTechnicianDialog } from './AssignTechnicianDialog';
 import {
@@ -123,6 +124,7 @@ export default function MobileWODetail({ wo }: Props) {
   const [observaciones, setObservaciones] = useState<string>(wo.observaciones_cierre || '');
   const [assignOpen, setAssignOpen] = useState(false);
   const [gpsConfirmado, setGpsConfirmado] = useState(false);
+  const [showPreCheck, setShowPreCheck] = useState(false);
   const [selectedSubscriptionItem, setSelectedSubscriptionItem] = useState<any>(null);
 
   const { data: subscriptionItems = [] } = useQuery({
@@ -563,7 +565,16 @@ export default function MobileWODetail({ wo }: Props) {
               </Card>
             )}
 
-            <Button onClick={goNext} className="w-full h-14 text-base">
+            <Button
+              onClick={() => {
+                if (isTecnico && wo.estado === 'programada') {
+                  setShowPreCheck(true);
+                } else {
+                  goNext();
+                }
+              }}
+              className="w-full h-14 text-base"
+            >
               {isTecnico ? 'Iniciar trabajo' : 'Continuar'} <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </>
@@ -1167,6 +1178,24 @@ export default function MobileWODetail({ wo }: Props) {
           branchId={wo.branch_id}
         />
       )}
+
+      <WOPreCheckDialog
+        open={showPreCheck}
+        onOpenChange={setShowPreCheck}
+        woId={wo.id}
+        onConfirm={async () => {
+          const { error } = await supabase
+            .from('work_orders')
+            .update({ estado: 'en_ruta' })
+            .eq('id', wo.id);
+          if (error) {
+            toast.error(`Error al iniciar ruta: ${error.message}`);
+            return;
+          }
+          setShowPreCheck(false);
+          goNext();
+        }}
+      />
 
       {selectedSubscriptionItem && (
         <WOSubscriptionConfig

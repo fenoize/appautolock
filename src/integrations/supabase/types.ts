@@ -3000,6 +3000,8 @@ export type Database = {
           original_wo_id: string | null
           pago_pendiente: boolean
           pdf_informe_url: string | null
+          pre_check_completado: boolean
+          pre_check_data: Json | null
           puede_editar: boolean | null
           quote_id: string | null
           region: string | null
@@ -3046,6 +3048,8 @@ export type Database = {
           original_wo_id?: string | null
           pago_pendiente?: boolean
           pdf_informe_url?: string | null
+          pre_check_completado?: boolean
+          pre_check_data?: Json | null
           puede_editar?: boolean | null
           quote_id?: string | null
           region?: string | null
@@ -3092,6 +3096,8 @@ export type Database = {
           original_wo_id?: string | null
           pago_pendiente?: boolean
           pdf_informe_url?: string | null
+          pre_check_completado?: boolean
+          pre_check_data?: Json | null
           puede_editar?: boolean | null
           quote_id?: string | null
           region?: string | null

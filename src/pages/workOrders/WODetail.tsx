@@ -16,6 +16,7 @@ import { WODetailHeader } from '@/components/workOrders/WODetailHeader';
 import { WOItemsTable } from '@/components/workOrders/WOItemsTable';
 import { WONotesSection } from '@/components/workOrders/WONotesSection';
 import MobileWODetail from '@/components/workOrders/MobileWODetail';
+import WOPreCheckDialog from '@/components/workOrders/WOPreCheckDialog';
 import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnicianDialog';
 import {
   AlertDialog,
@@ -64,6 +65,7 @@ export default function WODetail() {
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('items');
   const [pendingGpsDialog, setPendingGpsDialog] = useState<{ open: boolean; items: string[] }>({ open: false, items: [] });
+  const [showPreCheck, setShowPreCheck] = useState(false);
   const [consumingStock, setConsumingStock] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -184,10 +186,21 @@ export default function WODetail() {
         );
       case 'programada':
         return (
-          <Button onClick={() => handleChangeStatus('en_ruta')}>
-            <MapPin className="mr-2 h-4 w-4" />
-            Iniciar Ruta
-          </Button>
+          <>
+            <Button onClick={() => setShowPreCheck(true)}>
+              <MapPin className="mr-2 h-4 w-4" />
+              Iniciar Ruta
+            </Button>
+            <WOPreCheckDialog
+              open={showPreCheck}
+              onOpenChange={setShowPreCheck}
+              woId={wo.id}
+              onConfirm={() => {
+                setShowPreCheck(false);
+                handleChangeStatus('en_ruta');
+              }}
+            />
+          </>
         );
       case 'en_ruta':
         return (
