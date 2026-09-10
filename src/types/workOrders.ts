@@ -3,6 +3,7 @@ import { Vehicle } from './vehicles';
 
 export type WOStatus = 
   | 'pendiente' 
+  | 'en_revision_tecnica'
   | 'asignada' 
   | 'programada' 
   | 'en_ruta' 

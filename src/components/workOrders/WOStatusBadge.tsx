@@ -7,6 +7,7 @@ interface WOStatusBadgeProps {
 
 const statusConfig: Record<WOStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pendiente: { label: "Pendiente", variant: "secondary" },
+  en_revision_tecnica: { label: "En Revisión Técnica", variant: "outline" },
   asignada: { label: "Asignada", variant: "default" },
   programada: { label: "Programada", variant: "default" },
   en_ruta: { label: "En Ruta", variant: "default" },
