@@ -16,6 +16,7 @@ import { WODetailHeader } from '@/components/workOrders/WODetailHeader';
 import { WOItemsTable } from '@/components/workOrders/WOItemsTable';
 import { WONotesSection } from '@/components/workOrders/WONotesSection';
 import MobileWODetail from '@/components/workOrders/MobileWODetail';
+import WOPreCheckDialog from '@/components/workOrders/WOPreCheckDialog';
 import { AssignTechnicianDialog } from '@/components/workOrders/AssignTechnicianDialog';
 import {
   AlertDialog,
