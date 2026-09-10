@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { WOTipoBadge } from '@/components/workOrders/WOTipoBadge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
