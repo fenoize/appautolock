@@ -13,12 +13,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload } from 'lucide-react';
 import { useApproveQuoteManually } from '@/hooks/useQuotes';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { validateAttachment } from '@/lib/file-validation';
 
 interface QuoteApprovalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   quoteId: string;
 }
+
+// URL firmada de larga duración (~5 años). El bucket es privado.
+const SIGNED_URL_EXPIRES_IN = 60 * 60 * 24 * 365 * 5;
 
 export function QuoteApprovalDialog({
   open,
@@ -27,16 +33,56 @@ export function QuoteApprovalDialog({
 }: QuoteApprovalDialogProps) {
   const [comprobante, setComprobante] = useState<File | null>(null);
   const [notas, setNotas] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const approveMutation = useApproveQuoteManually();
+  const { toast } = useToast();
+
+  const handleFileChange = (file: File | null) => {
+    if (file) {
+      const validation = validateAttachment(file);
+      if (!validation.valid) {
+        toast({
+          title: 'Archivo no válido',
+          description: validation.error,
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+    setComprobante(file);
+  };
 
   const handleSubmit = async () => {
-    // TODO: Implementar subida de comprobante a Storage
-    let comprobanteUrl = undefined;
-    
+    let comprobanteUrl: string | undefined = undefined;
+
     if (comprobante) {
-      // Aquí se debería subir el archivo a Supabase Storage
-      // Por ahora lo dejamos sin implementar
-      console.log('Comprobante a subir:', comprobante);
+      setIsUploading(true);
+      try {
+        const ext = comprobante.name.split('.').pop();
+        const path = `${quoteId}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('comprobantes')
+          .upload(path, comprobante, { upsert: true });
+        if (uploadError) throw uploadError;
+
+        // Bucket privado: generar URL firmada de larga duración
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from('comprobantes')
+          .createSignedUrl(path, SIGNED_URL_EXPIRES_IN);
+        if (signedError) throw signedError;
+        comprobanteUrl = signedData.signedUrl;
+      } catch (error: any) {
+        toast({
+          title: 'Error al subir comprobante',
+          description:
+            error?.message ||
+            'No se pudo subir el comprobante. La cotización no fue aprobada.',
+          variant: 'destructive',
+        });
+        setIsUploading(false);
+        return;
+      }
+      setIsUploading(false);
     }
 
     await approveMutation.mutateAsync({
@@ -46,6 +92,13 @@ export function QuoteApprovalDialog({
 
     onOpenChange(false);
   };
+
+  const isBusy = isUploading || approveMutation.isPending;
+  const submitLabel = isUploading
+    ? 'Subiendo comprobante...'
+    : approveMutation.isPending
+    ? 'Aprobando...'
+    : 'Aprobar Cotización';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -65,7 +118,7 @@ export function QuoteApprovalDialog({
                 id="comprobante"
                 type="file"
                 accept="image/*,application/pdf"
-                onChange={(e) => setComprobante(e.target.files?.[0] || null)}
+                onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
                 className="flex-1"
               />
               <Button type="button" variant="outline" size="icon">
@@ -95,15 +148,12 @@ export function QuoteApprovalDialog({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={approveMutation.isPending}
+            disabled={isBusy}
           >
             Cancelar
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={approveMutation.isPending}
-          >
-            {approveMutation.isPending ? 'Aprobando...' : 'Aprobar Cotización'}
+          <Button onClick={handleSubmit} disabled={isBusy}>
+            {submitLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
