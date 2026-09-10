@@ -63,7 +63,7 @@ export default function WOPreCheckDialog({ open, onOpenChange, woId, onConfirm }
           pre_check_data: {
             items,
             completado_at: new Date().toISOString(),
-          },
+          } as any,
         })
         .eq('id', woId);
 
