@@ -1179,6 +1179,24 @@ export default function MobileWODetail({ wo }: Props) {
         />
       )}
 
+      <WOPreCheckDialog
+        open={showPreCheck}
+        onOpenChange={setShowPreCheck}
+        woId={wo.id}
+        onConfirm={async () => {
+          const { error } = await supabase
+            .from('work_orders')
+            .update({ estado: 'en_ruta' })
+            .eq('id', wo.id);
+          if (error) {
+            toast.error(`Error al iniciar ruta: ${error.message}`);
+            return;
+          }
+          setShowPreCheck(false);
+          goNext();
+        }}
+      />
+
       {selectedSubscriptionItem && (
         <WOSubscriptionConfig
           open={!!selectedSubscriptionItem}
