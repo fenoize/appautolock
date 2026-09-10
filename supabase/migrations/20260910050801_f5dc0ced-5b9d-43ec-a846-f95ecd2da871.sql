@@ -1,0 +1,1 @@
+ALTER TYPE wo_status ADD VALUE IF NOT EXISTS 'en_revision_tecnica' AFTER 'pendiente';

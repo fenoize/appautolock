@@ -3609,6 +3609,7 @@ export type Database = {
         | "completada"
         | "cancelada"
         | "pendiente"
+        | "en_revision_tecnica"
         | "asignada"
         | "pausada"
         | "reprogramada"
@@ -3788,6 +3789,7 @@ export const Constants = {
         "completada",
         "cancelada",
         "pendiente",
+        "en_revision_tecnica",
         "asignada",
         "pausada",
         "reprogramada",
