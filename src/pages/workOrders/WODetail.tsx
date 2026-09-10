@@ -8,6 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 import { WOStatusBadge } from '@/components/workOrders/WOStatusBadge';
 import { WOSubscriptionsTab } from '@/components/workOrders/WOSubscriptionsTab';
@@ -202,10 +203,24 @@ export default function WODetail() {
               <Pause className="mr-2 h-4 w-4" />
               Pausar
             </Button>
-            <Button onClick={handleFinalizarOT}>
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Finalizar OT
-            </Button>
+            {(wo as any).pago_pendiente ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button disabled>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Finalizar OT
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Hay un pago pendiente antes de cerrar esta OT</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button onClick={handleFinalizarOT}>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Finalizar OT
+              </Button>
+            )}
           </>
         );
       case 'pausada':
