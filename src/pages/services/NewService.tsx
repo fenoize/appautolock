@@ -23,6 +23,8 @@ const formSchema = z.object({
   requiere_checklist: z.boolean(),
   activo: z.boolean(),
   solo_cotizable_externo: z.boolean(),
+  requiere_suscripcion: z.boolean(),
+  default_plan_id: z.string().nullable().optional(),
   branch_id: z.string().optional()
 });
 
@@ -32,6 +34,7 @@ export default function NewService() {
   const navigate = useNavigate();
   const location = useLocation();
   const duplicateData = location.state?.duplicate;
+  const { data: plans } = useActiveSubscriptionPlans();
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -42,7 +45,9 @@ export default function NewService() {
       tiempo_estimado_minutos: duplicateData.tiempo_estimado_minutos,
       requiere_checklist: duplicateData.requiere_checklist,
       activo: true,
-      solo_cotizable_externo: duplicateData.solo_cotizable_externo
+      solo_cotizable_externo: duplicateData.solo_cotizable_externo,
+      requiere_suscripcion: duplicateData.requiere_suscripcion ?? false,
+      default_plan_id: duplicateData.default_plan_id ?? null
     } : {
       nombre: "",
       descripcion: "",
@@ -50,11 +55,14 @@ export default function NewService() {
       tiempo_estimado_minutos: 60,
       requiere_checklist: false,
       activo: true,
-      solo_cotizable_externo: false
+      solo_cotizable_externo: false,
+      requiere_suscripcion: false,
+      default_plan_id: null
     }
   });
 
   const createService = useCreateService();
+
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -147,12 +155,50 @@ export default function NewService() {
 
             <div className="flex items-center space-x-2">
               <Switch
+                id="requiere_suscripcion"
+                checked={watch("requiere_suscripcion")}
+                onCheckedChange={(checked) => {
+                  setValue("requiere_suscripcion", checked);
+                  if (!checked) setValue("default_plan_id", null);
+                }}
+              />
+              <Label htmlFor="requiere_suscripcion">Requiere suscripción</Label>
+            </div>
+
+            {watch("requiere_suscripcion") && (
+              <div className="space-y-2">
+                <Label>Plan de suscripción por defecto</Label>
+                <p className="text-xs text-muted-foreground">
+                  Al agregar este servicio a una cotización, se añadirá automáticamente este plan como línea ítem.
+                </p>
+                <Select
+                  value={watch("default_plan_id") || "none"}
+                  onValueChange={(v) => setValue("default_plan_id", v === "none" ? null : v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin plan por defecto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin plan por defecto</SelectItem>
+                    {plans?.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nombre} — ${Number(p.precio).toLocaleString("es-CL")} / {p.periodo_meses} meses
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="flex items-center space-x-2">
+              <Switch
                 id="solo_cotizable_externo"
                 checked={watch("solo_cotizable_externo")}
                 onCheckedChange={(checked) => setValue("solo_cotizable_externo", checked)}
               />
               <Label htmlFor="solo_cotizable_externo">Solo cotizable externamente</Label>
             </div>
+
 
             <div className="flex items-center space-x-2">
               <Switch
