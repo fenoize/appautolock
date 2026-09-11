@@ -132,13 +132,19 @@ export function QuoteToWODialog({
                         <p className="font-medium text-foreground">Pendiente</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground">Fecha propuesta:</p>
+                        <p className="text-muted-foreground">Fecha y hora propuesta:</p>
                         <p className="font-medium text-foreground">
                           {(quote as any).fecha_instalacion_propuesta
-                            ? new Date((quote as any).fecha_instalacion_propuesta + 'T12:00:00').toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                            ? new Date((quote as any).fecha_instalacion_propuesta).toLocaleString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
                             : 'No especificada'}
                         </p>
                       </div>
+                      {(quote as any).direccion_instalacion && (
+                        <div>
+                          <p className="text-muted-foreground">Dirección instalación:</p>
+                          <p className="font-medium text-foreground">{(quote as any).direccion_instalacion}</p>
+                        </div>
+                      )}
                       <div>
                         <p className="text-muted-foreground">Items:</p>
                         <p className="font-medium text-foreground">{quote.items?.length || 0} productos/servicios</p>
