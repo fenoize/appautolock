@@ -50,6 +50,13 @@ import { toast } from 'sonner';
 const COMBUSTIBLES = ['Bencina', 'Diesel', 'GLP', 'Eléctrico', 'Híbrido', 'Cualquiera'];
 const ENCENDIDOS = ['Llave', 'Push-Start', 'Sin llave', 'Cualquiera'];
 
+const normalizeText = (value: string | number | null | undefined) =>
+  String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
 const encendidoLabel = (v?: string | null) => {
   if (!v) return 'Cualquiera';
   if (v === 'Push-Start') return 'Botón';
@@ -132,8 +139,18 @@ export default function CompatibilityMatrix() {
   const [filterAnio, setFilterAnio] = useState<string>('all');
   const [filterCombustible, setFilterCombustible] = useState<string>('all');
   const [filterEncendido, setFilterEncendido] = useState<string>('all');
-  const { data: catalog = [] } = useVehicleCatalog(search);
+  const { data: catalog = [], isLoading: isCatalogLoading } = useVehicleCatalog();
   const { data: compats = [] } = useProductCompatibility(productId);
+  const searchTerm = useMemo(() => normalizeText(search), [search]);
+  const searchedCatalog = useMemo(() => {
+    if (!searchTerm) return catalog;
+    return catalog.filter((c) =>
+      normalizeText(c.marca).includes(searchTerm) ||
+      normalizeText(c.modelo).includes(searchTerm) ||
+      normalizeText(c.anio_desde).includes(searchTerm) ||
+      normalizeText(c.anio_hasta).includes(searchTerm),
+    );
+  }, [catalog, searchTerm]);
   const compatByCat = useMemo(() => {
     const map = new Map<string, ProductCompatibility>();
     compats.forEach((c) => map.set(c.vehicle_catalog_id, c));
@@ -169,7 +186,7 @@ export default function CompatibilityMatrix() {
   // Apply filters on top of the search-narrowed catalog
   const filteredCatalog = useMemo(() => {
     const anio = filterAnio !== 'all' ? Number(filterAnio) : null;
-    return catalog.filter((c) => {
+    return searchedCatalog.filter((c) => {
       if (filterMarca !== 'all' && c.marca !== filterMarca) return false;
       if (filterCombustible !== 'all' && (c.tipo_combustible ?? '') !== filterCombustible) return false;
       if (filterEncendido !== 'all' && (c.tipo_encendido ?? '') !== filterEncendido) return false;
@@ -188,7 +205,7 @@ export default function CompatibilityMatrix() {
       }
       return true;
     });
-  }, [catalog, filterMarca, filterAnio, filterCombustible, filterEncendido]);
+  }, [searchedCatalog, filterMarca, filterAnio, filterCombustible, filterEncendido]);
 
   const hasActiveFilters =
     filterMarca !== 'all' || filterAnio !== 'all' || filterCombustible !== 'all' || filterEncendido !== 'all';

@@ -50,23 +50,11 @@ const fetchAllCatalog = async (columns: string, marca?: string) => {
   return rows;
 };
 
-export const useVehicleCatalog = (search?: string) => {
+export const useVehicleCatalog = () => {
   return useQuery({
-    queryKey: ["vehicle_catalog", search],
-    queryFn: async () => {
-      let rows = (await fetchAllCatalog("*")) as VehicleCatalog[];
-      if (search?.trim()) {
-        const s = search.toLowerCase();
-        rows = rows.filter(
-          (r) =>
-            r.marca.toLowerCase().includes(s) ||
-            r.modelo.toLowerCase().includes(s) ||
-            String(r.anio_desde ?? "").includes(s) ||
-            String(r.anio_hasta ?? "").includes(s),
-        );
-      }
-      return rows;
-    },
+    queryKey: ["vehicle_catalog"],
+    queryFn: async () => (await fetchAllCatalog("*")) as VehicleCatalog[],
+    staleTime: 1000 * 60 * 5,
   });
 };
 
