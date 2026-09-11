@@ -18,6 +18,14 @@ export interface Service {
   solo_cotizable_externo: boolean;
   requiere_suscripcion?: boolean;
   tipos_suscripcion_disponibles?: string[];
+  default_plan_id?: string | null;
+  default_plan?: {
+    id: string;
+    nombre: string;
+    precio: number;
+    periodo_meses: number;
+  } | null;
+
   created_at: string;
   updated_at: string;
 }
