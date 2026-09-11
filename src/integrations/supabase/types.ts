@@ -1702,6 +1702,7 @@ export type Database = {
           branch_id: string | null
           categoria: string | null
           created_at: string | null
+          default_plan_id: string | null
           descripcion: string | null
           ficha_html: string | null
           ficha_resumen: string | null
@@ -1723,6 +1724,7 @@ export type Database = {
           branch_id?: string | null
           categoria?: string | null
           created_at?: string | null
+          default_plan_id?: string | null
           descripcion?: string | null
           ficha_html?: string | null
           ficha_resumen?: string | null
@@ -1744,6 +1746,7 @@ export type Database = {
           branch_id?: string | null
           categoria?: string | null
           created_at?: string | null
+          default_plan_id?: string | null
           descripcion?: string | null
           ficha_html?: string | null
           ficha_resumen?: string | null
@@ -1766,6 +1769,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_default_plan_id_fkey"
+            columns: ["default_plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
           },
         ]
@@ -3349,6 +3359,10 @@ export type Database = {
       }
     }
     Functions: {
+      activate_wo_subscriptions: {
+        Args: { p_wo_id: string }
+        Returns: undefined
+      }
       actualizar_estado_suscripciones: { Args: never; Returns: undefined }
       ajustar_stock: {
         Args: {
