@@ -57,6 +57,7 @@ export default function NewQuote() {
           validez_dias: parsed.validez_dias || 30,
           notas: parsed.notas || '',
           fecha_instalacion_propuesta: parsed.fecha_instalacion_propuesta || '',
+          direccion_instalacion: parsed.direccion_instalacion || '',
         };
       } catch {
         return {
@@ -66,6 +67,7 @@ export default function NewQuote() {
           validez_dias: 30,
           notas: '',
           fecha_instalacion_propuesta: '',
+          direccion_instalacion: '',
         };
       }
     }
@@ -76,8 +78,16 @@ export default function NewQuote() {
       validez_dias: 30,
       notas: '',
       fecha_instalacion_propuesta: '',
+      direccion_instalacion: '',
     };
   });
+
+  const handleDayClick = (key: string) => {
+    const currentTime = formData.fecha_instalacion_propuesta
+      ? formData.fecha_instalacion_propuesta.split('T')[1]?.slice(0, 5) || '09:00'
+      : '09:00';
+    setFormData((prev: any) => ({ ...prev, fecha_instalacion_propuesta: `${key}T${currentTime}` }));
+  };
 
   // Items de la cotización con auto-guardado
   const [items, setItems] = useState<QuoteItemForm[]>(() => {
@@ -634,7 +644,7 @@ export default function NewQuote() {
                       : count <= 4
                       ? 'text-amber-700 dark:text-amber-400'
                       : 'text-red-700 dark:text-red-400';
-                  const isSelected = formData.fecha_instalacion_propuesta === key;
+                  const isSelected = formData.fecha_instalacion_propuesta.split('T')[0] === key;
                   return (
                     <div
                       key={key}
