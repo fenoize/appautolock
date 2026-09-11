@@ -56,6 +56,7 @@ export default function NewQuote() {
           branch_id: parsed.branch_id || null,
           validez_dias: parsed.validez_dias || 30,
           notas: parsed.notas || '',
+          fecha_instalacion_propuesta: parsed.fecha_instalacion_propuesta || '',
         };
       } catch {
         return {
@@ -64,6 +65,7 @@ export default function NewQuote() {
           branch_id: null,
           validez_dias: 30,
           notas: '',
+          fecha_instalacion_propuesta: '',
         };
       }
     }
@@ -73,6 +75,7 @@ export default function NewQuote() {
       branch_id: null,
       validez_dias: 30,
       notas: '',
+      fecha_instalacion_propuesta: '',
     };
   });
 
@@ -273,6 +276,7 @@ export default function NewQuote() {
         neto: totals.neto,
         iva: totals.iva,
         total: totals.total,
+        fecha_instalacion_propuesta: formData.fecha_instalacion_propuesta || null,
       };
 
       const quote = await createQuote.mutateAsync(quoteData);
@@ -630,12 +634,17 @@ export default function NewQuote() {
                       : count <= 4
                       ? 'text-amber-700 dark:text-amber-400'
                       : 'text-red-700 dark:text-red-400';
+                  const isSelected = formData.fecha_instalacion_propuesta === key;
                   return (
-                    <div key={key} className={`${bgColor} rounded p-1 text-center`}>
+                    <div
+                      key={key}
+                      onClick={() => setFormData(prev => ({ ...prev, fecha_instalacion_propuesta: key }))}
+                      className={`${bgColor} rounded p-1 text-center cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:ring-1 hover:ring-muted-foreground'}`}
+                    >
                       <div className="text-[10px] text-muted-foreground leading-tight">
                         {dayNames[d.getDay()]}
                       </div>
-                      <div className="text-xs font-medium leading-tight">{d.getDate()}</div>
+                      <div className={`text-xs leading-tight ${isSelected ? 'font-bold' : 'font-medium'}`}>{d.getDate()}</div>
                       <div className={`text-xs font-bold leading-tight ${textColor}`}>
                         {count > 0 ? count : '–'}
                       </div>
@@ -643,6 +652,11 @@ export default function NewQuote() {
                   );
                 })}
               </div>
+              {formData.fecha_instalacion_propuesta && (
+                <p className="text-xs text-center mt-2 font-medium text-primary">
+                  📅 Fecha propuesta: {new Date(formData.fecha_instalacion_propuesta + 'T12:00:00').toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </p>
+              )}
               <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground justify-center">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded bg-green-400 inline-block" />
