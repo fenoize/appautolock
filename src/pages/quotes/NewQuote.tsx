@@ -619,6 +619,59 @@ export default function NewQuote() {
             </CardContent>
           </Card>
 
+          {/* Card: Instalación */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <CalendarCheck className="h-4 w-4 text-muted-foreground" />
+                Fecha de instalación
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-4">
+              {!formData.fecha_instalacion_propuesta ? (
+                <button
+                  type="button"
+                  onClick={() => setInstallPickerOpen(true)}
+                  className="w-full py-2.5 border-dashed border-2 border-border rounded-md text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-all flex items-center justify-center gap-2"
+                >
+                  <CalendarCheck className="h-4 w-4" />
+                  Agregar fecha y dirección
+                </button>
+              ) : (
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-0.5 flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 text-sm font-medium text-primary">
+                        <CalendarCheck className="h-3.5 w-3.5 flex-shrink-0" />
+                        <span>
+                          {new Date(formData.fecha_instalacion_propuesta).toLocaleString('es-CL', {
+                            weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      {formData.direccion_instalacion && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{formData.direccion_instalacion}</span>
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setInstallPickerOpen(true)}
+                      className="h-7 px-2 flex-shrink-0"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Card: Carga de Trabajo */}
           <Card>
             <CardHeader className="pb-2">
@@ -651,17 +704,15 @@ export default function NewQuote() {
                       : count <= 4
                       ? 'text-amber-700 dark:text-amber-400'
                       : 'text-red-700 dark:text-red-400';
-                  const isSelected = formData.fecha_instalacion_propuesta.split('T')[0] === key;
                   return (
                     <div
                       key={key}
-                      onClick={() => handleDayClick(key)}
-                      className={`${bgColor} rounded p-1 text-center cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:ring-1 hover:ring-muted-foreground'}`}
+                      className={`${bgColor} rounded p-1 text-center transition-all`}
                     >
                       <div className="text-[10px] text-muted-foreground leading-tight">
                         {dayNames[d.getDay()]}
                       </div>
-                      <div className={`text-xs leading-tight ${isSelected ? 'font-bold' : 'font-medium'}`}>{d.getDate()}</div>
+                      <div className="text-xs leading-tight font-medium">{d.getDate()}</div>
                       <div className={`text-xs font-bold leading-tight ${textColor}`}>
                         {count > 0 ? count : '–'}
                       </div>
@@ -669,25 +720,6 @@ export default function NewQuote() {
                   );
                 })}
               </div>
-              {formData.fecha_instalacion_propuesta && (
-                <p className="text-xs text-center mt-2 font-medium text-primary">
-                  📅 Fecha propuesta: {new Date(formData.fecha_instalacion_propuesta).toLocaleString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
-                </p>
-              )}
-              {formData.fecha_instalacion_propuesta && (
-                <div className="mt-2 flex items-center gap-2 justify-center">
-                  <Label className="text-xs">Hora:</Label>
-                  <input
-                    type="time"
-                    className="text-xs border rounded px-1 py-0.5 bg-background"
-                    value={formData.fecha_instalacion_propuesta.split('T')[1]?.slice(0, 5) || '09:00'}
-                    onChange={(e) => {
-                      const datePart = formData.fecha_instalacion_propuesta.split('T')[0];
-                      setFormData((prev: any) => ({ ...prev, fecha_instalacion_propuesta: `${datePart}T${e.target.value}` }));
-                    }}
-                  />
-                </div>
-              )}
               <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground justify-center">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded bg-green-400 inline-block" />
