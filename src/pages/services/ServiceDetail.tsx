@@ -16,6 +16,9 @@ import { ServiceCostItems } from "@/components/services/ServiceCostItems";
 import { ServiceChecklistEditor } from "@/components/services/ServiceChecklistEditor";
 import ServiceFichaEditor from "@/components/services/ServiceFichaEditor";
 import { SubscriptionPlanSelector } from "@/components/shared/SubscriptionPlanSelector";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useActiveSubscriptionPlans } from "@/hooks/useSubscriptionPlansActive";
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
