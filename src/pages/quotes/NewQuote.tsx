@@ -796,6 +796,21 @@ export default function NewQuote() {
         onOpenChange={setShowItemSelector}
         onSelectItem={handleAddItem}
       />
+
+      <InstallationPickerDialog
+        open={installPickerOpen}
+        onOpenChange={setInstallPickerOpen}
+        value={formData.fecha_instalacion_propuesta ? {
+          datetime: formData.fecha_instalacion_propuesta,
+          address: formData.direccion_instalacion || ''
+        } : null}
+        onChange={(val) => setFormData(prev => ({
+          ...prev,
+          fecha_instalacion_propuesta: val?.datetime || '',
+          direccion_instalacion: val?.address || ''
+        }))}
+        woLoad={woLoad}
+      />
     </div>
   );
 }
