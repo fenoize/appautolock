@@ -25,6 +25,8 @@ const useWorkOrders = () => {
 import { useUsers } from '@/hooks/useUsers';
 import { WOStatus, WorkOrder } from '@/types/workOrders';
 import { Calendar, List, ExternalLink } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -293,12 +295,18 @@ export default function WOCalendar() {
 
   // Renderizar contenido del evento
   const renderEventContent = (eventInfo: any) => {
+    const wo: WorkOrder = eventInfo.event.extendedProps.wo;
     return (
       <div className="p-1 text-xs overflow-hidden">
         <div className="font-semibold truncate">{eventInfo.event.extendedProps.folio}</div>
         <div className="truncate">{eventInfo.event.title.split(' - ')[1]}</div>
         {eventInfo.event.extendedProps.vehicle && (
           <div className="text-[10px] opacity-75 truncate">{eventInfo.event.extendedProps.vehicle}</div>
+        )}
+        {(wo as any).direccion_instalacion && (
+          <div className="text-[10px] opacity-75 truncate flex items-center gap-0.5">
+            📍 {(wo as any).direccion_instalacion}
+          </div>
         )}
       </div>
     );
