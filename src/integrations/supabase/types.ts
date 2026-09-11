@@ -1362,6 +1362,7 @@ export type Database = {
           client_id: string
           comprobante_pago_url: string | null
           created_at: string | null
+          direccion_instalacion: string | null
           email_destinatario: string | null
           email_enviado_at: string | null
           estado: Database["public"]["Enums"]["quote_status"] | null
@@ -1385,6 +1386,7 @@ export type Database = {
           client_id: string
           comprobante_pago_url?: string | null
           created_at?: string | null
+          direccion_instalacion?: string | null
           email_destinatario?: string | null
           email_enviado_at?: string | null
           estado?: Database["public"]["Enums"]["quote_status"] | null
@@ -1408,6 +1410,7 @@ export type Database = {
           client_id?: string
           comprobante_pago_url?: string | null
           created_at?: string | null
+          direccion_instalacion?: string | null
           email_destinatario?: string | null
           email_enviado_at?: string | null
           estado?: Database["public"]["Enums"]["quote_status"] | null
@@ -2982,6 +2985,7 @@ export type Database = {
           created_at: string | null
           direccion: string | null
           direccion_id: string | null
+          direccion_instalacion: string | null
           duracion_minutos: number | null
           estado: Database["public"]["Enums"]["wo_status"] | null
           evidencias_post_urls: string[] | null
@@ -3030,6 +3034,7 @@ export type Database = {
           created_at?: string | null
           direccion?: string | null
           direccion_id?: string | null
+          direccion_instalacion?: string | null
           duracion_minutos?: number | null
           estado?: Database["public"]["Enums"]["wo_status"] | null
           evidencias_post_urls?: string[] | null
@@ -3078,6 +3083,7 @@ export type Database = {
           created_at?: string | null
           direccion?: string | null
           direccion_id?: string | null
+          direccion_instalacion?: string | null
           duracion_minutos?: number | null
           estado?: Database["public"]["Enums"]["wo_status"] | null
           evidencias_post_urls?: string[] | null

@@ -57,6 +57,7 @@ export default function NewQuote() {
           validez_dias: parsed.validez_dias || 30,
           notas: parsed.notas || '',
           fecha_instalacion_propuesta: parsed.fecha_instalacion_propuesta || '',
+          direccion_instalacion: parsed.direccion_instalacion || '',
         };
       } catch {
         return {
@@ -66,6 +67,7 @@ export default function NewQuote() {
           validez_dias: 30,
           notas: '',
           fecha_instalacion_propuesta: '',
+          direccion_instalacion: '',
         };
       }
     }
@@ -76,8 +78,16 @@ export default function NewQuote() {
       validez_dias: 30,
       notas: '',
       fecha_instalacion_propuesta: '',
+      direccion_instalacion: '',
     };
   });
+
+  const handleDayClick = (key: string) => {
+    const currentTime = formData.fecha_instalacion_propuesta
+      ? formData.fecha_instalacion_propuesta.split('T')[1]?.slice(0, 5) || '09:00'
+      : '09:00';
+    setFormData((prev: any) => ({ ...prev, fecha_instalacion_propuesta: `${key}T${currentTime}` }));
+  };
 
   // Items de la cotización con auto-guardado
   const [items, setItems] = useState<QuoteItemForm[]>(() => {
@@ -277,6 +287,7 @@ export default function NewQuote() {
         iva: totals.iva,
         total: totals.total,
         fecha_instalacion_propuesta: formData.fecha_instalacion_propuesta || null,
+        direccion_instalacion: formData.direccion_instalacion || null,
       };
 
       const quote = await createQuote.mutateAsync(quoteData);
@@ -599,6 +610,16 @@ export default function NewQuote() {
                   placeholder="Notas adicionales para el cliente..."
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label>Dirección de instalación</Label>
+                <p className="text-xs text-muted-foreground">Opcional — si difiere de la dirección del cliente</p>
+                <Input
+                  placeholder="Ej: Av. Providencia 1234, Providencia"
+                  value={formData.direccion_instalacion}
+                  onChange={(e) => setFormData((prev: any) => ({ ...prev, direccion_instalacion: e.target.value }))}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -634,11 +655,11 @@ export default function NewQuote() {
                       : count <= 4
                       ? 'text-amber-700 dark:text-amber-400'
                       : 'text-red-700 dark:text-red-400';
-                  const isSelected = formData.fecha_instalacion_propuesta === key;
+                  const isSelected = formData.fecha_instalacion_propuesta.split('T')[0] === key;
                   return (
                     <div
                       key={key}
-                      onClick={() => setFormData(prev => ({ ...prev, fecha_instalacion_propuesta: key }))}
+                      onClick={() => handleDayClick(key)}
                       className={`${bgColor} rounded p-1 text-center cursor-pointer transition-all ${isSelected ? 'ring-2 ring-primary' : 'hover:ring-1 hover:ring-muted-foreground'}`}
                     >
                       <div className="text-[10px] text-muted-foreground leading-tight">
@@ -654,8 +675,22 @@ export default function NewQuote() {
               </div>
               {formData.fecha_instalacion_propuesta && (
                 <p className="text-xs text-center mt-2 font-medium text-primary">
-                  📅 Fecha propuesta: {new Date(formData.fecha_instalacion_propuesta + 'T12:00:00').toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  📅 Fecha propuesta: {new Date(formData.fecha_instalacion_propuesta).toLocaleString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
                 </p>
+              )}
+              {formData.fecha_instalacion_propuesta && (
+                <div className="mt-2 flex items-center gap-2 justify-center">
+                  <Label className="text-xs">Hora:</Label>
+                  <input
+                    type="time"
+                    className="text-xs border rounded px-1 py-0.5 bg-background"
+                    value={formData.fecha_instalacion_propuesta.split('T')[1]?.slice(0, 5) || '09:00'}
+                    onChange={(e) => {
+                      const datePart = formData.fecha_instalacion_propuesta.split('T')[0];
+                      setFormData((prev: any) => ({ ...prev, fecha_instalacion_propuesta: `${datePart}T${e.target.value}` }));
+                    }}
+                  />
+                </div>
               )}
               <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground justify-center">
                 <span className="flex items-center gap-1">
