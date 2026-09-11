@@ -172,7 +172,7 @@ export function useCreateQuoteItem() {
   return useMutation({
     mutationFn: async (item: {
       quote_id: string;
-      item_tipo: 'servicio' | 'producto';
+      item_tipo: 'servicio' | 'producto' | 'suscripcion';
       ref_id?: string;
       nombre: string;
       descripcion?: string;

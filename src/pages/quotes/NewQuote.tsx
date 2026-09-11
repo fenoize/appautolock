@@ -204,10 +204,12 @@ export default function NewQuote() {
   };
 
   const handleAddItem = (newItem: {
-    tipo: 'producto' | 'servicio';
+    tipo: 'producto' | 'servicio' | 'suscripcion';
     ref_id: string;
     nombre: string;
     precio_unitario: number;
+    periodo_meses?: number;
+    default_plan?: { id: string; nombre: string; precio: number; periodo_meses: number } | null;
   }) => {
     const item: QuoteItemForm = {
       item_tipo: newItem.tipo,
@@ -217,10 +219,31 @@ export default function NewQuote() {
       precio_unitario: newItem.precio_unitario,
       descuento_porcentaje: 0,
       subtotal: newItem.precio_unitario,
+      periodo_meses: newItem.periodo_meses,
     };
-    setItems([...items, item]);
+
+    const nextItems: QuoteItemForm[] = [...items, item];
+
+    // Auto-agregar plan de suscripción por defecto del servicio
+    const plan = newItem.tipo === 'servicio' ? newItem.default_plan : null;
+    if (plan && !items.some((i) => i.item_tipo === 'suscripcion' && i.ref_id === plan.id)) {
+      nextItems.push({
+        item_tipo: 'suscripcion',
+        ref_id: plan.id,
+        nombre: plan.nombre,
+        cantidad: 1,
+        precio_unitario: Number(plan.precio),
+        descuento_porcentaje: 0,
+        subtotal: Number(plan.precio),
+        periodo_meses: plan.periodo_meses,
+      });
+      toast.info(`Plan "${plan.nombre}" agregado automáticamente`);
+    }
+
+    setItems(nextItems);
     toast.success('Item agregado');
   };
+
 
   const updateItemQuantity = (index: number, cantidad: number) => {
     if (cantidad <= 0) return;
