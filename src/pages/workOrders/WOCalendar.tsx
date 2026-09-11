@@ -25,6 +25,8 @@ const useWorkOrders = () => {
 import { useUsers } from '@/hooks/useUsers';
 import { WOStatus, WorkOrder } from '@/types/workOrders';
 import { Calendar, List, ExternalLink } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -293,12 +295,18 @@ export default function WOCalendar() {
 
   // Renderizar contenido del evento
   const renderEventContent = (eventInfo: any) => {
+    const wo: WorkOrder = eventInfo.event.extendedProps.wo;
     return (
       <div className="p-1 text-xs overflow-hidden">
         <div className="font-semibold truncate">{eventInfo.event.extendedProps.folio}</div>
         <div className="truncate">{eventInfo.event.title.split(' - ')[1]}</div>
         {eventInfo.event.extendedProps.vehicle && (
           <div className="text-[10px] opacity-75 truncate">{eventInfo.event.extendedProps.vehicle}</div>
+        )}
+        {(wo as any).direccion_instalacion && (
+          <div className="text-[10px] opacity-75 truncate flex items-center gap-0.5">
+            📍 {(wo as any).direccion_instalacion}
+          </div>
         )}
       </div>
     );
@@ -529,6 +537,19 @@ export default function WOCalendar() {
               </SheetHeader>
 
               <div className="space-y-5 py-4">
+                {selectedEvent.wo.fecha_programada && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground text-xs">Instalación: </span>
+                    <span className="font-medium">
+                      {format(new Date(selectedEvent.wo.fecha_programada), "d MMM yyyy · HH:mm", { locale: es })}
+                    </span>
+                  </div>
+                )}
+                {(selectedEvent.wo as any)?.direccion_instalacion && (
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                    📍 {(selectedEvent.wo as any).direccion_instalacion}
+                  </div>
+                )}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Cliente</Label>
                   {selectedEvent.wo.client ? (
