@@ -416,14 +416,44 @@ export default function ServiceDetail() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="suscripciones">
+        <TabsContent value="suscripciones" className="space-y-4">
           <SubscriptionPlanSelector
             requiereSuscripcion={requiereSuscripcion}
             planesSeleccionados={planesSeleccionados}
             onToggleRequiereSuscripcion={handleToggleRequiereSuscripcion}
             onSelectPlanes={handleSelectPlanes}
           />
+
+          {requiereSuscripcion && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Plan de suscripción por defecto</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Al agregar este servicio a una cotización, se añadirá automáticamente este plan como línea ítem.
+                </p>
+                <Select
+                  value={defaultPlanId || 'none'}
+                  onValueChange={handleSelectDefaultPlan}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin plan por defecto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin plan por defecto</SelectItem>
+                    {activePlans?.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nombre} — ${Number(p.precio).toLocaleString('es-CL')} / {p.periodo_meses} meses
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
+
 
         <TabsContent value="ficha">
           <ServiceFichaEditor
