@@ -146,11 +146,37 @@ export default function WODetail() {
 
 
 
-  const handleChangeStatus = (newStatus: string) => {
-    if (id) {
+  const handleChangeStatus = async (newStatus: string) => {
+    if (!id) return;
+    if (newStatus !== 'completada') {
       updateWO.mutate({ id, estado: newStatus as any });
+      return;
+    }
+    try {
+      await updateWO.mutateAsync({ id, estado: newStatus as any });
+    } catch {
+      return;
+    }
+    try {
+      const { error } = await supabase.rpc('activate_wo_subscriptions', { p_wo_id: id });
+      if (error) throw error;
+      const { count } = await supabase
+        .from('subscriptions')
+        .select('id', { count: 'exact', head: true })
+        .eq('wo_id', id);
+      queryClient.invalidateQueries({ queryKey: ['wo-subscription-items', id] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      if (count && count > 0) {
+        toast.success(`OT completada · ${count} suscripción${count > 1 ? 'es' : ''} activada${count > 1 ? 's' : ''} automáticamente`);
+      } else {
+        toast.success('OT completada');
+      }
+    } catch (e) {
+      toast.warning('OT completada, pero no se pudieron activar las suscripciones. Verifica manualmente.');
+      console.error('activate_wo_subscriptions error:', e);
     }
   };
+
 
   const handleFinalizarOT = async () => {
     if (!id) return;
