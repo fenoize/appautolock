@@ -595,38 +595,28 @@ export default function CompatibilityMatrix() {
     return only as NodeStatus;
   };
 
-  // Expanded state — marcas open by default
+  // Expanded state — all brands stay closed until the user opens one or search finds a match
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      tree.forEach((n) => next.add(n.key));
-      return next;
-    });
-  }, [tree]);
+    if (!searchTerm) {
+      setExpanded(new Set());
+      return;
+    }
 
-  // Auto-expand on search match
-  useEffect(() => {
-    if (!search.trim()) return;
-    const s = search.toLowerCase();
-    const next = new Set(expanded);
+    const next = new Set<string>();
     const walk = (nodes: Node[], ancestors: string[]) => {
       for (const n of nodes) {
         const path = [...ancestors, n.key];
-        const matchSelf = n.label.toLowerCase().includes(s);
-        let matchLeaf = false;
-        if (n.leaves) {
-          matchLeaf = n.leaves.some((l) => l.label.toLowerCase().includes(s));
-        }
+        const matchSelf = normalizeText(n.label).includes(searchTerm);
+        const matchLeaf = n.leaves?.some((l) => normalizeText(l.label).includes(searchTerm)) ?? false;
         if (matchSelf || matchLeaf) path.forEach((k) => next.add(k));
         if (n.children) walk(n.children, path);
       }
     };
     walk(tree, []);
     setExpanded(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, tree]);
+  }, [searchTerm, tree]);
 
   const toggle = (key: string) =>
     setExpanded((prev) => {
@@ -1002,9 +992,13 @@ export default function CompatibilityMatrix() {
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg overflow-hidden bg-muted/20 divide-y">
-              {tree.length === 0 ? (
+              {isCatalogLoading ? (
                 <div className="text-center text-muted-foreground py-8 text-sm">
-                  Sin modelos en el catálogo
+                  Cargando catálogo…
+                </div>
+              ) : tree.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8 text-sm">
+                  {searchTerm ? `Sin resultados para “${search.trim()}”` : 'Sin modelos en el catálogo'}
                 </div>
               ) : (
                 tree.map((n) => renderNode(n, 0))
