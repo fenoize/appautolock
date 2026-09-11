@@ -520,9 +520,15 @@ export default function NewQuote() {
                       {items.map((item, index) => (
                         <TableRow key={index}>
                           <TableCell>
-                            <Badge variant={item.item_tipo === 'producto' ? 'secondary' : 'default'}>
-                              {item.item_tipo === 'producto' ? 'Producto' : 'Servicio'}
-                            </Badge>
+                            {item.item_tipo === 'suscripcion' ? (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-medium">
+                                Suscripción
+                              </span>
+                            ) : (
+                              <Badge variant={item.item_tipo === 'producto' ? 'secondary' : 'default'}>
+                                {item.item_tipo === 'producto' ? 'Producto' : 'Servicio'}
+                              </Badge>
+                            )}
                           </TableCell>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -531,7 +537,13 @@ export default function NewQuote() {
                                 <CompatibilityBadge estado={compatByProduct.get(item.ref_id)?.estado} />
                               )}
                             </div>
+                            {item.item_tipo === 'suscripcion' && (
+                              <p className="text-xs text-muted-foreground">
+                                recurrente{item.periodo_meses ? ` · ${item.periodo_meses} meses` : ''}
+                              </p>
+                            )}
                           </TableCell>
+
                           <TableCell>
                             <Input
                               type="number"
@@ -605,7 +617,13 @@ export default function NewQuote() {
                     ${totals.total.toLocaleString('es-CL')}
                   </span>
                 </div>
+                {items.some(i => i.item_tipo === 'suscripcion') && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    * El precio incluye suscripciones recurrentes que se activarán al completar la instalación.
+                  </p>
+                )}
               </div>
+
 
               <Separator />
 
