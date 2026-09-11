@@ -32,6 +32,9 @@ export default function ServiceDetail() {
   const [editNombre, setEditNombre] = useState("");
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
   const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
+  const [defaultPlanId, setDefaultPlanId] = useState<string | null>(null);
+  const { data: activePlans } = useActiveSubscriptionPlans();
+
 
   const [iglaSearchBrand, setIglaSearchBrand] = useState("");
   const [iglaSearchModel, setIglaSearchModel] = useState("");
@@ -115,8 +118,10 @@ export default function ServiceDetail() {
           ? service.tipos_suscripcion_disponibles 
           : []
       );
+      setDefaultPlanId((service as any).default_plan_id ?? null);
     }
   }, [service]);
+
 
   if (isLoading) {
     return (
