@@ -175,6 +175,13 @@ export default function ServiceDetail() {
     handleUpdateSuscripcion(requiereSuscripcion, planes);
   };
 
+  const handleSelectDefaultPlan = async (value: string) => {
+    const newId = value === 'none' ? null : value;
+    setDefaultPlanId(newId);
+    await updateService.mutateAsync({ id: service.id, default_plan_id: newId } as any);
+  };
+
+
   const handleNombreBlur = async () => {
     const trimmed = editNombre.trim();
     if (!trimmed || trimmed === service.nombre) return;
