@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useProducts } from '@/hooks/useProducts';
 import { useServices } from '@/hooks/useServices';
+import { useActiveSubscriptionPlans } from '@/hooks/useSubscriptionPlansActive';
+
 import {
   Dialog,
   DialogContent,
@@ -17,19 +19,27 @@ interface ItemSelectorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectItem: (item: {
-    tipo: 'producto' | 'servicio';
+    tipo: 'producto' | 'servicio' | 'suscripcion';
     ref_id: string;
     nombre: string;
     precio_unitario: number;
+    periodo_meses?: number;
+    default_plan?: { id: string; nombre: string; precio: number; periodo_meses: number } | null;
   }) => void;
 }
 
 export function ItemSelector({ open, onOpenChange, onSelectItem }: ItemSelectorProps) {
   const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<'productos' | 'servicios'>('productos');
+  const [tab, setTab] = useState<'productos' | 'servicios' | 'planes'>('productos');
   
   const { data: products } = useProducts();
   const { data: services } = useServices();
+  const { data: plans } = useActiveSubscriptionPlans();
+
+  const filteredPlans = plans?.filter(p =>
+    p.nombre.toLowerCase().includes(search.toLowerCase())
+  );
+
 
   const filteredProducts = products?.filter(p => 
     p.nombre.toLowerCase().includes(search.toLowerCase()) ||
