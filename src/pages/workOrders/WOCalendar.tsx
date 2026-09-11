@@ -537,6 +537,19 @@ export default function WOCalendar() {
               </SheetHeader>
 
               <div className="space-y-5 py-4">
+                {selectedEvent.wo.fecha_programada && (
+                  <div className="text-sm">
+                    <span className="text-muted-foreground text-xs">Instalación: </span>
+                    <span className="font-medium">
+                      {format(new Date(selectedEvent.wo.fecha_programada), "d MMM yyyy · HH:mm", { locale: es })}
+                    </span>
+                  </div>
+                )}
+                {(selectedEvent.wo as any)?.direccion_instalacion && (
+                  <div className="text-xs text-muted-foreground flex items-center gap-1">
+                    📍 {(selectedEvent.wo as any).direccion_instalacion}
+                  </div>
+                )}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">Cliente</Label>
                   {selectedEvent.wo.client ? (
