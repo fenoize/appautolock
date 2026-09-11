@@ -357,7 +357,26 @@ export default function WODetail() {
           {/* Items Tab */}
           <TabsContent value="items" className="pt-4">
             <WOItemsTable items={wo.items} />
+            {wo.items?.some((i: any) => i.item_tipo === 'suscripcion') && (
+              <div className="mt-4 p-3 rounded-md border border-purple-200 bg-purple-50">
+                <p className="text-xs font-medium text-purple-700 mb-2">Suscripciones incluidas</p>
+                {wo.items
+                  .filter((i: any) => i.item_tipo === 'suscripcion')
+                  .map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between text-sm">
+                      <span>{item.nombre}</span>
+                      <span className="text-muted-foreground">
+                        ${Number(item.precio_unitario ?? 0).toLocaleString('es-CL')}
+                      </span>
+                    </div>
+                  ))}
+                <p className="text-xs text-purple-700/80 mt-2">
+                  Se activan automáticamente al completar la OT.
+                </p>
+              </div>
+            )}
           </TabsContent>
+
 
           {/* Notas Tab */}
           <TabsContent value="notas" className="pt-4">
