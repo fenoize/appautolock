@@ -32,14 +32,16 @@ import { toast } from 'sonner';
 const STORAGE_KEY = 'newQuoteFormData';
 
 interface QuoteItemForm {
-  item_tipo: 'producto' | 'servicio';
+  item_tipo: 'producto' | 'servicio' | 'suscripcion';
   ref_id?: string;
   nombre: string;
   cantidad: number;
   precio_unitario: number;
   descuento_porcentaje: number;
   subtotal: number;
+  periodo_meses?: number;
 }
+
 
 export default function NewQuote() {
   const navigate = useNavigate();
