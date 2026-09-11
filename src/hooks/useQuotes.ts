@@ -108,6 +108,7 @@ export function useCreateQuote() {
       iva?: number;
       total?: number;
       fecha_instalacion_propuesta?: string | null;
+      direccion_instalacion?: string | null;
     }) => {
       // Generar folio
       const { data: folio, error: folioError } = await supabase
