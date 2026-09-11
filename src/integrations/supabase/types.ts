@@ -1366,6 +1366,7 @@ export type Database = {
           email_enviado_at: string | null
           estado: Database["public"]["Enums"]["quote_status"] | null
           fecha_emision: string | null
+          fecha_instalacion_propuesta: string | null
           folio: string
           id: string
           iva: number | null
@@ -1388,6 +1389,7 @@ export type Database = {
           email_enviado_at?: string | null
           estado?: Database["public"]["Enums"]["quote_status"] | null
           fecha_emision?: string | null
+          fecha_instalacion_propuesta?: string | null
           folio: string
           id?: string
           iva?: number | null
@@ -1410,6 +1412,7 @@ export type Database = {
           email_enviado_at?: string | null
           estado?: Database["public"]["Enums"]["quote_status"] | null
           fecha_emision?: string | null
+          fecha_instalacion_propuesta?: string | null
           folio?: string
           id?: string
           iva?: number | null
