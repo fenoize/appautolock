@@ -12,7 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { Plus, AlertCircle, Package, Trash2, X, CalendarDays } from 'lucide-react';
+import { Plus, AlertCircle, Package, Trash2, X, CalendarDays, CalendarCheck, MapPin, Edit2 } from 'lucide-react';
+import { InstallationPickerDialog } from '@/components/quotes/InstallationPickerDialog';
 import { useClients } from '@/hooks/useClients';
 import { useVehiclesByClient } from '@/hooks/useVehicles';
 import { useCreateQuote, useCreateQuoteItem } from '@/hooks/useQuotes';
@@ -82,12 +83,6 @@ export default function NewQuote() {
     };
   });
 
-  const handleDayClick = (key: string) => {
-    const currentTime = formData.fecha_instalacion_propuesta
-      ? formData.fecha_instalacion_propuesta.split('T')[1]?.slice(0, 5) || '09:00'
-      : '09:00';
-    setFormData((prev: any) => ({ ...prev, fecha_instalacion_propuesta: `${key}T${currentTime}` }));
-  };
 
   // Items de la cotización con auto-guardado
   const [items, setItems] = useState<QuoteItemForm[]>(() => {
@@ -110,6 +105,7 @@ export default function NewQuote() {
   const [showClientDialog, setShowClientDialog] = useState(false);
   const [showVehicleDialog, setShowVehicleDialog] = useState(false);
   const [showItemSelector, setShowItemSelector] = useState(false);
+  const [installPickerOpen, setInstallPickerOpen] = useState(false);
 
   // Datos
   const { data: clients } = useClients();
