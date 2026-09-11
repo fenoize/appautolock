@@ -16,6 +16,9 @@ import { ServiceCostItems } from "@/components/services/ServiceCostItems";
 import { ServiceChecklistEditor } from "@/components/services/ServiceChecklistEditor";
 import ServiceFichaEditor from "@/components/services/ServiceFichaEditor";
 import { SubscriptionPlanSelector } from "@/components/shared/SubscriptionPlanSelector";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useActiveSubscriptionPlans } from "@/hooks/useSubscriptionPlansActive";
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,6 +32,9 @@ export default function ServiceDetail() {
   const [editNombre, setEditNombre] = useState("");
   const [requiereSuscripcion, setRequiereSuscripcion] = useState(false);
   const [planesSeleccionados, setPlanesSeleccionados] = useState<string[]>([]);
+  const [defaultPlanId, setDefaultPlanId] = useState<string | null>(null);
+  const { data: activePlans } = useActiveSubscriptionPlans();
+
 
   const [iglaSearchBrand, setIglaSearchBrand] = useState("");
   const [iglaSearchModel, setIglaSearchModel] = useState("");
@@ -112,8 +118,10 @@ export default function ServiceDetail() {
           ? service.tipos_suscripcion_disponibles 
           : []
       );
+      setDefaultPlanId((service as any).default_plan_id ?? null);
     }
   }, [service]);
+
 
   if (isLoading) {
     return (
@@ -166,6 +174,13 @@ export default function ServiceDetail() {
     setPlanesSeleccionados(planes);
     handleUpdateSuscripcion(requiereSuscripcion, planes);
   };
+
+  const handleSelectDefaultPlan = async (value: string) => {
+    const newId = value === 'none' ? null : value;
+    setDefaultPlanId(newId);
+    await updateService.mutateAsync({ id: service.id, default_plan_id: newId } as any);
+  };
+
 
   const handleNombreBlur = async () => {
     const trimmed = editNombre.trim();
@@ -416,14 +431,44 @@ export default function ServiceDetail() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="suscripciones">
+        <TabsContent value="suscripciones" className="space-y-4">
           <SubscriptionPlanSelector
             requiereSuscripcion={requiereSuscripcion}
             planesSeleccionados={planesSeleccionados}
             onToggleRequiereSuscripcion={handleToggleRequiereSuscripcion}
             onSelectPlanes={handleSelectPlanes}
           />
+
+          {requiereSuscripcion && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Plan de suscripción por defecto</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Al agregar este servicio a una cotización, se añadirá automáticamente este plan como línea ítem.
+                </p>
+                <Select
+                  value={defaultPlanId || 'none'}
+                  onValueChange={handleSelectDefaultPlan}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin plan por defecto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin plan por defecto</SelectItem>
+                    {activePlans?.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nombre} — ${Number(p.precio).toLocaleString('es-CL')} / {p.periodo_meses} meses
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
+
 
         <TabsContent value="ficha">
           <ServiceFichaEditor

@@ -146,11 +146,37 @@ export default function WODetail() {
 
 
 
-  const handleChangeStatus = (newStatus: string) => {
-    if (id) {
+  const handleChangeStatus = async (newStatus: string) => {
+    if (!id) return;
+    if (newStatus !== 'completada') {
       updateWO.mutate({ id, estado: newStatus as any });
+      return;
+    }
+    try {
+      await updateWO.mutateAsync({ id, estado: newStatus as any });
+    } catch {
+      return;
+    }
+    try {
+      const { error } = await supabase.rpc('activate_wo_subscriptions', { p_wo_id: id });
+      if (error) throw error;
+      const { count } = await supabase
+        .from('subscriptions')
+        .select('id', { count: 'exact', head: true })
+        .eq('wo_id', id);
+      queryClient.invalidateQueries({ queryKey: ['wo-subscription-items', id] });
+      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      if (count && count > 0) {
+        toast.success(`OT completada · ${count} suscripción${count > 1 ? 'es' : ''} activada${count > 1 ? 's' : ''} automáticamente`);
+      } else {
+        toast.success('OT completada');
+      }
+    } catch (e) {
+      toast.warning('OT completada, pero no se pudieron activar las suscripciones. Verifica manualmente.');
+      console.error('activate_wo_subscriptions error:', e);
     }
   };
+
 
   const handleFinalizarOT = async () => {
     if (!id) return;
@@ -331,7 +357,26 @@ export default function WODetail() {
           {/* Items Tab */}
           <TabsContent value="items" className="pt-4">
             <WOItemsTable items={wo.items} />
+            {wo.items?.some((i: any) => i.item_tipo === 'suscripcion') && (
+              <div className="mt-4 p-3 rounded-md border border-purple-200 bg-purple-50">
+                <p className="text-xs font-medium text-purple-700 mb-2">Suscripciones incluidas</p>
+                {wo.items
+                  .filter((i: any) => i.item_tipo === 'suscripcion')
+                  .map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between text-sm">
+                      <span>{item.nombre}</span>
+                      <span className="text-muted-foreground">
+                        ${Number(item.precio_unitario ?? 0).toLocaleString('es-CL')}
+                      </span>
+                    </div>
+                  ))}
+                <p className="text-xs text-purple-700/80 mt-2">
+                  Se activan automáticamente al completar la OT.
+                </p>
+              </div>
+            )}
           </TabsContent>
+
 
           {/* Notas Tab */}
           <TabsContent value="notas" className="pt-4">

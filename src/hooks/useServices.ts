@@ -18,7 +18,8 @@ export function useServices(filters?: ServiceFilters) {
     queryFn: async () => {
       let query = supabase
         .from('services')
-        .select('*, services_products(*, product:products(*))');
+        .select('*, services_products(*, product:products(*)), default_plan:subscription_plans(id, nombre, precio, periodo_meses)');
+
       
       if (filters?.search) {
         query = query.or(`nombre.ilike.%${filters.search}%,descripcion.ilike.%${filters.search}%`);
@@ -39,7 +40,8 @@ export function useServices(filters?: ServiceFilters) {
       const { data, error } = await query.order('nombre');
       
       if (error) throw error;
-      return data as ServiceWithProducts[];
+      return data as any as ServiceWithProducts[];
+
     }
   });
 }
@@ -50,12 +52,13 @@ export function useService(id: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('services')
-        .select('*, services_products(*, product:products(*))')
+        .select('*, services_products(*, product:products(*)), default_plan:subscription_plans(id, nombre, precio, periodo_meses)')
         .eq('id', id)
         .single();
       
       if (error) throw error;
-      return data as ServiceWithProducts;
+      return data as any as ServiceWithProducts;
+
     },
     enabled: !!id
   });
@@ -68,7 +71,7 @@ export function useCreateService() {
     mutationFn: async (service: Omit<Service, 'id' | 'created_at' | 'updated_at' | 'version'>) => {
       const { data, error } = await supabase
         .from('services')
-        .insert([service])
+        .insert([service as any])
         .select()
         .single();
       
@@ -92,7 +95,8 @@ export function useUpdateService() {
     mutationFn: async ({ id, ...updates }: Partial<Service> & { id: string }) => {
       const { data, error } = await supabase
         .from('services')
-        .update(updates)
+        .update(updates as any)
+
         .eq('id', id)
         .select()
         .single();
@@ -403,10 +407,12 @@ export function useServiceComplete(id: string) {
         .select(`
           *,
           branch:branches(id, nombre),
+          default_plan:subscription_plans(id, nombre, precio, periodo_meses),
           services_products(*, product:products(id, nombre, sku, precio_venta, serializable)),
           service_checklist_items(*),
           service_compat_rules(*)
         `)
+
         .eq('id', id)
         .single();
       

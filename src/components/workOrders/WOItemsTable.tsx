@@ -40,7 +40,11 @@ export function WOItemsTable({ items }: WOItemsTableProps) {
                 <p className="font-medium text-foreground">{item.nombre}</p>
               </TableCell>
               <TableCell className="text-center">
-                {item.item_tipo === 'producto' ? (
+                {item.item_tipo === 'suscripcion' ? (
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-medium">
+                    Suscripción
+                  </span>
+                ) : item.item_tipo === 'producto' ? (
                   <Badge variant="default" className="gap-1">
                     <Package className="h-3 w-3" />
                     Producto
