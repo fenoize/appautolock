@@ -85,7 +85,7 @@ export interface WorkOrder {
 export interface WOItem {
   id: string;
   wo_id: string;
-  item_tipo: 'servicio' | 'producto';
+  item_tipo: 'servicio' | 'producto' | 'suscripcion';
   ref_id?: string;
   nombre: string;
   cantidad: number;
