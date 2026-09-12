@@ -23,7 +23,8 @@ import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
+import { AddressAutocomplete } from '@/components/shared/AddressAutocomplete';
+import { buildNotas } from '@/lib/addressNotes';
 import { REGIONES, getComunasByRegion } from '@/lib/chile-locations';
 import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
 
