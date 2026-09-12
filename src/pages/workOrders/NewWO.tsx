@@ -312,7 +312,7 @@ export default function NewWO() {
         direccion: formData.direccion || null,
         comuna: formData.comuna || null,
         region: formData.region || null,
-        notas: formData.notas || null,
+        notas: buildNotas(formData.notas, formData.referencia),
         tipo: formData.tipo || 'instalacion',
         original_wo_id: formData.original_wo_id || null,
         checklist_data: checklistData,
