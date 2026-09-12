@@ -267,6 +267,7 @@ export const CompanyInfoForm = () => {
                     value={{ direccion: field.value || '', comuna: '', region: '', referencia: '' }}
                     onChange={(v) => field.onChange(v.direccion)}
                     showReferencia={false}
+                    showComunaRegion={false}
                   />
                 </FormControl>
                 <FormMessage />
