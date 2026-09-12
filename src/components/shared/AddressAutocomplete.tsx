@@ -50,6 +50,7 @@ export function AddressAutocomplete({
   value,
   onChange,
   showReferencia = true,
+  showComunaRegion = true,
   required = false,
   disabled = false,
 }: Props) {
