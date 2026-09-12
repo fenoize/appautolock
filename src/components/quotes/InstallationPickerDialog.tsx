@@ -219,16 +219,10 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
 
           {/* Dirección */}
           <div>
-            <Label htmlFor="install-addr" className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1.5">
+            <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1.5">
               <MapPin className="h-3 w-3" /> Dirección de instalación <span className="font-normal">(opcional)</span>
             </Label>
-            <Input
-              id="install-addr"
-              value={address}
-              onChange={e => setAddress(e.target.value)}
-              placeholder="Av. Providencia 1234, Santiago"
-              className="text-sm"
-            />
+            <AddressAutocomplete value={addr} onChange={setAddr} showReferencia />
             <p className="text-[11px] text-muted-foreground mt-1">Si difiere de la dirección del cliente</p>
           </div>
 
@@ -236,7 +230,14 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
           {selDate && (
             <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2 text-xs text-primary font-medium">
               {formatLabel(selDate)}
-              {address && <div className="text-muted-foreground font-normal mt-0.5">{address}</div>}
+              {addr.direccion && (
+                <div className="text-muted-foreground font-normal mt-0.5">
+                  {[addr.direccion, addr.comuna, addr.region].filter(Boolean).join(', ')}
+                </div>
+              )}
+              {addr.referencia && (
+                <div className="text-muted-foreground font-normal mt-0.5">Ref: {addr.referencia}</div>
+              )}
             </div>
           )}
 
