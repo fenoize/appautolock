@@ -18,7 +18,8 @@ import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
-import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
+import { AddressAutocomplete } from '@/components/shared/AddressAutocomplete';
+import { parseNotasReferencia, buildNotas } from '@/lib/addressNotes';
 import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
 
 export default function EditWO() {
