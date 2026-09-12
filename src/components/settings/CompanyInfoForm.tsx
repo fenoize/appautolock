@@ -261,8 +261,13 @@ export const CompanyInfoForm = () => {
             )} />
             <FormField control={form.control} name="direccion" render={({ field }) => (
               <FormItem>
-                <FormLabel>Dirección</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl>
+                  <AddressAutocomplete
+                    value={{ direccion: field.value || '', comuna: '', region: '', referencia: '' }}
+                    onChange={(v) => field.onChange(v.direccion)}
+                    showReferencia={false}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
