@@ -5,10 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Clock, ChevronLeft, ChevronRight, CalendarCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AddressAutocomplete, AddressValue, EMPTY_ADDRESS } from '@/components/shared/AddressAutocomplete';
 
 interface InstallationValue {
   datetime: string; // ISO string con fecha+hora
   address: string;
+  comuna?: string;
+  region?: string;
+  referencia?: string;
 }
 
 interface Props {
