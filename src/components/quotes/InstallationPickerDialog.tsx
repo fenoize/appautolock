@@ -51,7 +51,12 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
   const initial = parseInitial();
   const [selDate, setSelDate] = useState<string | null>(initial.date);
   const [selTime, setSelTime] = useState(initial.time || '09:00');
-  const [address, setAddress] = useState(value?.address || '');
+  const [addr, setAddr] = useState<AddressValue>({
+    direccion: value?.address || '',
+    comuna: value?.comuna || '',
+    region: value?.region || '',
+    referencia: value?.referencia || '',
+  });
   const [curMonth, setCurMonth] = useState(() => {
     if (initial.date) { const d = new Date(initial.date); return { m: d.getMonth(), y: d.getFullYear() }; }
     return { m: today.getMonth(), y: today.getFullYear() };
