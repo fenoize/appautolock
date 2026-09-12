@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Loader2 } from 'lucide-react';
@@ -60,7 +61,30 @@ export function AddressAutocomplete({
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const updateDropdownPos = () => {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      updateDropdownPos();
+      const onScroll = () => updateDropdownPos();
+      window.addEventListener('scroll', onScroll, true);
+      window.addEventListener('resize', onScroll);
+      return () => {
+        window.removeEventListener('scroll', onScroll, true);
+        window.removeEventListener('resize', onScroll);
+      };
+    }
+    return undefined;
+  }, [open]);
 
   const prevDir = useRef(value.direccion);
   if (value.direccion !== prevDir.current && value.direccion !== inputVal) {
@@ -104,7 +128,10 @@ export function AddressAutocomplete({
     prevDir.current = q;
     onChange({ ...value, direccion: q });
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => search(q), 320);
+    timer.current = setTimeout(() => {
+      search(q);
+      updateDropdownPos();
+    }, 320);
   };
 
   const handleSelect = (s: Suggestion) => {
@@ -113,6 +140,11 @@ export function AddressAutocomplete({
     setSuggestions([]);
     setOpen(false);
     onChange({ ...value, direccion: s.direccion, comuna: s.comuna, region: s.region });
+  };
+
+  const handleFocus = () => {
+    updateDropdownPos();
+    if (suggestions.length > 0) setOpen(true);
   };
 
   return (
@@ -125,10 +157,11 @@ export function AddressAutocomplete({
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
+            ref={inputRef}
             value={inputVal}
             onChange={handleInput}
             onBlur={() => setTimeout(() => setOpen(false), 160)}
-            onFocus={() => suggestions.length > 0 && setOpen(true)}
+            onFocus={handleFocus}
             placeholder="Av. Providencia 1234"
             className="pl-9 pr-8"
             disabled={disabled}
@@ -137,8 +170,11 @@ export function AddressAutocomplete({
           {loading && (
             <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
           )}
-          {open && suggestions.length > 0 && (
-            <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-popover border border-border rounded-md shadow-md overflow-hidden">
+          {open && suggestions.length > 0 && dropdownPos && createPortal(
+            <div
+              className="bg-popover border border-border rounded-md shadow-md overflow-hidden"
+              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}
+            >
               {suggestions.map((s) => (
                 <button
                   key={s.id}
@@ -155,7 +191,8 @@ export function AddressAutocomplete({
                   </div>
                 </button>
               ))}
-            </div>
+            </div>,
+            document.body,
           )}
         </div>
       </div>
