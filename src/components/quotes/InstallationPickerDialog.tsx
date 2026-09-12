@@ -88,7 +88,13 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
     const [h, min] = (selTime || '09:00').split(':').map(Number);
     const dt = new Date(selDate);
     dt.setHours(h, min, 0, 0);
-    onChange({ datetime: dt.toISOString(), address: address.trim() });
+    onChange({
+      datetime: dt.toISOString(),
+      address: addr.direccion.trim(),
+      comuna: addr.comuna.trim(),
+      region: addr.region.trim(),
+      referencia: addr.referencia.trim(),
+    });
     onOpenChange(false);
   };
 
