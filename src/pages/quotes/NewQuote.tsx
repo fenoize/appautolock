@@ -681,15 +681,6 @@ export default function NewQuote() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Dirección de instalación</Label>
-                <p className="text-xs text-muted-foreground">Opcional — si difiere de la dirección del cliente</p>
-                <Input
-                  placeholder="Ej: Av. Providencia 1234, Providencia"
-                  value={formData.direccion_instalacion}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, direccion_instalacion: e.target.value }))}
-                />
-              </div>
             </CardContent>
           </Card>
 
