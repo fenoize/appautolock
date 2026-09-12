@@ -27,6 +27,7 @@ interface Props {
   value: AddressValue;
   onChange: (v: AddressValue) => void;
   showReferencia?: boolean;
+  showComunaRegion?: boolean;
   required?: boolean;
   disabled?: boolean;
 }
