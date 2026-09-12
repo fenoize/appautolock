@@ -355,48 +355,20 @@ function ProveedorFormDialog({
 
           <div className="space-y-4 rounded-lg border p-3">
             <p className="text-sm font-medium">Dirección</p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Región</Label>
-                <Select
-                  value={form.region}
-                  onValueChange={(val) => {
-                    set('region', val);
-                    set('comuna', '');
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona región" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {REGIONES_CHILE.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Comuna</Label>
-                <Select value={form.comuna} onValueChange={(val) => set('comuna', val)} disabled={!form.region}>
-                  <SelectTrigger>
-                    <SelectValue placeholder={form.region ? 'Selecciona comuna' : 'Selecciona región primero'} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(COMUNAS_POR_REGION[form.region] ?? []).map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Dirección (calle y número)</Label>
-              <Input value={form.direccion} onChange={(e) => set('direccion', e.target.value)} placeholder="Av. Siempre Viva 742" />
-            </div>
+            <AddressAutocomplete
+              value={{
+                direccion: form.direccion,
+                comuna: form.comuna,
+                region: form.region,
+                referencia: '',
+              }}
+              onChange={(v) => {
+                set('direccion', v.direccion);
+                set('comuna', v.comuna);
+                set('region', v.region);
+              }}
+              showReferencia={false}
+            />
             <div className="space-y-2">
               <Label>Oficina / Depto (opcional)</Label>
               <Input value={form.oficina} onChange={(e) => set('oficina', e.target.value)} placeholder="Of. 302" />
