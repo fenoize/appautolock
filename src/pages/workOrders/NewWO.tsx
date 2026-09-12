@@ -94,6 +94,7 @@ export default function NewWO() {
       direccion: '',
       comuna: '',
       region: '',
+      referencia: '',
       notas: '',
       tipo: 'instalacion',
       original_wo_id: '',
