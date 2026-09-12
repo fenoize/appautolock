@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { REGIONES_CHILE, COMUNAS_POR_REGION } from '@/lib/chile-geo';
+import { AddressAutocomplete } from '@/components/shared/AddressAutocomplete';
 import { toast } from '@/hooks/use-toast';
 import { Pencil, History, Truck } from 'lucide-react';
 
