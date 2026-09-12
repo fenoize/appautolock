@@ -850,7 +850,12 @@ export default function NewQuote() {
         onChange={(val) => setFormData(prev => ({
           ...prev,
           fecha_instalacion_propuesta: val?.datetime || '',
-          direccion_instalacion: val?.address || ''
+          direccion_instalacion: val
+            ? [
+                [val.address, val.comuna, val.region].filter(Boolean).join(', '),
+                val.referencia ? `Ref: ${val.referencia}` : '',
+              ].filter(Boolean).join(' — ')
+            : ''
         }))}
         woLoad={woLoad}
       />
