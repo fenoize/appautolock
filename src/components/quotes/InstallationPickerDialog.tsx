@@ -95,7 +95,7 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
   const handleClear = () => {
     setSelDate(null);
     setSelTime('09:00');
-    setAddress('');
+    setAddr({ ...EMPTY_ADDRESS });
     onChange(null);
     onOpenChange(false);
   };
