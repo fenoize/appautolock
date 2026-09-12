@@ -47,12 +47,8 @@ export default function NewWO() {
       try {
         const parsed = JSON.parse(saved);
         // Validate region/comuna against our dropdown data — clear if stale free-text values
-        const savedRegion = parsed.region || '';
-        const validRegion = REGIONES.some(r => r.nombre === savedRegion) ? savedRegion : '';
-        const savedComuna = parsed.comuna || '';
-        const validComuna = validRegion && getComunasByRegion(validRegion).includes(savedComuna)
-          ? savedComuna
-          : '';
+        const validRegion = parsed.region || '';
+        const validComuna = parsed.comuna || '';
         return {
           client_id: parsed.client_id || '',
           vehicle_id: parsed.vehicle_id || '',
