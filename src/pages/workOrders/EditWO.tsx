@@ -52,6 +52,7 @@ export default function EditWO() {
     direccion: '',
     comuna: '',
     region: '',
+    referencia: '',
     tipo: 'instalacion',
     original_wo_id: ''
   });
