@@ -157,10 +157,11 @@ export function AddressAutocomplete({
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
+            ref={inputRef}
             value={inputVal}
             onChange={handleInput}
             onBlur={() => setTimeout(() => setOpen(false), 160)}
-            onFocus={() => suggestions.length > 0 && setOpen(true)}
+            onFocus={handleFocus}
             placeholder="Av. Providencia 1234"
             className="pl-9 pr-8"
             disabled={disabled}
@@ -169,8 +170,11 @@ export function AddressAutocomplete({
           {loading && (
             <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
           )}
-          {open && suggestions.length > 0 && (
-            <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-popover border border-border rounded-md shadow-md overflow-hidden">
+          {open && suggestions.length > 0 && dropdownPos && createPortal(
+            <div
+              className="bg-popover border border-border rounded-md shadow-md overflow-hidden"
+              style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, zIndex: 9999 }}
+            >
               {suggestions.map((s) => (
                 <button
                   key={s.id}
@@ -187,7 +191,8 @@ export function AddressAutocomplete({
                   </div>
                 </button>
               ))}
-            </div>
+            </div>,
+            document.body,
           )}
         </div>
       </div>
