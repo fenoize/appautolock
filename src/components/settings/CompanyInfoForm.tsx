@@ -10,6 +10,7 @@ import { Loader2, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 
 const formSchema = z.object({
   razon_social: z.string().min(1, "Razón social requerida"),
