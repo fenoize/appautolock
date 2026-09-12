@@ -61,7 +61,30 @@ export function AddressAutocomplete({
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const updateDropdownPos = () => {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      updateDropdownPos();
+      const onScroll = () => updateDropdownPos();
+      window.addEventListener('scroll', onScroll, true);
+      window.addEventListener('resize', onScroll);
+      return () => {
+        window.removeEventListener('scroll', onScroll, true);
+        window.removeEventListener('resize', onScroll);
+      };
+    }
+    return undefined;
+  }, [open]);
 
   const prevDir = useRef(value.direccion);
   if (value.direccion !== prevDir.current && value.direccion !== inputVal) {
