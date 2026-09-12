@@ -701,26 +701,28 @@ export default function NewWO() {
               <CardTitle>Dirección de Instalación</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label>Dirección *</Label>
-                <Input
-                  value={formData.direccion}
-                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                  placeholder="Calle, número, depto..."
-                />
-                {formData.client_id && !formData.direccion && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Se usará la dirección predeterminada del cliente
-                  </p>
-                )}
-              </div>
-
-              <ComunaRegionFields
-                region={formData.region}
-                comuna={formData.comuna}
-                onRegionChange={(v) => setFormData({ ...formData, region: v, comuna: '' })}
-                onComunaChange={(v) => setFormData({ ...formData, comuna: v })}
+              <AddressAutocomplete
+                value={{
+                  direccion: formData.direccion,
+                  comuna: formData.comuna,
+                  region: formData.region,
+                  referencia: formData.referencia || '',
+                }}
+                onChange={(v) => setFormData({
+                  ...formData,
+                  direccion: v.direccion,
+                  comuna: v.comuna,
+                  region: v.region,
+                  referencia: v.referencia,
+                })}
+                showReferencia
+                required
               />
+              {formData.client_id && !formData.direccion && (
+                <p className="text-xs text-muted-foreground">
+                  Se usará la dirección predeterminada del cliente
+                </p>
+              )}
             </CardContent>
           </Card>
 
