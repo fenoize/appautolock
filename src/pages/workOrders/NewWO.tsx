@@ -60,6 +60,7 @@ export default function NewWO() {
           direccion: parsed.direccion || '',
           comuna: validComuna,
           region: validRegion,
+          referencia: parsed.referencia || '',
           notas: parsed.notas || '',
           tipo: parsed.tipo || 'instalacion',
           original_wo_id: parsed.original_wo_id || '',
