@@ -128,7 +128,10 @@ export function AddressAutocomplete({
     prevDir.current = q;
     onChange({ ...value, direccion: q });
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => search(q), 320);
+    timer.current = setTimeout(() => {
+      search(q);
+      updateDropdownPos();
+    }, 320);
   };
 
   const handleSelect = (s: Suggestion) => {
@@ -137,6 +140,11 @@ export function AddressAutocomplete({
     setSuggestions([]);
     setOpen(false);
     onChange({ ...value, direccion: s.direccion, comuna: s.comuna, region: s.region });
+  };
+
+  const handleFocus = () => {
+    updateDropdownPos();
+    if (suggestions.length > 0) setOpen(true);
   };
 
   return (
