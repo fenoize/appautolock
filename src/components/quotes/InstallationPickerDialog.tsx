@@ -64,7 +64,12 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
       const p = parseInitial();
       setSelDate(p.date);
       setSelTime(p.time || '09:00');
-      setAddress(value?.address || '');
+      setAddr({
+        direccion: value?.address || '',
+        comuna: value?.comuna || '',
+        region: value?.region || '',
+        referencia: value?.referencia || '',
+      });
       setCalError(false);
       if (p.date) {
         const d = new Date(p.date);
