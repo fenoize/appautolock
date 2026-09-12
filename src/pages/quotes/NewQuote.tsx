@@ -591,6 +591,37 @@ export default function NewQuote() {
 
         {/* Columna Derecha - 1/3 */}
         <div className="space-y-6">
+          {/* Card: Acciones */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Acciones</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button 
+                className="w-full"
+                onClick={() => handleSave('borrador')}
+                disabled={!canSave || createQuote.isPending}
+              >
+                Guardar Borrador
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full"
+                onClick={() => handleSave('enviada')}
+                disabled={!canSave || createQuote.isPending}
+              >
+                Guardar y Enviar
+              </Button>
+              <Button 
+                variant="ghost"
+                className="w-full"
+                onClick={() => navigate('/quotes')}
+              >
+                Cancelar
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Card: Resumen */}
           <Card>
             <CardHeader>
@@ -777,37 +808,6 @@ export default function NewQuote() {
                   5+ OTs
                 </span>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Card: Acciones */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Acciones</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button 
-                className="w-full"
-                onClick={() => handleSave('borrador')}
-                disabled={!canSave || createQuote.isPending}
-              >
-                Guardar Borrador
-              </Button>
-              <Button 
-                variant="outline"
-                className="w-full"
-                onClick={() => handleSave('enviada')}
-                disabled={!canSave || createQuote.isPending}
-              >
-                Guardar y Enviar
-              </Button>
-              <Button 
-                variant="ghost"
-                className="w-full"
-                onClick={() => navigate('/quotes')}
-              >
-                Cancelar
-              </Button>
             </CardContent>
           </Card>
         </div>
