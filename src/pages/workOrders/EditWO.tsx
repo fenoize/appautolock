@@ -148,7 +148,7 @@ export default function EditWO() {
         client_id: formData.client_id,
         vehicle_id: formData.vehicle_id || null,
         branch_id: formData.branch_id,
-        notas: formData.notas || null,
+        notas: buildNotas(formData.notas, formData.referencia),
         fecha_programada: formData.fecha_programada || null,
         ventana_inicio: formData.ventana_inicio || null,
         ventana_fin: formData.ventana_fin || null,
