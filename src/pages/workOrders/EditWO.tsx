@@ -18,7 +18,8 @@ import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { SkeletonCard } from '@/components/shared/SkeletonCard';
-import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
+import { AddressAutocomplete } from '@/components/shared/AddressAutocomplete';
+import { parseNotasReferencia, buildNotas } from '@/lib/addressNotes';
 import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
 
 export default function EditWO() {
@@ -52,6 +53,7 @@ export default function EditWO() {
     direccion: '',
     comuna: '',
     region: '',
+    referencia: '',
     tipo: 'instalacion',
     original_wo_id: ''
   });
@@ -68,7 +70,8 @@ export default function EditWO() {
         client_id: wo.client_id || '',
         vehicle_id: wo.vehicle_id || '',
         branch_id: wo.branch_id || '',
-        notas: wo.notas || '',
+        notas: parseNotasReferencia(wo.notas).notas,
+        referencia: parseNotasReferencia(wo.notas).referencia,
         fecha_programada: wo.fecha_programada ? wo.fecha_programada.slice(0, 16) : '',
         ventana_inicio: wo.ventana_inicio || '',
         ventana_fin: wo.ventana_fin || '',
@@ -148,7 +151,7 @@ export default function EditWO() {
         client_id: formData.client_id,
         vehicle_id: formData.vehicle_id || null,
         branch_id: formData.branch_id,
-        notas: formData.notas || null,
+        notas: buildNotas(formData.notas, formData.referencia),
         fecha_programada: formData.fecha_programada || null,
         ventana_inicio: formData.ventana_inicio || null,
         ventana_fin: formData.ventana_fin || null,
@@ -295,24 +298,23 @@ export default function EditWO() {
             <CardTitle>Dirección de Instalación</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2 md:col-span-3">
-                <Label htmlFor="direccion">Dirección</Label>
-                <Input
-                  id="direccion"
-                  value={formData.direccion}
-                  onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
-                  placeholder="Calle, número, depto, etc."
-                />
-              </div>
-              <ComunaRegionFields
-                region={formData.region}
-                comuna={formData.comuna}
-                onRegionChange={(v) => setFormData(prev => ({ ...prev, region: v, comuna: '' }))}
-                onComunaChange={(v) => setFormData(prev => ({ ...prev, comuna: v }))}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2"
-              />
-            </div>
+            <AddressAutocomplete
+              value={{
+                direccion: formData.direccion,
+                comuna: formData.comuna,
+                region: formData.region,
+                referencia: formData.referencia,
+              }}
+              onChange={(v) => setFormData(prev => ({
+                ...prev,
+                direccion: v.direccion,
+                comuna: v.comuna,
+                region: v.region,
+                referencia: v.referencia,
+              }))}
+              showReferencia
+              required
+            />
           </CardContent>
         </Card>
 

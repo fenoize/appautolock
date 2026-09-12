@@ -5,10 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Clock, ChevronLeft, ChevronRight, CalendarCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AddressAutocomplete, AddressValue, EMPTY_ADDRESS } from '@/components/shared/AddressAutocomplete';
 
 interface InstallationValue {
   datetime: string; // ISO string con fecha+hora
   address: string;
+  comuna?: string;
+  region?: string;
+  referencia?: string;
 }
 
 interface Props {
@@ -47,7 +51,12 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
   const initial = parseInitial();
   const [selDate, setSelDate] = useState<string | null>(initial.date);
   const [selTime, setSelTime] = useState(initial.time || '09:00');
-  const [address, setAddress] = useState(value?.address || '');
+  const [addr, setAddr] = useState<AddressValue>({
+    direccion: value?.address || '',
+    comuna: value?.comuna || '',
+    region: value?.region || '',
+    referencia: value?.referencia || '',
+  });
   const [curMonth, setCurMonth] = useState(() => {
     if (initial.date) { const d = new Date(initial.date); return { m: d.getMonth(), y: d.getFullYear() }; }
     return { m: today.getMonth(), y: today.getFullYear() };
@@ -60,7 +69,12 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
       const p = parseInitial();
       setSelDate(p.date);
       setSelTime(p.time || '09:00');
-      setAddress(value?.address || '');
+      setAddr({
+        direccion: value?.address || '',
+        comuna: value?.comuna || '',
+        region: value?.region || '',
+        referencia: value?.referencia || '',
+      });
       setCalError(false);
       if (p.date) {
         const d = new Date(p.date);
@@ -84,14 +98,20 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
     const [h, min] = (selTime || '09:00').split(':').map(Number);
     const dt = new Date(selDate);
     dt.setHours(h, min, 0, 0);
-    onChange({ datetime: dt.toISOString(), address: address.trim() });
+    onChange({
+      datetime: dt.toISOString(),
+      address: addr.direccion.trim(),
+      comuna: addr.comuna.trim(),
+      region: addr.region.trim(),
+      referencia: addr.referencia.trim(),
+    });
     onOpenChange(false);
   };
 
   const handleClear = () => {
     setSelDate(null);
     setSelTime('09:00');
-    setAddress('');
+    setAddr({ ...EMPTY_ADDRESS });
     onChange(null);
     onOpenChange(false);
   };
@@ -215,16 +235,10 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
 
           {/* Dirección */}
           <div>
-            <Label htmlFor="install-addr" className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1.5">
+            <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1.5">
               <MapPin className="h-3 w-3" /> Dirección de instalación <span className="font-normal">(opcional)</span>
             </Label>
-            <Input
-              id="install-addr"
-              value={address}
-              onChange={e => setAddress(e.target.value)}
-              placeholder="Av. Providencia 1234, Santiago"
-              className="text-sm"
-            />
+            <AddressAutocomplete value={addr} onChange={setAddr} showReferencia />
             <p className="text-[11px] text-muted-foreground mt-1">Si difiere de la dirección del cliente</p>
           </div>
 
@@ -232,7 +246,14 @@ export function InstallationPickerDialog({ open, onOpenChange, value, onChange, 
           {selDate && (
             <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2 text-xs text-primary font-medium">
               {formatLabel(selDate)}
-              {address && <div className="text-muted-foreground font-normal mt-0.5">{address}</div>}
+              {addr.direccion && (
+                <div className="text-muted-foreground font-normal mt-0.5">
+                  {[addr.direccion, addr.comuna, addr.region].filter(Boolean).join(', ')}
+                </div>
+              )}
+              {addr.referencia && (
+                <div className="text-muted-foreground font-normal mt-0.5">Ref: {addr.referencia}</div>
+              )}
             </div>
           )}
 

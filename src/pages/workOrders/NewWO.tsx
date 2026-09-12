@@ -23,8 +23,9 @@ import { CreateVehicleDialog } from '@/components/quotes/CreateVehicleDialog';
 import { ItemSelector } from '@/components/quotes/ItemSelector';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ComunaRegionFields } from '@/components/shared/ComunaRegionFields';
-import { REGIONES, getComunasByRegion } from '@/lib/chile-locations';
+import { AddressAutocomplete } from '@/components/shared/AddressAutocomplete';
+import { buildNotas } from '@/lib/addressNotes';
+
 import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
 
 const STORAGE_KEY = 'newWOFormData';
@@ -47,12 +48,8 @@ export default function NewWO() {
       try {
         const parsed = JSON.parse(saved);
         // Validate region/comuna against our dropdown data — clear if stale free-text values
-        const savedRegion = parsed.region || '';
-        const validRegion = REGIONES.some(r => r.nombre === savedRegion) ? savedRegion : '';
-        const savedComuna = parsed.comuna || '';
-        const validComuna = validRegion && getComunasByRegion(validRegion).includes(savedComuna)
-          ? savedComuna
-          : '';
+        const validRegion = parsed.region || '';
+        const validComuna = parsed.comuna || '';
         return {
           client_id: parsed.client_id || '',
           vehicle_id: parsed.vehicle_id || '',
@@ -63,6 +60,7 @@ export default function NewWO() {
           direccion: parsed.direccion || '',
           comuna: validComuna,
           region: validRegion,
+          referencia: parsed.referencia || '',
           notas: parsed.notas || '',
           tipo: parsed.tipo || 'instalacion',
           original_wo_id: parsed.original_wo_id || '',
@@ -78,6 +76,7 @@ export default function NewWO() {
           direccion: '',
           comuna: '',
           region: '',
+          referencia: '',
           notas: '',
           tipo: 'instalacion',
           original_wo_id: '',
@@ -94,6 +93,7 @@ export default function NewWO() {
       direccion: '',
       comuna: '',
       region: '',
+      referencia: '',
       notas: '',
       tipo: 'instalacion',
       original_wo_id: '',
@@ -312,7 +312,7 @@ export default function NewWO() {
         direccion: formData.direccion || null,
         comuna: formData.comuna || null,
         region: formData.region || null,
-        notas: formData.notas || null,
+        notas: buildNotas(formData.notas, formData.referencia),
         tipo: formData.tipo || 'instalacion',
         original_wo_id: formData.original_wo_id || null,
         checklist_data: checklistData,
@@ -701,26 +701,28 @@ export default function NewWO() {
               <CardTitle>Dirección de Instalación</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label>Dirección *</Label>
-                <Input
-                  value={formData.direccion}
-                  onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
-                  placeholder="Calle, número, depto..."
-                />
-                {formData.client_id && !formData.direccion && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Se usará la dirección predeterminada del cliente
-                  </p>
-                )}
-              </div>
-
-              <ComunaRegionFields
-                region={formData.region}
-                comuna={formData.comuna}
-                onRegionChange={(v) => setFormData({ ...formData, region: v, comuna: '' })}
-                onComunaChange={(v) => setFormData({ ...formData, comuna: v })}
+              <AddressAutocomplete
+                value={{
+                  direccion: formData.direccion,
+                  comuna: formData.comuna,
+                  region: formData.region,
+                  referencia: formData.referencia || '',
+                }}
+                onChange={(v) => setFormData({
+                  ...formData,
+                  direccion: v.direccion,
+                  comuna: v.comuna,
+                  region: v.region,
+                  referencia: v.referencia,
+                })}
+                showReferencia
+                required
               />
+              {formData.client_id && !formData.direccion && (
+                <p className="text-xs text-muted-foreground">
+                  Se usará la dirección predeterminada del cliente
+                </p>
+              )}
             </CardContent>
           </Card>
 
