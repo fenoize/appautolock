@@ -295,24 +295,23 @@ export default function EditWO() {
             <CardTitle>Dirección de Instalación</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2 md:col-span-3">
-                <Label htmlFor="direccion">Dirección</Label>
-                <Input
-                  id="direccion"
-                  value={formData.direccion}
-                  onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
-                  placeholder="Calle, número, depto, etc."
-                />
-              </div>
-              <ComunaRegionFields
-                region={formData.region}
-                comuna={formData.comuna}
-                onRegionChange={(v) => setFormData(prev => ({ ...prev, region: v, comuna: '' }))}
-                onComunaChange={(v) => setFormData(prev => ({ ...prev, comuna: v }))}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4 md:col-span-2"
-              />
-            </div>
+            <AddressAutocomplete
+              value={{
+                direccion: formData.direccion,
+                comuna: formData.comuna,
+                region: formData.region,
+                referencia: formData.referencia,
+              }}
+              onChange={(v) => setFormData(prev => ({
+                ...prev,
+                direccion: v.direccion,
+                comuna: v.comuna,
+                region: v.region,
+                referencia: v.referencia,
+              }))}
+              showReferencia
+              required
+            />
           </CardContent>
         </Card>
 
