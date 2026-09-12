@@ -10,6 +10,7 @@ import { Loader2, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AddressAutocomplete } from "@/components/shared/AddressAutocomplete";
 
 
 const formSchema = z.object({
@@ -264,7 +265,11 @@ export const CompanyInfoForm = () => {
               <FormItem>
                 <FormLabel>Dirección</FormLabel>
                 <FormControl>
-                  <Input {...field} placeholder="Av. Providencia 1234" />
+                  <AddressAutocomplete
+                    value={{ direccion: field.value || '', comuna: '', region: '', referencia: '' }}
+                    onChange={(v) => field.onChange(v.direccion)}
+                    showReferencia={false}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
