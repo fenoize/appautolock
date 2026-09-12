@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.activate_wo_subscriptions(uuid) TO authenticated;
