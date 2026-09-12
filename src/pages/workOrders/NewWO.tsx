@@ -25,7 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AddressAutocomplete } from '@/components/shared/AddressAutocomplete';
 import { buildNotas } from '@/lib/addressNotes';
-import { REGIONES, getComunasByRegion } from '@/lib/chile-locations';
+
 import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
 
 const STORAGE_KEY = 'newWOFormData';
