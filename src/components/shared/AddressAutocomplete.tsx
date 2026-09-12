@@ -3,8 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MapPin, Loader2 } from 'lucide-react';
 
-const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN ||
-  import.meta.env.VITE_LOVABLE_CONNECTOR_MAPBOX_PUBLIC_TOKEN) as string | undefined;
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN as string | undefined;
 
 export interface AddressValue {
   direccion: string;
@@ -13,7 +12,12 @@ export interface AddressValue {
   referencia: string;
 }
 
-export const EMPTY_ADDRESS: AddressValue = { direccion: '', comuna: '', region: '', referencia: '' };
+export const EMPTY_ADDRESS: AddressValue = {
+  direccion: '',
+  comuna: '',
+  region: '',
+  referencia: '',
+};
 
 interface Suggestion {
   id: string;
@@ -27,7 +31,6 @@ interface Props {
   value: AddressValue;
   onChange: (v: AddressValue) => void;
   showReferencia?: boolean;
-  showComunaRegion?: boolean;
   required?: boolean;
   disabled?: boolean;
 }
@@ -50,7 +53,6 @@ export function AddressAutocomplete({
   value,
   onChange,
   showReferencia = true,
-  showComunaRegion = true,
   required = false,
   disabled = false,
 }: Props) {
@@ -60,7 +62,6 @@ export function AddressAutocomplete({
   const [open, setOpen] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
-  // Sync external value changes to input (e.g. when form resets or loads data)
   const prevDir = useRef(value.direccion);
   if (value.direccion !== prevDir.current && value.direccion !== inputVal) {
     setInputVal(value.direccion);
@@ -160,7 +161,6 @@ export function AddressAutocomplete({
       </div>
 
       {/* Comuna + Región */}
-      {showComunaRegion && (
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>
@@ -185,7 +185,6 @@ export function AddressAutocomplete({
           />
         </div>
       </div>
-      )}
 
       {/* Referencia */}
       {showReferencia && (
